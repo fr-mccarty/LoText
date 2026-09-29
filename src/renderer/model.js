@@ -1090,6 +1090,8 @@ export class AppModel {
       case 'selectNextInstance': this.editor?.selectNextInstance(); break
       case 'moveLineUp': this.editor?.moveLinesUp(); break
       case 'moveLineDown': this.editor?.moveLinesDown(); break
+      case 'hideLines': this.editor?.hideLines(); break
+      case 'showLines': this.editor?.showLines(); break
       case 'bold': this.editor?.toggleBold(); break
       case 'cutAndSendToDayCap': await this.cutAndSendToDayCap(); break
       case 'italic': this.editor?.toggleItalic(); break

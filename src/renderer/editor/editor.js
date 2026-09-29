@@ -23,7 +23,7 @@ import { invisibles } from './invisibles.js'
 import { taskBoxes } from './task-boxes.js'
 import { hangingIndent } from './hanging-indent.js'
 import { findBar, showFindBar } from './find-bar.js'
-import { enhancedTasks, moveItems } from './enhanced-view.js'
+import { enhancedTasks, moveItems, hideLines, showLines } from './enhanced-view.js'
 import * as TextRanges from './text-ranges.js'
 import { cutWholeLines, indentBy, outdentBy, linesOfSelection, insertNewlineKeepingIndent } from './line-editing.js'
 import * as Emphasis from './emphasis-markers.js'
@@ -267,6 +267,13 @@ export class Editor {
   moveLinesUp () { moveItems(this.view, -1) }
 
   moveLinesDown () { moveItems(this.view, 1) }
+
+  // MARK: - ⌥⌘[ and ⌥⌘], hide and show lines
+
+  /** Closes the arrow around the caret, or hides the selected lines under the first (`enhanced-view.js`). */
+  hideLines () { hideLines(this.view) }
+
+  showLines () { showLines(this.view) }
 
   // MARK: - ⌘B and ⌘I, emphasis markers
 

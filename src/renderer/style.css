@@ -424,8 +424,9 @@ body.row-dragging .row.selected:hover { background: var(--selection-inactive); }
 /* Enhanced tasks (specs/enhanced-tasks.md) and disclosure arrows at the end of any line
    (specs/disclosures.md). The arrows, `==>` / `==v` and `-->` / `--v`, are text, drawn as small buttons,
    and are the only sign that something is folded: no ellipsis follows them. */
-.lo-disclosure { white-space: nowrap; cursor: pointer; color: var(--accent); background: var(--control); border-radius: 3px; }
-.lo-disclosure:hover { background: var(--selection-inactive); }
+.lo-disclosure, .lo-hidden-lines { white-space: nowrap; cursor: pointer; color: var(--accent); background: var(--control); border-radius: 3px; }
+.lo-disclosure:hover, .lo-hidden-lines:hover { background: var(--selection-inactive); }
+.lo-hidden-lines { margin-left: 0.5em; padding: 0 0.3em; }
 .lo-enhanced-title { font-weight: 600; }
 
 /* The find bar (src/renderer/editor/find-bar.js): AppKit's find bar, in the window's colours.

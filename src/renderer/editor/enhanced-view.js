@@ -6,13 +6,13 @@
 // One field and one click handler serve both, so a task's arrows and the arrows inside it never
 // fight over a click.
 //
-// What is hidden is read from the text. The one thing the view keeps is which tasks and
-// disclosures a caret or an edit has reached into (Find, undo, ⌫ after a fold): those show
-// everything until the next click on that arrow or that task's box. It is gone when the file is
-// closed.
+// What an arrow hides is read from the text. The view keeps two things of its own, both gone when
+// the file is closed: which tasks and disclosures a caret or an edit has reached into (Find,
+// undo, ⌫ after a fold), which show everything until the next click on that arrow or that task's
+// box; and the lines Hide Lines hid with no arrow to close, drawn with a ⋯ button that shows them.
 
 import { StateField, StateEffect, EditorState, EditorSelection, ChangeSet, MapMode, Text } from '@codemirror/state'
-import { EditorView, Decoration } from '@codemirror/view'
+import { EditorView, Decoration, WidgetType } from '@codemirror/view'
 import { invertedEffects } from '@codemirror/commands'
 import * as Tasks from './enhanced-tasks.js'
 import * as Disclosures from './disclosures.js'
@@ -27,6 +27,12 @@ const arrowClicked = StateEffect.define()
  */
 const linesMoved = StateEffect.define()
 const isMove = (tr) => tr.effects.some((effect) => effect.is(linesMoved))
+
+/** Hide Lines with no arrow to close: { from, to }, the lines to hide as a document range. */
+const selectionHidden = StateEffect.define()
+
+/** Show Lines or a click on ⋯: the start of the hidden selection to show. */
+const selectionShown = StateEffect.define()
 
 /** The user event of an arrow click: the one edit that may write a closed arrow. */
 const DISCLOSE = 'input.disclose'
@@ -81,23 +87,30 @@ const inside = (head, range) => head > range.from && head < range.to
  */
 export function foldedRanges (state) {
   const value = state.field(enhancedField, false)
-  return value ? merged(hiddenRanges(value)) : []
+  return value ? merged([...hiddenRanges(value), ...value.hiddenSelections]) : []
 }
+
+/** Whether `fromA`–`toA` reaches into `range`, the newline after it included, as ⌫ below it does. */
+const reachesInto = (fromA, toA, range) => fromA < range.to + 1 && toA > range.from
 
 export const enhancedField = StateField.define({
   create (state) {
-    return { ...locate(state.doc), revealed: new Set() }
+    return { ...locate(state.doc), revealed: new Set(), hiddenSelections: [] }
   },
 
   update (value, tr) {
-    let { tasks, disclosures, revealed } = value
+    let { tasks, disclosures, revealed, hiddenSelections } = value
     const clicks = tr.effects.filter((effect) => effect.is(arrowClicked))
     if (tr.docChanged) {
       revealed = new Set(revealed)
       if (isMove(tr)) {
-        // Moved lines keep the state their arrows say; a reveal among them is dropped.
+        // Moved lines keep the state their arrows say; a reveal among them is dropped, and so is
+        // a hidden selection whose lines or line above moved, so a line never lands among them.
+        const startDoc = tr.startState.doc
         tr.changes.iterChangedRanges((fromA, toA) => {
           for (const pos of revealed) if (pos >= fromA && pos <= toA) revealed.delete(pos)
+          hiddenSelections = hiddenSelections.filter((range) =>
+            !reachesInto(fromA, toA, { from: startDoc.lineAt(range.from).from, to: range.to }))
         })
       } else if (!clicks.length) {
         // A change that reaches into hidden text shows it, so an edit is never made unseen. The
@@ -105,10 +118,15 @@ export const enhancedField = StateField.define({
         // click is the one change that means to hide.
         tr.changes.iterChangedRanges((fromA, toA) => {
           for (const range of hiddenRanges(value)) {
-            if (fromA < range.to + 1 && toA > range.from) revealed.add(range.pos)
+            if (reachesInto(fromA, toA, range)) revealed.add(range.pos)
           }
+          hiddenSelections = hiddenSelections.filter((range) => !reachesInto(fromA, toA, range))
         })
       }
+      // Text typed at the end of the line above goes before the hidden lines, not into them.
+      hiddenSelections = hiddenSelections
+        .map((range) => ({ from: tr.changes.mapPos(range.from, 1), to: tr.changes.mapPos(range.to, -1) }))
+        .filter((range) => range.to > range.from)
       // A reveal whose owner's line was deleted, start to end, goes with it. Mapped, it would
       // land on the start of whatever slid up into its place and open that instead.
       const deleted = (pos) => {
@@ -130,6 +148,10 @@ export const enhancedField = StateField.define({
       revealed = new Set(revealed)
       for (const effect of clicks) revealed.delete(effect.value)
     }
+    for (const effect of tr.effects) {
+      if (effect.is(selectionHidden)) hiddenSelections = [...hiddenSelections, effect.value]
+      if (effect.is(selectionShown)) hiddenSelections = hiddenSelections.filter((range) => range.from !== effect.value)
+    }
     // Keep only what still names a task or a disclosure.
     const alive = new Set([...tasks, ...disclosures].map((owner) => owner.pos))
     revealed = new Set([...revealed].filter((pos) => alive.has(pos)))
@@ -141,8 +163,9 @@ export const enhancedField = StateField.define({
       for (const range of hiddenRanges({ tasks, disclosures, revealed })) {
         if (inside(head, range)) revealed.add(range.pos)
       }
+      hiddenSelections = hiddenSelections.filter((range) => !inside(head, range))
     }
-    return { tasks, disclosures, revealed }
+    return { tasks, disclosures, revealed, hiddenSelections }
   },
 
   provide: (field) => EditorView.decorations.compute([field], (state) => decorationsFor(state, state.field(field))),
@@ -151,6 +174,23 @@ export const enhancedField = StateField.define({
 const titleLine = Decoration.line({ class: 'lo-enhanced-title' })
 const arrow = Decoration.mark({ class: 'lo-disclosure' })
 const hidden = Decoration.replace({})
+
+/** The sign that lines are hidden with no arrow over them; a click on it shows them. */
+class HiddenLinesButton extends WidgetType {
+  eq () { return true }
+
+  toDOM () {
+    const node = document.createElement('span')
+    node.className = 'lo-hidden-lines'
+    node.textContent = '⋯'
+    node.title = 'Show Lines'
+    return node
+  }
+
+  ignoreEvent () { return false }
+}
+
+const hiddenWithButton = Decoration.replace({ widget: new HiddenLinesButton() })
 
 function decorationsFor (state, value) {
   const ranges = []
@@ -163,42 +203,157 @@ function decorationsFor (state, value) {
     ranges.push(arrow.range(disclosure.pos + disclosure.column, disclosure.pos + disclosure.column + 3))
   }
   // Nested folds, a task's and the disclosures' inside it, are drawn as one.
-  for (const range of merged(hiddenRanges(value))) ranges.push(hidden.range(range.from, range.to))
+  const buttonsAt = new Set(value.hiddenSelections.map((range) => range.from))
+  for (const range of merged([...hiddenRanges(value), ...value.hiddenSelections])) {
+    ranges.push((buttonsAt.has(range.from) ? hiddenWithButton : hidden).range(range.from, range.to))
+  }
   return Decoration.set(ranges, true)
 }
 
+/** The task or disclosure whose arrow is on line `index`, or null. */
+function ownerOnLine ({ tasks, disclosures }, index) {
+  return tasks.find((task) => task.line === index) ?? disclosures.find((disclosure) => disclosure.line === index) ?? null
+}
+
+/** The edit and effect of a click on `owner`'s arrow: it flips, and a reveal of it ends. */
+function arrowClick (doc, owner) {
+  const edit = 'arrowColumn' in owner ? Tasks.arrowFlip(owner) : Disclosures.arrowFlip(owner)
+  const at = doc.line(edit.line + 1).from + edit.column
+  return { changes: { from: at, to: at + 1, insert: edit.char }, effects: arrowClicked.of(owner.pos) }
+}
+
 /**
- * A click on an arrow — a task's or a disclosure's — flips it and leaves the caret where it was, unless that is inside what the click hides, when it goes to the end of the
- * line the fold is drawn on.
+ * After something has been hidden, moves each selection that now reaches into hidden lines to
+ * the end of the line they are drawn on, so the caret never sits unseen.
+ */
+function moveSelectionOutOfHidden (view) {
+  const folded = foldedRanges(view.state)
+  const selection = view.state.selection
+  let moved = false
+  const ranges = selection.ranges.map((range) => {
+    const fold = folded.find((candidate) => range.empty
+      ? inside(range.head, candidate)
+      : range.from < candidate.to && range.to > candidate.from)
+    if (!fold) return range
+    moved = true
+    return EditorSelection.cursor(fold.from)
+  })
+  if (moved) view.dispatch({ selection: EditorSelection.create(ranges, selection.mainIndex) })
+}
+
+/**
+ * A click on an arrow — a task's or a disclosure's — flips it and leaves the caret where it was,
+ * unless that is inside what the click hides, when it goes to the end of the line the fold is
+ * drawn on. A click on ⋯ shows the lines Hide Lines hid there.
  */
 const clicks = EditorView.domEventHandlers({
   mousedown (event, view) {
     if (event.button !== 0 || event.shiftKey || event.metaKey || event.altKey) return false
-    const target = event.target instanceof Element ? event.target.closest('.lo-disclosure') : null
+    const element = event.target instanceof Element ? event.target : null
+    const button = element?.closest('.lo-hidden-lines')
+    if (button) {
+      const pos = view.posAtDOM(button)
+      const shown = view.state.field(enhancedField).hiddenSelections
+        .filter((range) => range.from <= pos && pos <= range.to)
+      if (!shown.length) return false
+      view.dispatch({ effects: shown.map((range) => selectionShown.of(range.from)) })
+      event.preventDefault()
+      return true
+    }
+    const target = element?.closest('.lo-disclosure')
     if (!target) return false
     const doc = view.state.doc
-    const pos = view.posAtDOM(target)
-    const line = doc.lineAt(pos)
-    const index = line.number - 1
-    const { tasks, disclosures } = view.state.field(enhancedField)
-    const task = tasks.find((candidate) => candidate.line === index)
-    const disclosure = task ? null : disclosures.find((candidate) => candidate.line === index)
-    const owner = task ?? disclosure
+    const owner = ownerOnLine(view.state.field(enhancedField), doc.lineAt(view.posAtDOM(target)).number - 1)
     if (!owner) return false
-    const edit = task ? Tasks.arrowFlip(task) : Disclosures.arrowFlip(disclosure)
-    const at = doc.line(edit.line + 1).from + edit.column
-    view.dispatch({
-      changes: { from: at, to: at + 1, insert: edit.char },
-      effects: arrowClicked.of(owner.pos),
-      userEvent: DISCLOSE,
-    })
-    const head = view.state.selection.main.head
-    const range = hiddenRanges(view.state.field(enhancedField)).find((candidate) => inside(head, candidate))
-    if (range) view.dispatch({ selection: EditorSelection.cursor(range.from) })
+    view.dispatch({ ...arrowClick(doc, owner), userEvent: DISCLOSE })
+    moveSelectionOutOfHidden(view)
     event.preventDefault()
     return true
   },
 })
+
+// MARK: - Hide Lines and Show Lines
+
+/** The 0-based lines `range` covers; a selection ending at the very start of a line leaves that line out. */
+function linesCoveredBy (doc, range) {
+  const end = range.to > range.from && doc.lineAt(range.to).from === range.to ? range.to - 1 : range.to
+  return { first: doc.lineAt(range.from).number - 1, last: doc.lineAt(end).number - 1 }
+}
+
+/**
+ * The innermost task or disclosure around line `index` whose body is showing — its arrow open, or
+ * closed but revealed by Find or an edit — or null.
+ */
+function innermostShowing (value, index) {
+  const showing = [...value.tasks, ...value.disclosures].filter((owner) => owner.body &&
+    (owner.open || value.revealed.has(owner.pos)) && owner.line <= index && index <= owner.lastLine)
+  return showing.reduce((inner, owner) => (!inner || owner.line > inner.line ? owner : inner), null)
+}
+
+/**
+ * ⌥⌘[, Hide Lines, as VS Code's Fold and Fold Selection. A caret closes the innermost arrow around
+ * it whose body is showing — the same edit as a click on it, so ⌘Z opens it again — and pressing
+ * again closes the next arrow out. A selection over several lines keeps its first line and hides
+ * the rest: by closing the first line's arrow when it has one, and otherwise on screen only,
+ * nothing written to the file, with ⋯ after the first line to show them again. A selection
+ * reaching into what is hidden goes to the end of the line it is drawn on. False when nothing
+ * hides.
+ */
+export function hideLines (view) {
+  const { state } = view
+  const doc = state.doc
+  const value = state.field(enhancedField)
+  const owners = new Map()
+  const selections = []
+  for (const range of state.selection.ranges) {
+    const { first, last } = linesCoveredBy(doc, range)
+    if (first === last) {
+      const owner = innermostShowing(value, first)
+      if (owner) owners.set(owner.pos, owner)
+      continue
+    }
+    const owner = ownerOnLine(value, first)
+    if (owner && (owner.open || value.revealed.has(owner.pos))) owners.set(owner.pos, owner)
+    else if (!owner || !owner.body) selections.push({ from: doc.line(first + 1).to, to: doc.line(last + 1).to })
+  }
+  if (!owners.size && !selections.length) return false
+  const clicked = [...owners.values()].map((owner) => owner.open ? arrowClick(doc, owner) : { effects: arrowClicked.of(owner.pos) })
+  view.dispatch({
+    changes: clicked.flatMap((click) => click.changes ?? []),
+    effects: [...clicked.map((click) => click.effects), ...selections.map((range) => selectionHidden.of(range))],
+    userEvent: DISCLOSE,
+  })
+  moveSelectionOutOfHidden(view)
+  return true
+}
+
+/**
+ * ⌥⌘], Show Lines, as VS Code's Unfold: with the caret on a line with ⋯ after it, shows the lines
+ * Hide Lines hid there; otherwise, on a closed arrow's line, opens the arrow, the same edit as a
+ * click on it. False when nothing shows.
+ */
+export function showLines (view) {
+  const { state } = view
+  const doc = state.doc
+  const value = state.field(enhancedField)
+  const shown = new Set()
+  const owners = new Map()
+  for (const range of state.selection.ranges) {
+    const line = doc.lineAt(range.head)
+    const hiddenHere = value.hiddenSelections.filter((hidden) => hidden.from === line.to)
+    for (const hidden of hiddenHere) shown.add(hidden.from)
+    const owner = hiddenHere.length ? null : ownerOnLine(value, line.number - 1)
+    if (owner && !owner.open) owners.set(owner.pos, owner)
+  }
+  if (!shown.size && !owners.size) return false
+  const clicked = [...owners.values()].map((owner) => arrowClick(doc, owner))
+  view.dispatch({
+    changes: clicked.map((click) => click.changes),
+    effects: [...clicked.map((click) => click.effects), ...[...shown].map((from) => selectionShown.of(from))],
+    userEvent: DISCLOSE,
+  })
+  return true
+}
 
 /** A cursor at the start of the fold `head` would sit inside once `task` hides, or null. */
 function caretOutside (doc, task, head) {

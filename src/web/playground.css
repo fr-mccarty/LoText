@@ -19,12 +19,15 @@
 }
 
 .lotext-playground .lo-task-box { cursor: pointer; color: #3478f6; }
-.lotext-playground .lo-disclosure {
+.lotext-playground .lo-disclosure,
+.lotext-playground .lo-hidden-lines {
   white-space: nowrap;
   cursor: pointer;
   color: #3478f6;
   background: rgba(127, 127, 127, 0.2);
   border-radius: 3px;
 }
-.lotext-playground .lo-disclosure:hover { background: rgba(127, 127, 127, 0.32); }
+.lotext-playground .lo-disclosure:hover,
+.lotext-playground .lo-hidden-lines:hover { background: rgba(127, 127, 127, 0.32); }
+.lotext-playground .lo-hidden-lines { margin-left: 0.5em; padding: 0 0.3em; }
 .lotext-playground .lo-enhanced-title { font-weight: 600; }

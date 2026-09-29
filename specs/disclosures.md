@@ -61,7 +61,29 @@ A collapsed arrow hides from the end of its line to the end of the last line of 
 as an enhanced task's folds are: the arrow is the only sign that something is folded — nothing is
 drawn after it — and the arrow keys skip the hidden lines. A caret that Find or undo drops into
 hidden lines shows them, and so does an edit that reaches into them; the arrow is not rewritten.
-That is the only state the view keeps, and it lasts until the next click on that arrow.
+That lasts until the next click on that arrow.
+
+## Hide Lines and Show Lines
+
+Edit ▸ Hide Lines (⌥⌘[) and Edit ▸ Show Lines (⌥⌘]), after VS Code's Fold, Fold Selection and
+Unfold. They work the arrows from the keyboard, and hide lines that have no arrow over them.
+
+- **Hide Lines with a caret** closes the innermost arrow around it whose body is showing — a task's
+  or a disclosure's, open, or closed but shown by Find or an edit — the same edit as a click, so
+  one ⌘Z opens it again. Pressed again, it closes the next arrow out. Outside every arrow it does
+  nothing.
+- **Hide Lines with a selection over several lines** keeps the first line and hides the rest. When
+  the first line has an arrow, it closes that arrow instead. Otherwise the lines are hidden on
+  screen only: nothing is written to the file, and ⋯ is drawn after the first line. A selection
+  over one line is treated as a caret. A selection ending at the very start of a line leaves that
+  line out.
+- **Show Lines** on a line with ⋯ after it shows the lines hidden there; on a closed arrow's line it
+  opens the arrow, the same edit as a click. A click on ⋯ shows its lines too.
+- What Hide Lines hid with ⋯ shows again the way a fold does: a caret that Find or undo drops into
+  it, an edit that reaches into it (the newline after it included), and ⌥↑ / ⌥↓ moving its lines
+  or the line above them. Typing on the line above keeps it hidden. It is not saved, and closing
+  the file forgets it.
+- Whatever hides, a selection reaching into it goes to the end of the line above it.
 
 ## Moving
 
@@ -86,7 +108,8 @@ Edit ▸ Move Line Up / Down (⌥↑ / ⌥↓):
 ⌘X with nothing selected cuts the caret's line. On a **collapsed** arrow's line it cuts the whole
 item: the line and its body, nested arrows and all, so nothing is left behind unseen. An expanded
 arrow's line is cut alone, as any line. One ⌘Z puts it back. What counts is what is hidden on
-screen, so an item Find or undo has opened is cut as an open one.
+screen, so an item Find or undo has opened is cut as an open one, and the line above ⋯ is cut with
+the lines Hide Lines hid under it.
 
 ## Printing
 
@@ -99,7 +122,8 @@ purpose, so this is an editor feature only.
   hidden, the click edit, and which arrows an edit has just typed. Pure functions, tested in
   `test/disclosures.test.js`.
 - `src/renderer/editor/enhanced-view.js` — the CodeMirror side, shared with enhanced tasks: one
-  field, one click handler, the hiding and the typing filters.
+  field, one click handler, the hiding and the typing filters, Hide Lines and Show Lines. Tested
+  in `test/hide-lines.test.js`.
 - `src/renderer/editor/move-items.js` — what ⌥↑ / ⌥↓ move and what they step over. Pure
   functions, tested in `test/move-items.test.js`.
 - `src/renderer/sheets/help.js` — Help ▸ Disclosure Arrows, the user-facing version of this spec.

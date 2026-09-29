@@ -281,6 +281,13 @@ next line                           ← back at the edge: ends both bodies`)),
         'A long body line wraps onto rows indented as far as its own text, not back to the left edge. No spaces are added to the text.',
       )),
 
+    section('Hiding from the keyboard',
+      list(
+        ['Edit ▸ Hide Lines (⌥⌘[) closes the arrow the caret is in, the same edit as a click; press it again to close the next arrow out. Edit ▸ Show Lines (⌥⌘]) opens the arrow on the caret’s line.'],
+        ['Select several lines and press ⌥⌘[: the first line stays and the rest hide. When the first line has an arrow, that arrow closes. Otherwise nothing is written to the file, and ', code('⋯'), ' after the first line shows them again, as does ⌥⌘] on that line.'],
+        'Lines hidden with ⋯ show again when an edit or Find reaches into them, and are forgotten when the file closes.',
+      )),
+
     section('Moving',
       para('Put the caret on ', code('Name -->'), ' and press ⌥↓ (Edit ▸ Move Line Down). Or put it on ',
         code('next line'), ' and press ⌥↑ twice.'),

@@ -522,6 +522,8 @@ function shortcut (event) {
   const code = event.code
   if (alt) {
     if (code === 'KeyF' && !shift) return 'findAndReplace'
+    if (code === 'BracketLeft' && !shift) return 'hideLines'
+    if (code === 'BracketRight' && !shift) return 'showLines'
     return null
   }
   const plain = {
