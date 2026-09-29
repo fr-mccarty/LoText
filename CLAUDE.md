@@ -126,6 +126,8 @@ A rebuild does not reload the running app — restart `electron .`. ⌘R is Refr
     base theme, ⌥-arrows vs the menu, grid layout, and how the editor was checked against Lolext.
   - `packaging-a-dmg.md` — building, signing and notarizing; first-time release setup; which
     Apple certificate is which.
+  - `recently-edited-speed.md` — what made ⇧⌘O slow (listing a network share's folders one at
+    a time), how it was measured, and why there is no cache.
   - `running-lotext-on-ios.md` — the simulator harness (`scripts/ios-sim.sh`), answering native
     alerts from a terminal, and the codesign-under-Documents trap.
 - `docs/` — how-to documents for people. `publishing-the-mac-download.md`: exporting the

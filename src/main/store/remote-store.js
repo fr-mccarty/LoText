@@ -37,6 +37,8 @@ export class RemoteStore {
     this.kind = 'remote'
     this.absoluteRoot = ''
     this.reachable = true
+    // Each listing is an ssh of its own; eight at once could run into the server's MaxSessions.
+    this.listingConcurrency = 1
     this.fetched = new Map()                // remote path → a local copy, for the viewers
   }
 
