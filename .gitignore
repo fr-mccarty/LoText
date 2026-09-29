@@ -1,5 +1,6 @@
 # Dependencies and build output: npm install and npm run build / web:build / ios:build recreate them
-node_modules/
+node_modules
+node_modules.nosync
 dist/
 dist-mobile/
 dist-web/

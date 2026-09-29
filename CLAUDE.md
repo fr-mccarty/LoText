@@ -88,6 +88,12 @@ A rebuild does not reload the running app — restart `electron .`. ⌘R is Refr
   absolute disk paths.
 - **Do not add `"type": "module"`** to the root `package.json`: `dist/*.js` is CommonJS and
   Electron would load it as ESM. See `discoveries/test-setup.md`.
+- **`node_modules` is a symlink to `node_modules.nosync`**, a name iCloud Drive skips. npm
+  replaces the link with a real folder on every install; the `dependencies` script in
+  `package.json` (`scripts/keep-node-modules-out-of-icloud.mjs`) moves it back. Install with
+  scripts on — `--ignore-scripts` leaves the packages uploading to iCloud.
+- **Keep the `yauzl` override.** electron's installer unzips with it, and the yauzl 2 that
+  `extract-zip` asks for stops partway under Node 26, leaving electron without its app.
 - **Stay on vitest 3.** vitest 5 needs esbuild 0.27+, which collides with the build's pinned
   esbuild 0.24.
 - **The markdown dialect is deliberately small** (`src/shared/markdown/`): headings, paragraphs,
