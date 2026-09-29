@@ -18,6 +18,7 @@ import * as FilePath from '../../shared/file-path.js'
 import { openability } from '../../shared/binary-types.js'
 import { element, clear, icon, quote } from '../dom.js'
 import { showContextMenu } from '../context-menu.js'
+import { scrollStep } from './drag-scroll.js'
 
 export class Sidebar {
   constructor (root, model) {
@@ -308,7 +309,9 @@ export class Sidebar {
         this.drag = drag
       }
       drag.ghost.style.transform = `translate(${move.clientX + 10}px, ${move.clientY + 6}px)`
+      drag.pointer = { x: move.clientX, y: move.clientY }
       this.markDropTarget(this.dropTargetAt(move.clientX, move.clientY))
+      this.scrollWhileNearEdge(drag)
     }
     const finish = (up) => {
       document.removeEventListener('mousemove', onMove, true)
@@ -334,6 +337,26 @@ export class Sidebar {
     document.addEventListener('keydown', onKey, true)
   }
 
+  /**
+   * Near the list's top or bottom edge, or past it, the list scrolls a little every frame until
+   * the pointer leaves the edge or the drag ends. The rows move under a pointer that is standing
+   * still, so the drop target is read again after every step.
+   */
+  scrollWhileNearEdge (drag) {
+    if (drag.scrolling) return
+    const step = () => {
+      if (this.drag !== drag) { drag.scrolling = null; return }
+      const list = this.listNode.getBoundingClientRect()
+      const amount = scrollStep(drag.pointer.y, list.top, list.bottom)
+      const before = this.listNode.scrollTop
+      if (amount) this.listNode.scrollTop = before + amount
+      if (this.listNode.scrollTop === before) { drag.scrolling = null; return }
+      this.markDropTarget(this.dropTargetAt(drag.pointer.x, drag.pointer.y))
+      drag.scrolling = requestAnimationFrame(step)
+    }
+    drag.scrolling = requestAnimationFrame(step)
+  }
+
   /** The element that would take a drop at this point, or null where nothing can. */
   dropTargetAt (x, y) {
     const target = document.elementFromPoint(x, y)?.closest('[data-drop-path]')
@@ -349,6 +372,7 @@ export class Sidebar {
   }
 
   endDrag () {
+    if (this.drag?.scrolling) cancelAnimationFrame(this.drag.scrolling)
     this.drag?.target?.classList.remove('drop-target')
     this.drag?.ghost?.remove()
     document.body.classList.remove('row-dragging')

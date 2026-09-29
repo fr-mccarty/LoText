@@ -33,6 +33,7 @@ nobody has clicked it yet.
 ## Sidebar
 - [ ] New File ⌘N, New Folder ⇧⌘N, Duplicate ⇧⌘D, Rename (extension not pre-selected), Delete.
 - [ ] Drag a file into a folder, out of one (onto the folder's name or empty space), Esc to cancel. *Scripted.* Drop from Finder is not implemented.
+- [ ] Drag a row to the sidebar's bottom or top edge: the list scrolls, faster nearer the edge, and stops when the pointer moves away. *Scripted.*
 - [ ] Twirl a folder open, ⌘R, and expansion and scroll survive.
 - [ ] Right-click menu on a file, a folder, and a dimmed binary row.
 - [ ] ⇧⌘B hides and shows the sidebar. *Scripted.*
