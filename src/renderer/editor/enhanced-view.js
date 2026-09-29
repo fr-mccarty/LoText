@@ -291,7 +291,7 @@ function innermostShowing (value, index) {
 }
 
 /**
- * ⌥⌘[, Hide Lines, as VS Code's Fold and Fold Selection. A caret closes the innermost arrow around
+ * ⌘[, Hide Lines, as VS Code's Fold and Fold Selection. A caret closes the innermost arrow around
  * it whose body is showing — the same edit as a click on it, so ⌘Z opens it again — and pressing
  * again closes the next arrow out. A selection over several lines keeps its first line and hides
  * the rest: by closing the first line's arrow when it has one, and otherwise on screen only,
@@ -328,7 +328,7 @@ export function hideLines (view) {
 }
 
 /**
- * ⌥⌘], Show Lines, as VS Code's Unfold: with the caret on a line with ⋯ after it, shows the lines
+ * ⌘], Show Lines, as VS Code's Unfold: with the caret on a line with ⋯ after it, shows the lines
  * Hide Lines hid there; otherwise, on a closed arrow's line, opens the arrow, the same edit as a
  * click on it. False when nothing shows.
  */

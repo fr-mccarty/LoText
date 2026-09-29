@@ -522,8 +522,6 @@ function shortcut (event) {
   const code = event.code
   if (alt) {
     if (code === 'KeyF' && !shift) return 'findAndReplace'
-    if (code === 'BracketLeft' && !shift) return 'hideLines'
-    if (code === 'BracketRight' && !shift) return 'showLines'
     return null
   }
   const plain = {
@@ -531,6 +529,7 @@ function shortcut (event) {
     KeyR: 'refresh', KeyB: 'bold', KeyI: 'italic', KeyD: 'selectNextInstance', KeyF: 'find',
     KeyG: 'findNext', KeyE: 'useSelectionForFind', KeyZ: 'undo', Equal: 'bigger',
     Minus: 'smaller', Digit0: 'actualSize', Comma: 'settings', Backspace: 'deleteImmediately',
+    BracketLeft: 'hideLines', BracketRight: 'showLines',
   }
   const shifted = {
     KeyN: 'newFolder', KeyD: 'duplicate', KeyO: 'goToLastFile', KeyP: 'findFile',

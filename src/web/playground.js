@@ -1,7 +1,7 @@
 // The LoText editor for a web page: lolekproductions.org/LoText mounts it so people can try the
 // app's own editing in the browser. It is the editor's real code — task boxes, enhanced tasks,
 // disclosure arrows, the hanging indent for wrapped lines, Tab, Return keeping the indent, ⌥↑ / ⌥↓,
-// ⌘X and ⌥⌘[ / ⌥⌘] — without the app around it: no files, no menus, no settings.
+// ⌘X and ⌘[ / ⌘] — without the app around it: no files, no menus, no settings.
 //
 //   window.LoTextPlayground.mount(element, text)   → a function that takes the editor away again
 //
@@ -35,8 +35,8 @@ function mount (element, text) {
           { key: 'Alt-ArrowUp', run: (target) => moveItems(target, -1) },
           { key: 'Alt-ArrowDown', run: (target) => moveItems(target, 1) },
           { key: 'Mod-x', run: (target) => cutWholeLines(target) },
-          { key: 'Mod-Alt-[', run: hideLines },
-          { key: 'Mod-Alt-]', run: showLines },
+          { key: 'Mod-[', run: hideLines },
+          { key: 'Mod-]', run: showLines },
           ...historyKeymap,
           ...defaultKeymap,
         ]),

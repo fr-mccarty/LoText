@@ -65,7 +65,7 @@ That lasts until the next click on that arrow.
 
 ## Hide Lines and Show Lines
 
-Edit ▸ Hide Lines (⌥⌘[) and Edit ▸ Show Lines (⌥⌘]), after VS Code's Fold, Fold Selection and
+Edit ▸ Hide Lines (⌘[) and Edit ▸ Show Lines (⌘]), after VS Code's Fold, Fold Selection and
 Unfold. They work the arrows from the keyboard, and hide lines that have no arrow over them.
 
 - **Hide Lines with a caret** closes the innermost arrow around it whose body is showing — a task's

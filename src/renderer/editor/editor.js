@@ -268,7 +268,7 @@ export class Editor {
 
   moveLinesDown () { moveItems(this.view, 1) }
 
-  // MARK: - ⌥⌘[ and ⌥⌘], hide and show lines
+  // MARK: - ⌘[ and ⌘], hide and show lines
 
   /** Closes the arrow around the caret, or hides the selected lines under the first (`enhanced-view.js`). */
   hideLines () { hideLines(this.view) }
@@ -434,5 +434,5 @@ export class Editor {
 const CLAIMED_BY_MENU = new Set([
   'Mod-f', 'Mod-Alt-f', 'Mod-g', 'Shift-Mod-g', 'Mod-e',
   'Mod-d', 'Mod-b', 'Mod-i', 'Mod-/', 'Mod-z', 'Shift-Mod-z', 'Mod-y',
-  'Mod-Backspace',
+  'Mod-Backspace', 'Mod-[', 'Mod-]',
 ])

@@ -185,8 +185,8 @@ function editMenu () {
       { label: 'Move Line Up', accelerator: 'Alt+Up', registerAccelerator: false, enabled: state.hasOpenFile, click: () => send('moveLineUp') },
       { label: 'Move Line Down', accelerator: 'Alt+Down', registerAccelerator: false, enabled: state.hasOpenFile, click: () => send('moveLineDown') },
       { type: 'separator' },
-      { label: 'Hide Lines', accelerator: 'Alt+Command+[', enabled: state.hasOpenFile, click: () => send('hideLines') },
-      { label: 'Show Lines', accelerator: 'Alt+Command+]', enabled: state.hasOpenFile, click: () => send('showLines') },
+      { label: 'Hide Lines', accelerator: 'Command+[', enabled: state.hasOpenFile, click: () => send('hideLines') },
+      { label: 'Show Lines', accelerator: 'Command+]', enabled: state.hasOpenFile, click: () => send('showLines') },
       { type: 'separator' },
       {
         // Find, over the open file. Every item is one call into the editor's own find panel,
