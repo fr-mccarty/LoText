@@ -35,8 +35,9 @@ function mount (element, text) {
           { key: 'Alt-ArrowUp', run: (target) => moveItems(target, -1) },
           { key: 'Alt-ArrowDown', run: (target) => moveItems(target, 1) },
           { key: 'Mod-x', run: (target) => cutWholeLines(target) },
-          { key: 'Mod-[', run: hideLines },
-          { key: 'Mod-]', run: showLines },
+          // Always claimed, even with nothing to hide or show: in a browser ⌘[ and ⌘] are Back and Forward.
+          { key: 'Mod-[', run: (target) => { hideLines(target); return true } },
+          { key: 'Mod-]', run: (target) => { showLines(target); return true } },
           ...historyKeymap,
           ...defaultKeymap,
         ]),
