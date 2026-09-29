@@ -74,6 +74,16 @@ function merged (ranges) {
 
 const inside = (head, range) => head > range.from && head < range.to
 
+/**
+ * What is hidden in `state` right now, as document ranges joined where they nest or touch: each
+ * from the end of a collapsed task's or disclosure's line to the end of the last line it hides.
+ * Empty in an editor without enhanced tasks.
+ */
+export function foldedRanges (state) {
+  const value = state.field(enhancedField, false)
+  return value ? merged(hiddenRanges(value)) : []
+}
+
 export const enhancedField = StateField.define({
   create (state) {
     return { ...locate(state.doc), revealed: new Set() }
@@ -99,7 +109,15 @@ export const enhancedField = StateField.define({
           }
         })
       }
-      revealed = new Set([...revealed].map((pos) => tr.changes.mapPos(pos, 1)))
+      // A reveal whose owner's line was deleted, start to end, goes with it. Mapped, it would
+      // land on the start of whatever slid up into its place and open that instead.
+      const deleted = (pos) => {
+        const end = tr.startState.doc.lineAt(pos).to
+        let gone = false
+        tr.changes.iterChangedRanges((fromA, toA) => { if (fromA <= pos && toA >= end && toA > fromA) gone = true })
+        return gone
+      }
+      revealed = new Set([...revealed].filter((pos) => !deleted(pos)).map((pos) => tr.changes.mapPos(pos, 1)))
       const before = new Map(tasks.map((task) => [tr.changes.mapPos(task.pos, 1), task]))
       ;({ tasks, disclosures } = locate(tr.newDoc))
       // Checking a task's box hides it again, as a click on its arrow does.

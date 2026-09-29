@@ -182,6 +182,7 @@ function enhancedTasksHelp (onDispose) {
         'A visible line of the task, on its own, moves one line at a time, as any line does.',
         'Any other line steps over a collapsed task whole, and into an expanded one a line at a time.',
         'The text is kept exactly and the arrows keep their state. The caret keeps its place, and one ⌘Z undoes the move.',
+        'With the caret on a collapsed task’s line and nothing selected, ⌘X cuts the whole task, hidden lines and all. An expanded task’s line is cut on its own.',
       )),
 
     section('Plain boxes',
@@ -289,6 +290,7 @@ next line                           ← back at the edge: ends both bodies`)),
         ['An ', strong('open'), ' arrow’s line moves on its own, one line at a time.'],
         'Any other line also moves one line at a time, so it can be moved into and out of an open section. A closed arrow counts as one line with what it hides, so a line steps over it and never lands among hidden lines.',
         'Nothing is reindented, so a moved body may belong to another line afterwards. Arrows keep their state, the caret keeps its place, and one ⌘Z undoes the move.',
+        ['With the caret on a ', strong('closed'), ' arrow’s line and nothing selected, ⌘X cuts it with its whole body. An open arrow’s line is cut on its own.'],
       )),
 
     section('Inside an enhanced task',

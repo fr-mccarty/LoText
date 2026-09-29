@@ -54,6 +54,13 @@ in one press: the largest task or disclosure that holds the next line and ends t
 arrows keep their state, the caret keeps its place, and one ⌘Z undoes the move. At the top or
 bottom of the file nothing happens.
 
+## Cutting
+
+⌘X with nothing selected cuts the caret's line (`cutWholeLines` in `line-editing.js`).
+On a **collapsed** task's line it cuts the whole task: the line and every line it hides, down to
+the next task, nested disclosures and all. An expanded task's line is cut alone, as any line.
+What goes to the clipboard is exactly what left the text, and one ⌘Z puts it back.
+
 ## Printing
 
 Printing and PDF show the text as written, arrows and all. The markdown dialect is kept small on

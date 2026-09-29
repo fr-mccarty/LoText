@@ -81,6 +81,13 @@ Edit ▸ Move Line Up / Down (⌥↑ / ⌥↓):
   afterwards — and every arrow keeps its state. The caret keeps its place in the moved text, one
   ⌘Z undoes the move, and at the top or bottom of the file nothing happens.
 
+## Cutting
+
+⌘X with nothing selected cuts the caret's line. On a **collapsed** arrow's line it cuts the whole
+item: the line and its body, nested arrows and all, so nothing is left behind unseen. An expanded
+arrow's line is cut alone, as any line. One ⌘Z puts it back. What counts is what is hidden on
+screen, so an item Find or undo has opened is cut as an open one.
+
 ## Printing
 
 Printing and PDF show the text as written, arrows and all. The markdown dialect is kept small on

@@ -4,11 +4,15 @@
 
 import { EditorSelection } from '@codemirror/state'
 import * as TextRanges from './text-ranges.js'
+import { foldedRanges } from './enhanced-view.js'
 
 /**
  * ⌘X with only carets: every line a caret is on goes to the clipboard and out of the buffer, as
- * `Editor.cut` in editor.js describes. False, doing nothing, when anything is selected, so the ordinary cut
- * runs instead. The lines leave once the clipboard has them, and not if it refuses them.
+ * `Editor.cut` in editor.js describes. A collapsed task or disclosure goes whole: its line takes
+ * everything it hides with it, nested items and all, so nothing is left behind unseen. An
+ * expanded one is only its line, as any other. False, doing nothing, when anything is selected,
+ * so the ordinary cut runs instead. The lines leave once the clipboard has them, and not if it
+ * refuses them.
  */
 export function cutWholeLines (view) {
   const state = view.state
@@ -17,7 +21,7 @@ export function cutWholeLines (view) {
   const sites = state.selection.ranges
     .map((range) => TextRanges.range(range.from, 0))
     .sort((a, b) => a.location - b.location)
-  const lines = TextRanges.merged(TextRanges.linesTouchedBy(sites, text))
+  const lines = withFoldedBodies(TextRanges.merged(TextRanges.linesTouchedBy(sites, text)), foldedRanges(state), text)
   if (!lines.length) return true
 
   const payload = lines.map((line) => {
@@ -31,6 +35,20 @@ export function cutWholeLines (view) {
     if (view.state.doc === state.doc) view.dispatch({ changes, userEvent: 'delete.cut' })
   }, () => {})
   return true
+}
+
+/**
+ * `lines` grown so that a line a fold is drawn on takes the hidden lines under it: from its own
+ * start to the end of the fold's last line, newline included.
+ */
+function withFoldedBodies (lines, folds, text) {
+  if (!folds.length) return lines
+  const grown = lines.map((line) => {
+    const fold = folds.find((candidate) =>
+      candidate.from >= line.location && candidate.from < TextRanges.maxRange(line))
+    return fold ? TextRanges.union(line, TextRanges.lineRange(fold.to, text)) : line
+  })
+  return TextRanges.merged(grown)
 }
 
 /**
