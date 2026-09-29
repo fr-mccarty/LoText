@@ -343,9 +343,15 @@ public class LoTextNativePlugin: CAPPlugin, CAPBridgedPlugin {
         return url
     }
 
+    /**
+     * The remembered folder: its name, whether it is still there, and whether one was ever
+     * chosen — a bookmark that no longer resolves was chosen, but has no name left to give.
+     */
     @objc func dayCapFolder(_ call: CAPPluginCall) {
-        guard let url = dayCapURL() else { call.resolve([:]); return }
-        call.resolve(["name": url.lastPathComponent])
+        let chosen = UserDefaults.standard.data(forKey: Self.dayCapBookmarkKey) != nil
+        guard let url = dayCapURL() else { call.resolve(["present": false, "chosen": chosen]); return }
+        let present = FolderStore(root: url, securityScoped: true).isAvailable
+        call.resolve(["name": url.lastPathComponent, "present": present, "chosen": chosen])
     }
 
     @objc func pickDayCapFolder(_ call: CAPPluginCall) {
@@ -364,10 +370,18 @@ public class LoTextNativePlugin: CAPPlugin, CAPBridgedPlugin {
         }
     }
 
-    /** `data` as a new file called `name` in the DayCap folder; `nameTaken` if one is there. */
+    /**
+     * `data` as a new file called `name` in the DayCap folder; `nameTaken` if one is there,
+     * `notFound` if no folder was chosen or the chosen one has gone, so the JS side asks again.
+     */
     @objc func writeToDayCap(_ call: CAPPluginCall) {
         guard let url = dayCapURL() else {
             call.reject("No DayCap folder has been chosen.", "notFound")
+            return
+        }
+        let store = FolderStore(root: url, securityScoped: true)
+        guard store.isAvailable else {
+            call.reject("The DayCap folder, \(url.lastPathComponent), is not there any more.", "notFound")
             return
         }
         guard let name = call.getString("name"), !name.contains("/"),
@@ -376,7 +390,7 @@ public class LoTextNativePlugin: CAPPlugin, CAPBridgedPlugin {
             return
         }
         do {
-            try FolderStore(root: url, securityScoped: true).writeNew(data, to: name)
+            try store.writeNew(data, to: name)
             call.resolve()
         } catch {
             reject(call, error)

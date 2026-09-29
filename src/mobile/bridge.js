@@ -14,7 +14,7 @@ import { StoreError, notFound } from '../shared/store/errors.js'
 import { extract } from '../shared/viewers/document-text.js'
 import { createSettings } from '../shared/settings-store.js'
 import { createCloudSync, positionKey } from '../shared/sync/cloud-sync.js'
-import { dayCapFileName } from '../shared/daycap.js'
+import { sendToDayCap } from './daycap.js'
 import { MobileStore } from './mobile-store.js'
 import { Native, fromBase64, toBase64, chooseFrom } from './native.js'
 import * as prefs from './prefs.js'
@@ -32,6 +32,27 @@ const MAX_RECENTS = 10
 
 /** A phone is held further away than a laptop's screen; the Mac's 13 is small there. */
 const PHONE_VIEW_DEFAULTS = { editorFontSize: 16 }
+
+/**
+ * What Cut and Send to DayCap (`./daycap.js`) needs from LoTextNative. The picker cannot say
+ * why it is up, so a folder that has gone is named in an alert first, as the Mac's question does.
+ */
+const dayCapNative = {
+  folder: () => Native.dayCapFolder(),
+  choose: async (gone) => {
+    if (gone) {
+      const { index } = await Native.alert({
+        title: `The DayCap folder, ${gone}, is not there any more.`,
+        message: 'Choose the folder DayCap drops its files into.',
+        buttons: ['Choose…', 'Cancel'],
+        cancelIndex: 1,
+      })
+      if (index !== 0) return null
+    }
+    return (await Native.pickDayCapFolder()).name ?? null
+  },
+  write: ({ name, text }) => Native.writeToDayCap({ name, data: toBase64(new TextEncoder().encode(text)) }),
+}
 
 export function createBridge () {
   const ready = prefs.load()
@@ -330,23 +351,7 @@ export function createBridge () {
     sendsToDayCap: true,
     dayCapFolder: async () => (await Native.dayCapFolder()).name ?? null,
     chooseDayCapFolder: async () => (await Native.pickDayCapFolder()).name ?? null,
-    sendToDayCap: async (text) => {
-      const folder = (await Native.dayCapFolder()).name ?? (await Native.pickDayCapFolder()).name
-      if (!folder) return null
-      const data = toBase64(new TextEncoder().encode(text))
-      const now = new Date()
-      for (let attempt = 1; ; attempt++) {
-        const name = dayCapFileName(now, attempt)
-        try {
-          await Native.writeToDayCap({ name, data })
-          return name
-        } catch (error) {
-          if (error?.code !== 'nameTaken') {
-            throw new Error(`The text could not be saved in the DayCap folder, ${folder}. ${error?.message ?? ''}`.trim())
-          }
-        }
-      }
-    },
+    sendToDayCap: (text) => sendToDayCap(dayCapNative, text),
 
     // Printing
     print: async ({ text, fileName }) => printJob({ text, fileName }, false),

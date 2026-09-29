@@ -36,6 +36,7 @@ picked, and suggests `iCloud Drive/DayCap`, its iCloud container
 (`~/Library/Mobile Documents/iCloud~org~lolekproductions~daycap/Documents` on the Mac). So LoText
 asks too: Settings ▸ Editor ▸ DayCap ▸ Folder, with Choose…. Until one is chosen, or when the
 chosen one is no longer there, a send asks for it, opening at DayCap's iCloud folder when this
-Mac has it. The folder is **each device's own**: a path on the Mac (`dayCapFolder` in `lotext.json`), a
+Mac has it. On iOS the folder picker cannot say why it is up, so a folder that has gone
+is named in an alert first (Choose… / Cancel); the picker opens where Files last was. The folder is **each device's own**: a path on the Mac (`dayCapFolder` in `lotext.json`), a
 bookmark to a folder picked in Files on iOS (`dayCapBookmark` in the app's user defaults). It is
 never synced through iCloud, never in an exported settings file, and Restore Defaults leaves it.
