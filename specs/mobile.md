@@ -83,5 +83,7 @@ the Mac. Audio and video play in the pane. A PDF opens in Quick Look.
 ## Settings
 
 The Mac's Settings panel, shown as a full-screen sheet with a Done button. Export and Import use
-the system's document pickers. Settings on the phone are the phone's own: they do not sync with
-the Mac.
+the system's document pickers. Settings on the phone are the phone's own until iCloud sync is
+turned on (Settings ▸ iCloud, on each device): then the Editor tab, the print presets and where
+each iCloud Drive document was left travel between the phone and the Mac (`icloud-sync.md`).
+The DayCap folder is never synced — it is each device's own.
