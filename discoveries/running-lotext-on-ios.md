@@ -57,6 +57,16 @@ set `lastPointer`. That is the harness, not a bug.
   of `@\n@` (a TypeError on `window.__model`). Wait a few seconds after launching.
 - **`simctl terminate` is a crash** as far as the app knows: nothing saves. The next launch
   offers the working save back — which is correct, and is the way to test recovery.
+- **`navigator.clipboard.readText()` in `eval` hangs the harness.** iOS puts up its Paste
+  permission callout and waits for a tap, so that eval never answers and every later one queues
+  behind it; `launch` clears it. To see what a cut or copy wrote, replace
+  `navigator.clipboard.writeText` for the one eval and record its argument. A scripted key event
+  needs the same stub: without a real key press WebKit refuses the write, and ⌘X's whole-line
+  cut then (rightly) leaves the text alone.
+- **No real hardware keys from a terminal.** This Xcode ships no Simulator.app (DeviceHub.app
+  stands in), `simctl io` has no keyboard, and `osascript` is not allowed to send keystrokes
+  from this session (error 1002, no Accessibility permission). A keydown dispatched on
+  `view.contentDOM` tests everything after iOS hands the key to the page, not the handing-over.
 - The simulator's first on-screen keyboard shows iOS's *slide to type* tutorial over the app.
 - **Disk.** A simulator build is ~400 MB and a booted simulator writes more. The disk filled up
   once mid-session, after which every command failed with `ENOSPC` and the simulator had to be
@@ -72,3 +82,6 @@ recovery offered on relaunch; long-press row menu; Move To…; New File → rena
 editor; Delete; Print (AirPrint panel, page drawn at Letter); Settings sheet, both tabs; Find
 File; Recently Edited; Help; the keyboard bar's Tab, task box and undo; ⌘= on a hardware
 keyboard; image, .docx and PDF (Quick Look) viewers; Choose Folder… presenting the picker.
+Later, on iPhone 17 Pro: long lines one tab, two tabs and four spaces in wrap under their own
+text (the hanging indent's tab workaround holds in WebKit); ⌘X, as a scripted keydown, on a
+collapsed disclosure takes its hidden lines with it, and one ⌘Z puts them back.

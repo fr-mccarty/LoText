@@ -89,6 +89,12 @@ was checked* was scripted there.
       opens the row menu.
 - [ ] Split View / Slide Over on iPad switches between the two layouts cleanly.
 - [ ] Video and audio play in the pane.
+- [ ] A real hardware ⌘X on a collapsed task and on a collapsed disclosure: the item goes whole
+      and pastes back whole. *The page's side was scripted in the simulator; iOS handing the
+      key to the page, and the clipboard taking it, were not.*
+- [ ] Cut and Send to DayCap after deleting the chosen DayCap folder in Files: the alert names
+      it, Choose… opens the picker, the note lands in the new folder. *Logic tested; the
+      picker cannot be driven from the harness.*
 
 ## iCloud sync (`specs/icloud-sync.md`)
 *Scripted on the Mac against a fake container, and on the simulator (not signed in to iCloud).
