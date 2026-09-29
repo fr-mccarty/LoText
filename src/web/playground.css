@@ -1,0 +1,30 @@
+/* The LoText editor on a web page (src/web/playground.js). It takes the page's own text colour
+   and sits on whatever surface the page gives it; only LoText's blue is its own, for the task
+   boxes, the arrows and the selection, and it reads the same on a light page and a dark one. */
+
+.lotext-playground .cm-editor {
+  background: transparent;
+  color: inherit;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 14px;
+}
+.lotext-playground .cm-editor.cm-focused { outline: none; }
+.lotext-playground .cm-scroller { font-family: inherit; line-height: 1.6; }
+.lotext-playground .cm-content { padding: 0; caret-color: currentColor; }
+.lotext-playground .cm-line { padding: 0; }
+.lotext-playground .cm-editor .cm-cursor { border-left: 2px solid currentColor; }
+.lotext-playground .cm-editor .cm-selectionBackground,
+.lotext-playground .cm-editor.cm-focused .cm-selectionBackground {
+  background: rgba(52, 120, 246, 0.4) !important;
+}
+
+.lotext-playground .lo-task-box { cursor: pointer; color: #3478f6; }
+.lotext-playground .lo-disclosure {
+  white-space: nowrap;
+  cursor: pointer;
+  color: #3478f6;
+  background: rgba(127, 127, 127, 0.2);
+  border-radius: 3px;
+}
+.lotext-playground .lo-disclosure:hover { background: rgba(127, 127, 127, 0.32); }
+.lotext-playground .lo-enhanced-title { font-weight: 600; }

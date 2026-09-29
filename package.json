@@ -1,0 +1,41 @@
+{
+  "name": "lotext",
+  "productName": "LoText",
+  "version": "1.0.3",
+  "description": "A folder-based plain-text editor. One window is one folder; one file is open at a time.",
+  "main": "dist/main.js",
+  "bundleId": "com.lolekproductions.lotext",
+  "author": "Josh McCarty",
+  "license": "MIT",
+  "private": true,
+  "scripts": {
+    "build": "node build.mjs",
+    "watch": "node build.mjs --watch",
+    "start": "npm run build && electron .",
+    "dev": "npm run build && electron . --dev",
+    "pdf": "electron . --pdf",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "dmg": "bash scripts/make-dmg.sh",
+    "release": "bash scripts/release.sh",
+    "web:build": "node build.mjs --web",
+    "ios:build": "node build.mjs --mobile && npx cap sync ios",
+    "ios:sim": "bash scripts/ios-sim.sh run",
+    "ios:open": "npm run ios:build && npx cap open ios"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^8.5.2",
+    "electron": "^33.0.0",
+    "esbuild": "^0.24.0",
+    "vitest": "^3.2.7"
+  },
+  "dependencies": {
+    "@capacitor/core": "^8.5.2",
+    "@capacitor/ios": "^8.5.2",
+    "@capacitor/keyboard": "^8.0.5",
+    "@codemirror/commands": "^6.7.1",
+    "@codemirror/search": "^6.5.8",
+    "@codemirror/state": "^6.4.1",
+    "@codemirror/view": "^6.34.3"
+  }
+}

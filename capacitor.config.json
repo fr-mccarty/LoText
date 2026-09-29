@@ -1,0 +1,16 @@
+{
+  "appId": "com.lolekproductions.lotext",
+  "appName": "LoText",
+  "webDir": "dist-mobile",
+  "ios": {
+    "contentInset": "never",
+    "scrollEnabled": false,
+    "backgroundColor": "#00000000"
+  },
+  "plugins": {
+    "Keyboard": {
+      "resize": "native",
+      "resizeOnFullScreen": true
+    }
+  }
+}

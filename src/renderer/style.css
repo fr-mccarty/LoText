@@ -1,0 +1,861 @@
+/*
+ * THE WINDOW — chrome that gets out of the way.
+ *
+ *   sidebar | editor.  Nothing between them but the split.
+ *
+ *   above the editor:   nothing at all
+ *       no tab bar
+ *       no strip with the file's name on it
+ *       no rule, no hairline, no separator under the title bar
+ *
+ * Nothing hides. The traffic lights are always visible, and so is the window's own title.
+ * Colours are the system's, through `-apple-system` semantic colours where they exist and a
+ * two-appearance palette where they do not — so there is nothing to recompute when the
+ * appearance changes.
+ */
+
+:root {
+  /* Without this, the system colours below — Canvas, Field, Highlight — resolve to their light
+     values whatever the system appearance is, and the detail pane paints white under the dark
+     scheme's near-white text. Declaring the schemes we support is what makes them follow. */
+  color-scheme: light dark;
+  --sidebar-width: 342px;
+  --text: #1d1d1f;
+  --text-secondary: rgba(0, 0, 0, 0.5);
+  --text-tertiary: rgba(0, 0, 0, 0.3);
+  --selection: rgba(0, 0, 0, 0.09);
+  /* Three blues, because the reference uses three, and `Highlight` was standing in for all of
+     them while being none of them — on this machine it resolves to a desaturated slate. They
+     are hardcoded rather than taken from the user's chosen system accent because this Chromium
+     has no `AccentColor` system colour: it falls through to Canvas, so there is nothing to
+     follow.
+     `--accent` is the control tint — a default button, a focus ring, a filled switch. #3478f6
+     is what the print dialog's Print button renders, which is the one place the colour is
+     drawn opaque with nothing composited over it; the Settings panels measure #397cf7 for the
+     same colour only because the window's vibrancy backdrop lightens it.
+     `--selection-tint` fills a selected row in a list. The Find File sheet's selected row is
+     #316ad6, darker and less saturated than the control tint on purpose: a row is selected,
+     it is not a control asking to be pressed. */
+  --accent: #3478f6;
+  --selection-tint: #316ad6;
+  /* Text selection is the control blue, see-through so the text stays readable over it. It was
+     the system's `Highlight` at 30%, which read as a faint slate — asked to be brighter. */
+  --text-selection: rgba(52, 120, 246, 0.42);
+  /* The caret is its own colour rather than the text's. Text is deliberately off-white so a
+     page of it is not glaring; a caret is one bar two pixels wide, and wants the opposite —
+     the most contrast the window can give it. */
+  --caret: #000;
+  --separator: rgba(0, 0, 0, 0.1);
+  --surface: transparent;
+  --sheet: rgba(246, 246, 246, 0.98);
+  --sheet-border: rgba(0, 0, 0, 0.12);
+  --menu: rgba(250, 250, 250, 0.97);
+  --invisible: rgba(0, 0, 0, 0.09);
+  --title-bar-height: 38px;
+  /* A grouped card, and the selection the sidebar shows when the focus is somewhere else. Both
+     are overlays rather than flat colours, so the window's material still reads through them. */
+  --card: rgba(0, 0, 0, 0.035);
+  --card-border: rgba(0, 0, 0, 0.08);
+  --selection-inactive: rgba(0, 0, 0, 0.12);
+  /* The face of a small control — a stepper, a popup's chevron, a switch's track when it is
+     off. One token for all three, because macOS draws them all out of the same grey. */
+  --control: rgba(0, 0, 0, 0.10);
+  --control-knob: #ffffff;
+  /* A text field's face, and the halo round the one that has the keyboard. */
+  --field: #ffffff;
+  --focus-ring: rgba(52, 120, 246, 0.35);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --text: #f2f2f2;
+    --text-secondary: rgba(255, 255, 255, 0.55);
+    --text-tertiary: rgba(255, 255, 255, 0.32);
+    --selection: rgba(255, 255, 255, 0.12);
+    --separator: rgba(255, 255, 255, 0.12);
+    --sheet: rgba(42, 42, 44, 0.98);
+    --sheet-border: rgba(255, 255, 255, 0.14);
+    --menu: rgba(56, 56, 58, 0.98);
+    --invisible: rgba(255, 255, 255, 0.11);
+    --card: rgba(255, 255, 255, 0.03);
+    --card-border: rgba(255, 255, 255, 0.07);
+    --selection-inactive: rgba(255, 255, 255, 0.18);
+    --control: rgba(255, 255, 255, 0.08);
+    --control-knob: #e8e8e8;
+    --field: rgba(255, 255, 255, 0.06);
+    --focus-ring: rgba(52, 120, 246, 0.5);
+    /* Restated rather than inherited so the dark scheme is a complete palette on its own. The
+       values repeat because every reference capture is dark appearance, and inventing a second
+       pair for light would be claiming a measurement nobody took. */
+    --accent: #3478f6;
+    --selection-tint: #316ad6;
+    --text-selection: rgba(52, 120, 246, 0.55);
+    --caret: #fff;
+  }
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  overflow: hidden;
+  font: 13px/1.4 -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  color: var(--text);
+  background: transparent;
+  -webkit-font-smoothing: antialiased;
+  cursor: default;
+  user-select: none;
+}
+
+#window {
+  display: grid;
+  grid-template-columns: var(--sidebar-width) 1px 1fr;
+  height: 100%;
+}
+
+/* One column, not `0 0 1fr`: the sidebar and splitter leave the grid when they are hidden, and
+   the pane would otherwise auto-place into the first track — the zero-width one. */
+body.sidebar-hidden #window { grid-template-columns: 1fr; }
+body.sidebar-hidden #sidebar,
+body.sidebar-hidden #splitter { display: none; }
+body.dragging { cursor: col-resize; }
+
+/* ── The sidebar ──────────────────────────────────────────────────────────── */
+
+#sidebar {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  /* The window's own sidebar material shows through: one surface, one colour, and nothing can
+     pass behind the folder's name. */
+  background: transparent;
+  overflow: hidden;
+}
+
+.sidebar-top {
+  flex: 0 0 auto;
+  /* The strip is stacked *above* the list, not laid over it — as an inset the rows would scroll
+     underneath and be drawn straight through the folder's name. */
+  padding-top: var(--title-bar-height);
+  -webkit-app-region: drag;
+}
+
+.sidebar-actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 4px 8px 12px;   /* a wider gap below than above, so the buttons read as their own row */
+  -webkit-app-region: no-drag;
+}
+
+.spacer { flex: 1 1 auto; }
+
+.icon-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 22px;
+  border: 0;
+  border-radius: 5px;
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: default;
+}
+
+.icon-button:hover:not(:disabled) { background: var(--selection); color: var(--text); }
+.icon-button:disabled { opacity: 0.32; }
+
+.sidebar-root {
+  display: flex;
+  align-items: center;
+  margin: 0 8px 2px;
+  padding: 3px 6px;
+  border-radius: 5px;
+  /* Larger than a section header, and in the plain text colour: this is the name of the thing
+     the whole window is showing, not a label for the rows below it. */
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  -webkit-app-region: no-drag;
+}
+
+.sidebar-root:hover { background: var(--selection); }
+.sidebar-root.drop-target { background: var(--selection-tint); color: #fff; }
+.sidebar-root span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.banner {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 8px 6px;
+  padding: 5px 8px;
+  border-radius: 6px;
+  background: var(--selection);
+  font-size: 11.5px;
+  color: var(--text-secondary);
+}
+
+.sidebar-note { padding: 0 12px; }
+
+.sidebar-list {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 0 8px 20px;
+  outline: none;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  /* The pitch of the source list: one row every 32px, which is what makes the tree read as a
+     list of places rather than a dense index. */
+  height: 32px;
+  padding-right: 6px;
+  border-radius: 5px;
+  white-space: nowrap;
+}
+
+.row:hover:not(.dimmed) { background: var(--selection); }
+
+/* Which file is open is worth saying even when the keyboard is in the editor — but saying it in
+   colour then would claim a focus the sidebar does not have. Grey while the focus is elsewhere,
+   the list's selection tint while it is here, which is how every other macOS source list
+   behaves. The tint is not the control accent: the reference's main window has no saturated
+   blue in it at all, and its Find File sheet picks the darker fill for exactly this job. */
+.row.selected { background: var(--selection-inactive); }
+.sidebar-list:focus-within .row.selected { background: var(--selection-tint); color: #fff; }
+.sidebar-list:focus-within .row.selected .disclosure,
+.sidebar-list:focus-within .row.selected .row-icon,
+.sidebar-list:focus-within .row.selected .dirty-dot { color: #fff; }
+.row.dimmed { color: var(--text-tertiary); }
+.row.drop-target { outline: 2px solid var(--selection-tint); outline-offset: -2px; }
+.sidebar-list.drop-target { box-shadow: inset 0 0 0 2px var(--selection-tint); border-radius: 5px; }
+
+/* The row being dragged, following the pointer. It takes no events, so what is under the
+   pointer is always the row it is over rather than itself. */
+.drag-ghost {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 8px;
+  border-radius: 5px;
+  background: var(--menu);
+  color: var(--text);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+  font-size: 13px;
+  white-space: nowrap;
+  pointer-events: none;
+}
+body.row-dragging, body.row-dragging * { cursor: default !important; }
+body.row-dragging .row:hover { background: transparent; }
+body.row-dragging .row.selected:hover { background: var(--selection-inactive); }
+
+.disclosure {
+  display: inline-flex;
+  width: 12px;
+  height: 12px;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-secondary);
+  transition: transform 90ms ease;
+}
+
+.disclosure.open { transform: rotate(90deg); }
+
+.row-icon {
+  position: relative;
+  display: inline-flex;
+  width: 16px;
+  justify-content: center;
+  color: var(--text-secondary);
+}
+
+.link-badge {
+  position: absolute;
+  left: -2px;
+  bottom: -3px;
+  color: var(--text-secondary);
+}
+
+.row-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dirty-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: 0.55;
+}
+
+.attention { color: #d08010; display: inline-flex; }
+
+.rename-field {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 24px;
+  padding: 0 4px;
+  border: 1px solid var(--accent);
+  border-radius: 3px;
+  font: inherit;
+  color: var(--text);
+  background: Field;
+  outline: none;
+  user-select: text;
+}
+
+#splitter {
+  background: var(--separator);
+  cursor: col-resize;
+}
+
+/* ── The detail pane ──────────────────────────────────────────────────────── */
+
+#detail {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  /* The title bar is a strip of the editor, not a bar on it: same colour, no rule between. */
+  background: Canvas;
+}
+
+/* The handle the window drags by. Its own element rather than padding inside the scroller, so
+   it stays put while the text scrolls and a press on it is never a click in the text. */
+.drag-strip {
+  flex: 0 0 var(--title-bar-height);
+  background: Canvas;
+  -webkit-app-region: drag;
+}
+
+.banners { flex: 0 0 auto; -webkit-app-region: drag; }
+
+.detail-banner {
+  margin: 0;
+  border-radius: 0;
+  background: var(--selection);
+  font-size: 11.5px;
+}
+
+.editor-host, .overlay-host {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.editor-host[hidden], .overlay-host[hidden] { display: none; }
+
+.empty-state,
+.pane-message {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  color: var(--text-secondary);
+}
+
+.empty-state p { margin: 0; font-size: 17px; }
+.pane-message p { margin: 0; max-width: 34em; text-align: center; }
+
+/* ── The editor ───────────────────────────────────────────────────────────── */
+/* One font, one size, every line alike. No page outline, no margins, no ruler. */
+
+.cm-editor {
+  flex: 1 1 auto;
+  min-height: 0;
+  height: 100%;
+  background: transparent;
+  color: var(--text);
+  user-select: text;
+}
+
+.cm-editor.cm-focused { outline: none; }
+
+.cm-scroller {
+  font-family: inherit;
+  -webkit-app-region: no-drag;
+}
+
+.cm-gutters { display: none; }              /* no line numbers: every line alike */
+.cm-content { caret-color: var(--caret); }
+
+/* The caret is the one thing in the editor that has to be found at a glance, and CodeMirror's
+   own is a 1.2px black bar — invisible against a dark window. Two pixels at the text colour:
+   still a bar, just one the eye lands on. `!important` for the same reason the selection below
+   needs it, CodeMirror injects these as a base theme and a plain rule loses to it.
+
+   Nothing else paints a row. `highlightActiveLine()` is deliberately not among the editor's
+   extensions — see src/renderer/editor/editor.js — because a rule here could not switch it off
+   for exactly that reason. */
+.cm-cursor,
+.cm-editor .cm-cursor,
+.cm-editor.cm-focused .cm-cursor {
+  border-left-width: 2px !important;
+  border-left-color: var(--caret) !important;
+}
+.cm-selectionBackground,
+.cm-editor .cm-selectionBackground,
+.cm-editor.cm-focused .cm-selectionBackground { background: var(--text-selection) !important; }
+.cm-selectionMatch { background: transparent; }
+
+/* "Show invisibles" is a faint background on spaces and tabs, so they can be seen and counted.
+   The characters in the buffer are never altered. */
+.lo-invisible { background: var(--invisible); border-radius: 2px; }
+
+/* A task box, `[ ]` or `[x]`, stays its three characters; it only shows that a click flips it. */
+.lo-task-box { cursor: pointer; color: var(--accent); }
+
+/* Enhanced tasks (specs/enhanced-tasks.md) and disclosure arrows at the end of any line
+   (specs/disclosures.md). The arrows, `==>` / `==v` and `-->` / `--v`, are text, drawn as small buttons,
+   and are the only sign that something is folded: no ellipsis follows them. */
+.lo-disclosure { white-space: nowrap; cursor: pointer; color: var(--accent); background: var(--control); border-radius: 3px; }
+.lo-disclosure:hover { background: var(--selection-inactive); }
+.lo-enhanced-title { font-weight: 600; }
+
+/* The find bar (src/renderer/editor/find-bar.js): AppKit's find bar, in the window's colours.
+   It sits in the editor's own surface with a hairline under it, as the title bar strip does
+   with nothing under it. Selectors carry `.cm-editor` because CodeMirror's base theme styles
+   `.cm-panels` with a scoped class, and a plain rule here loses to it. */
+.cm-editor .cm-panels,
+.cm-editor .cm-panels.cm-panels-top {
+  background: Canvas;
+  color: var(--text);
+  border-bottom: 1px solid var(--separator);
+}
+.lo-find {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 6px 12px;
+  background: var(--card);
+  font: 13px/1.2 -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  user-select: none;
+}
+.lo-find-row { display: flex; align-items: center; gap: 8px; }
+.lo-find-row[hidden] { display: none; }
+/* The buttons to the right of each field line up down the two rows. */
+.lo-find-trailing { flex: 0 0 196px; display: flex; align-items: center; gap: 6px; }
+
+.lo-find-field {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  height: 24px;
+  padding: 0 6px 0 8px;
+  border: 1px solid var(--sheet-border);
+  border-radius: 6px;
+  background: var(--field);
+}
+.lo-find-field:focus-within {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--focus-ring);
+}
+.lo-find-input {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  outline: none;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  user-select: text;
+}
+.lo-find-input::placeholder { color: var(--text-tertiary); }
+.lo-find-count { flex: 0 0 auto; font-size: 11.5px; color: var(--text-secondary); white-space: nowrap; }
+
+.lo-find-options,
+.lo-find-clear,
+.lo-find-step,
+.lo-find-button {
+  font: inherit;
+  color: var(--text-secondary);
+  cursor: default;
+}
+.lo-find-options {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 1px;
+  height: 18px;
+  padding: 0 3px 0 1px;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+}
+.lo-find-options:hover { background: var(--selection); color: var(--text); }
+.lo-find-clear {
+  flex: 0 0 auto;
+  display: inline-flex;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--text-tertiary);
+}
+.lo-find-clear[hidden] { display: none; }
+.lo-find-clear:hover { color: var(--text-secondary); }
+.lo-find-clear path { stroke: Canvas; stroke-width: 2.2; }
+
+/* ‹ › as one control with a seam, the way a segmented control is drawn. */
+.lo-find-segmented {
+  display: flex;
+  height: 24px;
+  border-radius: 6px;
+  overflow: hidden;
+  background: var(--control);
+}
+.lo-find-step {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--text);
+}
+.lo-find-step + .lo-find-step { border-left: 1px solid var(--separator); }
+.lo-find-step:hover { background: var(--selection); }
+.lo-find-step:active { background: var(--selection-inactive); }
+
+.lo-find-button {
+  height: 24px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 6px;
+  background: var(--control);
+  color: var(--text);
+}
+.lo-find-button:hover { background: var(--selection-inactive); }
+.lo-find-button:active { background: var(--selection-inactive); filter: brightness(0.92); }
+
+.lo-find-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-left: 2px;
+  color: var(--text);
+  white-space: nowrap;
+}
+.lo-find-toggle input { margin: 0; accent-color: var(--accent); }
+
+/* The magnifier's menu is the app's context menu, with a column for the check marks. */
+.lo-find-menu { min-width: 190px; }
+.lo-find-option { display: flex; align-items: center; }
+.lo-find-check { flex: 0 0 18px; }
+
+/* Every match a soft yellow, and the one found a solid yellow with dark text over it — AppKit's
+   find indicator. `.cm-editor` to outrank the base theme, as for the panels above. */
+.cm-editor .cm-searchMatch { background: rgba(255, 214, 10, 0.3); border-radius: 2px; }
+.cm-editor .cm-searchMatch.cm-searchMatch-selected,
+.cm-editor .cm-searchMatch-selected { background: #ffd60a; color: #1d1d1f; }
+
+/* ── The viewers ──────────────────────────────────────────────────────────── */
+
+.viewer { flex: 1 1 auto; min-height: 0; overflow: auto; }
+
+.image-viewer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+/* At the image's own size, or shrunk to fit the pane — and never enlarged past 1:1. */
+.image-viewer img { max-width: 100%; max-height: 100%; }
+
+.media-viewer { display: flex; align-items: center; justify-content: center; background: #000; }
+.media-viewer video { max-width: 100%; max-height: 100%; }
+
+/* A file with no picture in it gets its name and a transport bar, because a video surface with
+   nothing on it is a black rectangle with nothing to click. */
+.audio-viewer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+}
+
+.audio-name { color: var(--text-secondary); }
+.pdf-viewer { display: flex; }
+.pdf-viewer embed { flex: 1 1 auto; border: 0; }
+
+/* The words, and nothing else — selectable, so ⌘A and ⌘C get them out. It sits on the pane's
+   own backdrop, exactly as the editor does. */
+.document-viewer {
+  margin: 0;
+  padding: 16px 48px 40vh;
+  white-space: pre-wrap;
+  word-break: break-word;
+  color: var(--text);
+  user-select: text;
+  outline: none;
+}
+
+.sheet-viewer {
+  padding: 16px 24px 40vh;
+  user-select: text;
+}
+
+.sheet-viewer .sheet-name {
+  margin: 16px 0 6px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.sheet-viewer table { border-collapse: collapse; }
+.sheet-viewer th, .sheet-viewer td {
+  border: 1px solid var(--separator);
+  padding: 3px 8px;
+  text-align: left;
+  white-space: pre-wrap;
+}
+.sheet-viewer th { font-weight: 600; background: var(--selection); }
+
+/* ── Sheets ───────────────────────────────────────────────────────────────── */
+
+#sheet-host {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 80px;
+  background: rgba(0, 0, 0, 0.18);
+}
+
+#sheet-host[hidden] { display: none; }
+
+.sheet {
+  display: flex;
+  flex-direction: column;
+  width: 560px;
+  max-width: calc(100vw - 48px);
+  border: 1px solid var(--sheet-border);
+  border-radius: 12px;
+  background: var(--sheet);
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.35);
+  overflow: hidden;
+  outline: none;
+}
+
+.sheet.find-file { height: 420px; }
+.sheet.recent-files { height: 360px; }
+
+/* Help ▸ Enhanced Tasks, Disclosure Arrows and Markdown Formatting: a reference to read, so it
+   is wider and taller than the pickers, and it scrolls inside itself. */
+.sheet.help { width: 720px; height: calc(100vh - 120px); max-height: 820px; }
+.help-body { flex: 1 1 auto; min-height: 0; overflow-y: auto; padding: 4px 22px 22px; line-height: 1.5; user-select: text; }
+.help-body p { margin: 8px 0; }
+.help-body ul { margin: 6px 0; padding-left: 20px; }
+.help-body li { margin: 3px 0; }
+.help-body code, .help-source, .help-try .cm-content {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 12px;
+}
+/* Inline code keeps its spaces and never breaks: `[[ ]] ==>` split over two lines reads wrong. */
+.help-body code { padding: 0 3px; border-radius: 3px; background: var(--card); white-space: pre; }
+.help-section { margin-top: 18px; }
+.help-section > h2 { margin: 0 0 6px; font-size: 14px; font-weight: 600; }
+.help-source {
+  margin: 6px 0;
+  padding: 8px 10px;
+  border: 1px solid var(--card-border);
+  border-radius: 6px;
+  background: var(--card);
+  white-space: pre-wrap;
+  color: var(--text);
+}
+.help-input { display: block; width: 100%; min-height: 180px; box-sizing: border-box; resize: vertical; outline: none; }
+.help-try { border: 1px solid var(--card-border); border-radius: 6px; background: var(--card); padding: 4px 10px; }
+.help-try .cm-editor.cm-focused { outline: none; }
+.help-example { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 6px 0; }
+.help-example > div { min-width: 0; }
+.help-label { font-size: 10.5px; font-weight: 600; letter-spacing: 0.07em; text-transform: uppercase; color: var(--text-secondary); }
+/* The paper side: a sheet of paper, whatever the appearance, since that is what it stands for. */
+.help-printed {
+  margin: 6px 0;
+  padding: 10px 12px;
+  border-radius: 6px;
+  background: #fff;
+  color: #111;
+  font-family: -apple-system, 'Helvetica Neue', sans-serif;
+  font-size: 12px;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.12);
+}
+.help-printed > * + * { margin-top: 8px; }
+.help-printed-heading { margin: 0; line-height: 1.25; }
+.help-printed h1 { font-size: 22px; } .help-printed h2 { font-size: 18px; } .help-printed h3 { font-size: 15px; }
+.help-printed h4, .help-printed h5, .help-printed h6 { font-size: 13px; }
+.help-printed code { background: rgba(0, 0, 0, 0.06); }
+.help-printed-table { border-collapse: collapse; }
+.help-printed-table th, .help-printed-table td { padding: 3px 8px; border-bottom: 1px solid rgba(0, 0, 0, 0.25); }
+.help-status { display: flex; align-items: center; justify-content: space-between; }
+.help-status button {
+  font: inherit;
+  padding: 3px 14px;
+  border: 0;
+  border-radius: 6px;
+  background: var(--accent);
+  color: #fff;
+}
+
+.sheet-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 14px 4px;
+  font-weight: 600;
+}
+
+/* An eyebrow: the sheet says what it is before it says anything else. Small, spaced and upper
+   case so it reads as a label for the sheet rather than as its first row of content — it never
+   competes with the file names under it, which are what the eye is actually here for. */
+.sheet-eyebrow {
+  padding: 12px 14px 6px;
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+
+.sheet-field-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  color: var(--text-secondary);
+}
+
+.sheet-field {
+  flex: 1 1 auto;
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  font-size: 16px;
+  color: var(--text);
+  outline: none;
+  user-select: text;
+}
+
+.sheet.connect .sheet-field {
+  border: 1px solid var(--sheet-border);
+  border-radius: 6px;
+  padding: 5px 8px;
+  font-size: 13px;
+  background: Field;
+}
+
+.sheet-divider { height: 1px; background: var(--separator); }
+
+.sheet-list { flex: 1 1 auto; min-height: 0; overflow-y: auto; padding: 4px 0; }
+.sheet-list.short { max-height: 140px; flex: 0 0 auto; }
+
+.sheet-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 6px;
+  padding: 5px 8px;
+  border-radius: 6px;
+  color: var(--text-secondary);
+}
+
+.sheet-row:hover { background: var(--selection); }
+.sheet-row.highlighted { background: var(--selection-tint); color: #fff; }
+.sheet-row-text { min-width: 0; }
+.sheet-row-name { color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sheet-row.highlighted .sheet-row-name,
+.sheet-row.highlighted .sheet-row-folder { color: #fff; }
+
+/* Truncated at the *head*: the end of a long path is the part that tells two files called
+   `index.md` apart. */
+.sheet-row-folder {
+  font-size: 11px;
+  color: var(--text-secondary);
+  overflow: hidden;
+  white-space: nowrap;
+  direction: rtl;
+  text-align: left;
+}
+
+.sheet-empty { padding: 30px; text-align: center; color: var(--text-secondary); }
+
+.sheet-status {
+  padding: 6px 14px;
+  font-size: 11.5px;
+  color: var(--text-secondary);
+}
+
+.key-block { padding: 10px 14px; display: flex; flex-direction: column; gap: 6px; }
+.key-explain { margin: 0; font-size: 11.5px; color: var(--text-secondary); }
+
+.public-key {
+  display: block;
+  max-height: 70px;
+  overflow: auto;
+  padding: 6px 8px;
+  border: 1px solid var(--sheet-border);
+  border-radius: 6px;
+  background: var(--selection);
+  font: 11px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace;
+  word-break: break-all;
+  user-select: text;
+}
+
+.text-button {
+  align-self: flex-start;
+  border: 1px solid var(--sheet-border);
+  border-radius: 6px;
+  padding: 3px 10px;
+  background: var(--menu);
+  color: var(--text);
+  font: inherit;
+  cursor: default;
+}
+
+.text-button:hover { background: var(--selection); }
+
+/* ── Context menus ────────────────────────────────────────────────────────── */
+
+.context-menu {
+  position: fixed;
+  z-index: 100;
+  min-width: 170px;
+  padding: 4px;
+  border: 1px solid var(--sheet-border);
+  border-radius: 8px;
+  background: var(--menu);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+
+.menu-item { padding: 4px 10px; border-radius: 5px; }
+.menu-item:hover { background: var(--accent); color: #fff; }
+.menu-item.destructive { color: #d0342c; }
+.menu-item.disabled, .menu-item.disabled:hover { background: transparent; color: var(--text-tertiary); }
+.menu-item.destructive:hover { background: #d0342c; color: #fff; }
+.menu-separator { height: 1px; margin: 4px 6px; background: var(--separator); }
+
+.icon { flex: 0 0 auto; }

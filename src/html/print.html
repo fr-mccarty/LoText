@@ -1,0 +1,33 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>LoText — print</title>
+    <style>
+      /* The page is drawn in points, one to one, so what is measured is what is printed.
+         Nothing here is responsive and nothing here reflows: the layout already decided
+         where every run goes. */
+      /* The layout has already inset every run by the preset's own margins. Without this the
+         print panel adds the browser's default margins on top and shrinks the page to fit
+         them, which printed a one-inch margin as about 1.3in — more on a printer with a wide
+         unprintable edge. The size is set per job by print-window.js. */
+      @page { margin: 0; }
+      html, body { margin: 0; padding: 0; background: #fff; color: #000; }
+      .page {
+        position: relative;
+        overflow: hidden;
+        background: #fff;
+        page-break-after: always;
+        break-after: page;
+      }
+      .page:last-child { page-break-after: auto; break-after: auto; }
+      .run { position: absolute; white-space: pre; color: #000; }
+      .rule { position: absolute; background: #000; }
+      .letterhead-image { position: absolute; object-fit: contain; }
+    </style>
+  </head>
+  <body>
+    <div id="pages"></div>
+    <script src="print-window.js"></script>
+  </body>
+</html>

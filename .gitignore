@@ -1,0 +1,36 @@
+# Dependencies and build output: npm install and npm run build / web:build / ios:build recreate them
+node_modules/
+dist/
+dist-mobile/
+dist-web/
+exports/
+
+# Written into ios/ by cap sync
+ios/App/App/public/
+ios/App/App/capacitor.config.json
+ios/App/App/config.xml
+ios/App/App/config *.xml
+ios/capacitor-cordova-ios-plugins/
+ios/debug.xcconfig
+
+# Xcode per-user state and build products
+xcuserdata/
+DerivedData/
+ios/App/build/
+ios/App/output/
+ios/App/Pods/
+*.xcarchive
+
+# Signing material and secrets
+.env
+.env.*
+*.p8
+*.p12
+*.cer
+*.pem
+*.key
+*.mobileprovision
+*.provisionprofile
+
+# macOS
+.DS_Store

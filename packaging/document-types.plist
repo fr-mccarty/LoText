@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  What the app will accept from the Finder.
+
+  The runtime half of this already exists: `app.on('open-file')` in src/main/main.js hands the
+  path to src/main/open-queue.js, which holds it until a window can take it. But macOS only
+  sends that event for types the bundle *declares*, so without this array a double-click or an
+  Open With never reaches the app at all.
+
+  LSHandlerRank is `Default`: LoText is what a .txt, .md or .toml file opens in. That is a claim on
+  types the system already has an opinion about, so it is deliberate rather than incidental —
+  this is the editor for these files on this machine, and a double-click should land here.
+-->
+<plist version="1.0">
+<array>
+  <dict>
+    <key>CFBundleTypeName</key>
+    <string>Plain Text</string>
+    <key>CFBundleTypeRole</key>
+    <string>Editor</string>
+    <key>LSHandlerRank</key>
+    <string>Default</string>
+    <key>CFBundleTypeIconFile</key>
+    <string>LoText</string>
+    <key>LSItemContentTypes</key>
+    <array>
+      <string>public.plain-text</string>
+      <string>public.utf8-plain-text</string>
+    </array>
+    <key>CFBundleTypeExtensions</key>
+    <array>
+      <string>txt</string>
+      <string>text</string>
+    </array>
+  </dict>
+  <dict>
+    <key>CFBundleTypeName</key>
+    <string>Markdown</string>
+    <key>CFBundleTypeRole</key>
+    <string>Editor</string>
+    <key>LSHandlerRank</key>
+    <string>Default</string>
+    <key>CFBundleTypeIconFile</key>
+    <string>LoText</string>
+    <key>LSItemContentTypes</key>
+    <array>
+      <string>net.daringfireball.markdown</string>
+    </array>
+    <key>CFBundleTypeExtensions</key>
+    <array>
+      <string>md</string>
+      <string>markdown</string>
+    </array>
+  </dict>
+  <dict>
+    <key>CFBundleTypeName</key>
+    <string>TOML</string>
+    <key>CFBundleTypeRole</key>
+    <string>Editor</string>
+    <key>LSHandlerRank</key>
+    <string>Default</string>
+    <key>CFBundleTypeIconFile</key>
+    <string>LoText</string>
+    <key>LSItemContentTypes</key>
+    <array>
+      <string>public.toml</string>
+    </array>
+    <key>CFBundleTypeExtensions</key>
+    <array>
+      <string>toml</string>
+    </array>
+  </dict>
+</array>
+</plist>

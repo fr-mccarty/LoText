@@ -1,0 +1,264 @@
+/*
+ * LoText on iPhone and iPad — what changes about the Mac's window when a finger drives it.
+ * Loaded after style.css (and settings.css in the Settings sheet), and only on iOS.
+ *
+ *   regular   ≥ 700px wide: sidebar | editor, as on the Mac
+ *   compact   < 700px wide: one pane at a time; `showing-detail` says which
+ *
+ * The Mac's sizes are a pointer's: 22px rows and 13px text. A finger wants 44pt targets, and
+ * the phone's own lists are 17pt — so rows, buttons and the bars are sized here, not there.
+ */
+
+:root {
+  --bar-height: 44px;
+  --keyboard-bar-height: 46px;
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
+  --sidebar-width: 320px;
+  /* The Mac lets the window's material show through; iOS has no material behind a web view,
+     so the sidebar is the system's grouped background and the editor its plain one. */
+  --sidebar-background: #f2f2f7;
+  --pane-background: #ffffff;
+  --bar-background: rgba(249, 249, 249, 0.94);
+  --pressed: rgba(0, 0, 0, 0.08);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --sidebar-background: #1c1c1e;
+    --pane-background: #000000;
+    --bar-background: rgba(22, 22, 24, 0.94);
+    --pressed: rgba(255, 255, 255, 0.1);
+  }
+}
+
+html, body {
+  background: var(--pane-background);
+  font-size: 15px;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+  -webkit-text-size-adjust: 100%;
+  overscroll-behavior: none;
+}
+
+/* Only text can be selected: a long press on a row is its menu, not a word to copy. */
+.cm-content, .help-body, .document-viewer, input, textarea { -webkit-user-select: text; user-select: text; }
+
+/* ── Both layouts ─────────────────────────────────────────────────────────── */
+
+#window { height: 100%; }
+body.keyboard-bar-showing #window { height: calc(100% - var(--keyboard-bar-height)); }
+
+#sidebar { background: var(--sidebar-background); }
+#detail, .drag-strip { background: var(--pane-background); }
+#splitter { width: 1px; position: relative; }
+/* A hairline is too thin to find with a finger: the handle is wider than it looks. */
+#splitter::after { content: ''; position: absolute; inset: 0 -10px; }
+
+.sidebar-top { padding-top: var(--safe-top); padding-left: var(--safe-left); }
+.sidebar-actions { gap: 0; padding: 2px 6px 6px; }
+.icon-button {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  color: var(--accent);
+}
+.icon-button:disabled { color: var(--text-secondary); }
+.icon-button:active:not(:disabled) { background: var(--pressed); }
+.icon-button:hover:not(:disabled) { background: transparent; color: var(--accent); }
+
+.sidebar-root { font-size: 13px; min-height: 36px; }
+.sidebar-list { padding-bottom: calc(var(--safe-bottom) + 12px); padding-left: var(--safe-left); }
+
+.row {
+  min-height: 44px;
+  font-size: 17px;
+  border-radius: 10px;
+  margin: 0 8px;
+  gap: 6px;
+}
+.row:hover:not(.dimmed) { background: transparent; }
+.row:active:not(.dimmed) { background: var(--pressed); }
+/* The open file is the highlighted row, and on iOS a highlighted row is always the tint:
+   there is no "the keyboard is elsewhere" grey, because there is no keyboard focus to follow. */
+.row.selected,
+.sidebar-list:focus-within .row.selected { background: var(--selection-tint); color: #fff; }
+.row.selected .dirty-dot { color: #fff; }
+.row.selected .row-icon, .row.selected .disclosure { color: #fff; }
+.disclosure { width: 18px; }
+.disclosure .icon { width: 13px; height: 13px; }
+.row-icon .icon { width: 19px; height: 19px; }
+.rename-field { font-size: 17px; padding: 4px 6px; }
+
+/* The bar that tops the detail pane where the Mac has its drag strip. */
+.mobile-bar {
+  flex: 0 0 calc(var(--bar-height) + var(--safe-top));
+  display: flex;
+  align-items: center;
+  padding: var(--safe-top) calc(var(--safe-right) + 10px) 0 calc(var(--safe-left) + 4px);
+  background: var(--bar-background);
+  border-bottom: 1px solid var(--separator);
+  -webkit-app-region: none;
+}
+.bar-side { flex: 1 1 0; display: flex; align-items: center; min-width: 0; }
+.bar-side.trailing { justify-content: flex-end; }
+.bar-title {
+  flex: 0 1 auto;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 17px;
+  font-weight: 600;
+}
+.bar-title-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bar-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  min-width: 44px;
+  height: 44px;
+  justify-content: center;
+  padding: 0 6px;
+  border: 0;
+  background: transparent;
+  color: var(--accent);
+  font: inherit;
+  font-size: 17px;
+}
+.bar-button:disabled { color: var(--text-tertiary); }
+.bar-button:active:not(:disabled) { opacity: 0.5; }
+.bar-button.back { padding-left: 0; }
+.bar-button.done { font-weight: 600; }
+
+.cm-scroller { padding-bottom: var(--safe-bottom); }
+/* The editor's theme pads the text 48px a side, which is a sixth of a phone's width. The phone
+   gets 16; the iPad keeps the Mac's margin. (!important: CodeMirror's theme outranks a plain rule.) */
+body.compact .cm-content {
+  padding-left: calc(var(--safe-left) + 16px) !important;
+  padding-right: calc(var(--safe-right) + 16px) !important;
+}
+/* The find bar at a finger's size. 16px in the fields, or Safari zooms the page on focus. */
+.lo-find { font-size: 15px; padding: 8px 12px; gap: 8px; }
+.lo-find-input { font-size: 16px; }
+.lo-find-field, .lo-find-segmented, .lo-find-button { height: 32px; }
+.lo-find-step { width: 36px; }
+/* A phone has no room for the field and its buttons side by side: the field takes the width and
+   the buttons go under it. */
+body.compact .lo-find-row { flex-wrap: wrap; }
+body.compact .lo-find-field { flex-basis: 100%; }
+body.compact .lo-find-trailing { flex: 1 1 auto; }
+
+.empty-state p, .pane-message p { font-size: 17px; }
+.quick-look { font-size: 17px; margin-top: 8px; }
+
+/* ── Regular: both panes ──────────────────────────────────────────────────── */
+
+body:not(.compact) .bar-button.back { display: none; }
+
+/* ── Compact: one pane at a time ──────────────────────────────────────────── */
+
+body.compact #window { display: block; position: relative; }
+body.compact #splitter { display: none; }
+body.compact .bar-button.sidebar-toggle { display: none; }
+body.compact #sidebar,
+body.compact.sidebar-hidden #sidebar {
+  display: flex;
+  position: absolute;
+  inset: 0;
+}
+body.compact #detail {
+  position: absolute;
+  inset: 0;
+  transform: translateX(100%);
+  transition: transform 0.28s cubic-bezier(0.25, 0.8, 0.25, 1);
+  box-shadow: -8px 0 24px rgba(0, 0, 0, 0.12);
+  visibility: hidden;
+}
+body.compact.showing-detail #detail { transform: none; visibility: visible; }
+/* The list stays put under the editor, as a navigation stack's does. */
+body.compact.showing-detail #sidebar { pointer-events: none; }
+
+/* ── The keyboard bar ─────────────────────────────────────────────────────── */
+
+#keyboard-bar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: var(--keyboard-bar-height);
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 0 calc(var(--safe-right) + 6px) 0 calc(var(--safe-left) + 6px);
+  background: var(--bar-background);
+  border-top: 1px solid var(--separator);
+  z-index: 20;
+}
+#keyboard-bar[hidden] { display: none; }
+.key {
+  width: 44px;
+  height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text);
+}
+.key:active { background: var(--pressed); }
+
+/* ── Sheets ───────────────────────────────────────────────────────────────── */
+
+#sheet-host { padding: calc(var(--safe-top) + 12px) 12px 12px; z-index: 30; }
+/* Opaque: WebKit draws the Mac's 98% sheet colour thin enough that the text under it reads. */
+.sheet { max-width: 100%; max-height: 100%; background: var(--sidebar-background); }
+.sheet-row { min-height: 44px; font-size: 16px; }
+.sheet-field { font-size: 17px; }
+body.compact .sheet.help { width: 100%; height: 100%; }
+body.compact .help-example { grid-template-columns: 1fr; }
+
+#settings-host {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--pane-background);
+  z-index: 40;
+}
+#settings-host[hidden] { display: none; }
+.settings-frame { flex: 1 1 auto; width: 100%; border: 0; background: var(--pane-background); }
+
+/* The page the printer draws in. It has to be laid out to be measured, so it is off screen
+   rather than hidden. */
+.print-frame {
+  position: fixed;
+  left: -20000px;
+  top: 0;
+  width: 900px;
+  height: 1200px;
+  border: 0;
+  visibility: hidden;
+}
+
+/* ── The Settings panel, inside its sheet ─────────────────────────────────── */
+
+body.settings.mobile { background: var(--pane-background); }
+/* The sheet's bar names the tab; the panel's own drawn title is the Mac's window title. */
+body.settings.mobile #window-title { display: none; }
+body.settings.mobile #tabs { padding-top: 8px; }
+body.settings.mobile #panel { scrollbar-gutter: auto; padding-bottom: var(--safe-bottom); }
+/* A segment's label on one line: "4 spaces" wrapped at the phone's width and lost its second word. */
+body.settings.mobile .segmented button { white-space: nowrap; height: 30px; }
+/* Add Layout…, Duplicate, Rename… and Delete are wider together than a phone. */
+body.settings.mobile .row-buttons { flex-wrap: wrap; row-gap: 8px; }
+
+/* Key hints are for a keyboard, which a phone mostly does not have. Help keeps its Done. */
+.help-status > span { visibility: hidden; }
+.sheet.recent-files .sheet-status { display: none; }
+/* The annotated samples line up in columns; wrapped at a phone's width they stop saying anything,
+   so they keep their lines and scroll sideways instead. */
+body.compact .help-source { white-space: pre; overflow-x: auto; }

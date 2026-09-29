@@ -1,0 +1,379 @@
+/* The Settings panel. Two tabs, each bound to its own bag — nothing on one tab can read or
+   write the other's storage, and the panel's shape says so: two lists of controls that never
+   share a row. */
+
+body.settings {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+  background: Canvas;
+}
+
+/* macOS draws no title on a `hiddenInset` window, so the panel draws its own. Keeping the
+   inset traffic lights is worth more than the native string: the reference puts the name on
+   their line, centered in the window, and that is reproducible in HTML. */
+#window-title {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* The height of the band the traffic lights sit in, so the name lands on their line rather
+     than above it. The tabs start where this band ends. */
+  height: 35px;
+  font-size: 13px;
+  font-weight: 600;
+  /* A title names the window; it is not a heading inside it. The secondary colour over this
+     background is the #999999 the reference measures. */
+  color: var(--text-secondary);
+  -webkit-app-region: drag;
+}
+
+#tabs {
+  display: flex;
+  justify-content: center;
+  gap: 4px;
+  padding: 0 12px 5px;
+  /* The header is a fixed band and the panel scrolls under it, so it needs a closing edge of
+     its own or the first card appears to float off the top of the window. */
+  border-bottom: 1px solid var(--separator);
+  -webkit-app-region: drag;
+}
+
+/* Icon over label, and the selected one sunk into a well. The icon is the faster read of the
+   two — the label is there to name what the picture already said. */
+.tab {
+  -webkit-app-region: no-drag;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+  width: 58px;
+  height: 48px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--text-secondary);
+  font: inherit;
+  font-size: 11px;
+  cursor: default;
+}
+
+.tab:hover { color: var(--text); }
+.tab.active { background: var(--card); border-color: var(--card-border); color: var(--accent); }
+
+/* The panel scrolls, and on macOS a scrolling panel does not give up width to say so: the bar
+   is an overlay that fades in over the content while the wheel is turning. Chromium's default
+   here is the classic always-present bar, which took 15px off the Printing tab and left the two
+   tabs' controls sitting at different widths from each other.
+
+   `overflow: overlay` would have been the answer and was removed from Chromium, so the width is
+   held steady the other way round: `scrollbar-gutter: stable` reserves the bar's space on both
+   tabs whether or not either of them scrolls. The cards are then the same width everywhere, and
+   the styled bar below is a thumb with no track, which is what stops it reading as a trough cut
+   into the panel. */
+#panel {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  scrollbar-gutter: stable;
+  padding: 8px 20px 28px;
+  /* Keeps a flick going the way every other macOS scroller does, and stops the bounce at the
+     end of the list from dragging the window's own material with it. */
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
+
+#panel::-webkit-scrollbar { width: 9px; background: transparent; }
+#panel::-webkit-scrollbar-track { background: transparent; }
+
+/* Sized and coloured like the system's overlay thumb: a rounded bar inset from the edge, in a
+   grey that reads on both the window and a card without belonging to either. */
+#panel::-webkit-scrollbar-thumb {
+  background: transparent;
+  border: 2px solid transparent;
+  border-radius: 5px;
+  background-clip: content-box;
+}
+
+#panel:hover::-webkit-scrollbar-thumb { background: var(--text-tertiary); background-clip: content-box; }
+#panel::-webkit-scrollbar-thumb:hover { background: var(--text-secondary); background-clip: content-box; }
+#panel::-webkit-scrollbar-corner { background: transparent; }
+
+.group-wrap { margin: 0 0 18px; }
+
+/* The name of the section, in the plain text colour and above the card rather than inside it:
+   it labels the group, it is not a row of it. */
+.group-wrap > h2 {
+  margin: 0 0 6px;
+  padding: 0 4px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+/* Barely lighter than the window — the card is read by its edge, not by its brightness. */
+.group {
+  border: 1px solid var(--card-border);
+  border-radius: 10px;
+  overflow: hidden;
+  background: var(--card);
+}
+
+.field {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 12px;
+  border-top: 1px solid var(--separator);
+}
+
+.group > .field:first-child { border-top: 0; }
+.field > label { flex: 1 1 auto; }
+.field.disabled { opacity: 0.4; pointer-events: none; }
+
+.field input[type="text"],
+.field textarea {
+  border: 1px solid var(--sheet-border);
+  border-radius: 6px;
+  padding: 3px 6px;
+  background: Field;
+  color: var(--text);
+  font: inherit;
+  user-select: text;
+}
+
+.field textarea { width: 260px; min-height: 22px; resize: vertical; }
+/* No width of its own. The unit is trailing text: it ends at the row's right edge and the
+   value and its stepper float in to the left of it, so `in`, `pt` and `= 22 pt` all finish on
+   the same line. A minimum width parked them short of that edge instead. */
+.caption {
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* A heading's resulting size: "= 22 pt" and "= 17.6 pt" differ in width, and without a common
+   one the six steppers beside them step in and out down the list. */
+.caption.result { min-width: 4.6em; text-align: right; }
+
+/* ── The numeric field and its stepper ────────────────────────────────────── */
+
+.stepper-field { display: flex; align-items: center; gap: 8px; }
+
+/* No box around the number: on a grouped row the value is text, and the stepper beside it is
+   the only thing that needs to look like a control. */
+.stepper-field input[type="number"] {
+  width: 64px;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  user-select: text;
+}
+
+.stepper-field input[type="number"]::-webkit-inner-spin-button,
+.stepper-field input[type="number"]::-webkit-outer-spin-button {
+  appearance: none;
+  margin: 0;
+}
+
+.stepper {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  flex: 0 0 auto;
+  width: 20px;
+  height: 24px;
+  border-radius: 6px;
+  overflow: hidden;
+  background: var(--control);
+}
+
+.stepper button {
+  display: flex;
+  flex: 1 1 50%;
+  align-items: center;
+  justify-content: center;
+  min-height: 0;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: var(--text);
+  cursor: default;
+}
+
+.stepper button:active { background: var(--selection); }
+
+/* The hairline between the two halves, which is what makes them read as one control split in
+   two rather than as two buttons that happen to touch. It stops short of both edges, as every
+   divider inside a macOS control does. */
+.stepper::after {
+  content: "";
+  position: absolute;
+  left: 3px;
+  right: 3px;
+  top: 50%;
+  height: 1px;
+  background: var(--separator);
+}
+
+/* ── The popup button ─────────────────────────────────────────────────────── */
+
+/* A real <select> stretched invisibly over the whole thing: the menu, the keyboard and the
+   accessibility tree stay the browser's, and only the drawing is ours. */
+.popup {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.popup-value { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.popup-chevron {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--control);
+  color: var(--text);
+}
+
+.popup select {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  padding: 0;
+  margin: 0;
+  opacity: 0;
+  font: inherit;
+  cursor: default;
+}
+
+/* ── The switch ───────────────────────────────────────────────────────────── */
+
+input.switch {
+  position: relative;
+  flex: 0 0 auto;
+  appearance: none;
+  width: 38px;
+  height: 17px;
+  margin: 0;
+  border-radius: 9px;
+  background: var(--control);
+  transition: background 130ms ease;
+}
+
+input.switch::after {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 21px;
+  height: 13px;
+  border-radius: 7px;
+  background: var(--control-knob);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.28);
+  transition: transform 130ms ease;
+}
+
+input.switch:checked { background: var(--accent); }
+input.switch:checked::after { transform: translateX(13px); }
+
+/* Borderless, the way macOS has drawn a segmented control since Big Sur: a sunken track with
+   a rounded pill riding on the selected segment. The old bordered box with a square fill read
+   as three buttons that happened to touch.
+   The segments are equal thirds rather than text-width, so choosing `Double` over `1.5` does
+   not change how wide the control is or where the row's right edge falls. */
+.segmented {
+  display: inline-flex;
+  /* Inset on the sides only. The pill is as tall as the track, so what separates them is the
+     1px the track shows at the rounded corners, and nothing else. */
+  padding: 0 1px;
+  border-radius: 7px;
+  background: var(--control);
+}
+
+.segmented button {
+  flex: 1 1 0;
+  min-width: 63px;
+  height: 24px;
+  border: 0;
+  border-radius: 6px;
+  padding: 0 8px;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  cursor: default;
+}
+
+.segmented button.active { background: var(--accent); color: #fff; }
+
+.footnote {
+  padding: 6px 4px 0;
+  font-size: 11.5px;
+  color: var(--text-secondary);
+}
+
+.footnote code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+
+/* One row, never two: the four preset buttons are one sentence about the selected preset, and
+   a wrap would read as two groups of controls. */
+.row-buttons { display: flex; gap: 8px; align-items: center; padding: 8px 12px; }
+.row-buttons > * { flex: 0 0 auto; white-space: nowrap; }
+.row-buttons .spacer { flex: 1 1 auto; }
+
+.token-legend { display: grid; gap: 1px; }
+.token-legend code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+
+button.plain {
+  border: 1px solid var(--sheet-border);
+  border-radius: 6px;
+  padding: 3px 10px;
+  background: var(--menu);
+  color: var(--text);
+  font: inherit;
+  cursor: default;
+}
+
+button.plain:hover:not(:disabled) { background: var(--selection); }
+button.plain:disabled { opacity: 0.4; }
+button.plain.destructive { color: #d0342c; }
+/* Red is a warning about what the button would do; a button that cannot be pressed is not
+   warning anybody about anything. */
+button.plain.destructive:disabled { color: var(--text); }
+
+/* A footnote that is reporting a failure rather than explaining a control. */
+.footnote .warn { color: #e0524a; }
+
+/* A letterhead image row: the picture small, beside the buttons that change it. The white is the
+   paper it prints on, so a logo with a transparent background reads as it will on the page. */
+.field .row-buttons { padding: 0; }
+/* A long path loses its start, not its end: the folder's own name is the part worth reading. */
+.daycap-folder {
+  max-width: 250px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  direction: rtl;
+  text-align: left;
+}
+.letterhead-thumb {
+  max-height: 28px;
+  max-width: 120px;
+  object-fit: contain;
+  background: #fff;
+  border-radius: 3px;
+  padding: 2px;
+}

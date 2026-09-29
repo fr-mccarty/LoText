@@ -1,0 +1,11 @@
+<svg width="824" height="824" viewBox="0 0 824 824" xmlns="http://www.w3.org/2000/svg">
+  <rect width="824" height="824" rx="185" ry="185" fill="#3478f6"/>
+  <!-- Lucide `edit` (an alias of `square-pen`), ISC licensed. Its 24px box scaled to 470px and
+       centred: (824 - 470) / 2 = 177. The stroke scales with the glyph, so the weight stays the
+       one Lucide drew rather than thinning out at size. -->
+  <g transform="translate(177,177) scale(19.5833)"
+     fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+    <path d="M18.375 2.625a1 1 0 0 1 3 3l-9.013 9.014a2 2 0 0 1-.853.505l-2.873.84a.5.5 0 0 1-.62-.62l.84-2.873a2 2 0 0 1 .506-.852z" />
+  </g>
+</svg>

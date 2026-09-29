@@ -1,0 +1,28 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <!-- The page never zooms: text size is Settings ▸ Editor, and ⌘+ / ⌘− on a keyboard. -->
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+    <meta name="color-scheme" content="light dark">
+    <meta http-equiv="Content-Security-Policy"
+          content="default-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' data: blob:; frame-src 'self';">
+    <title>LoText</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="mobile.css">
+  </head>
+  <body class="mobile">
+    <!-- The Mac's window — sidebar | editor — with the bars and the keyboard bar the phone needs.
+         src/mobile/ui.js decides whether both panes show or one at a time. -->
+    <div id="window">
+      <aside id="sidebar"></aside>
+      <div id="splitter"></div>
+      <main id="detail"></main>
+    </div>
+    <div id="keyboard-bar" hidden></div>
+    <div id="sheet-host" hidden></div>
+    <div id="settings-host" hidden></div>
+    <script src="renderer.js"></script>
+  </body>
+</html>
