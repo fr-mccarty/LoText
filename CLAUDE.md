@@ -62,6 +62,9 @@ A rebuild does not reload the running app — restart `electron .`. ⌘R is Refr
   - A long line that starts with spaces or tabs wraps onto rows indented as far as its own text
     (`src/renderer/editor/hanging-indent.js`); Lolext wraps to the left edge. Drawing only — no
     spaces are added.
+  - Return starts the new line with the previous line's leading spaces and tabs, exactly
+    (`insertNewlineKeepingIndent` in `src/renderer/editor/line-editing.js`); Lolext indents
+    nothing, and CodeMirror's own Return turned tabs into spaces.
   - Sidebar rows offer Copy Absolute Path, the item's full path on the clipboard, wherever the
     folder has a path on this Mac (not over SSH, not on iOS).
   - Reopening a file puts back its selection and top line. Optional iCloud sync carries settings,

@@ -1,7 +1,8 @@
-// Editing by whole lines: ⌘X with nothing selected, and Tab and ⇧Tab. The app's editor binds
+// Editing by whole lines: ⌘X with nothing selected, Tab and ⇧Tab, and Return. The app's editor binds
 // them (editor.js) and so does the editor on the LoText web page (src/web/playground.js), which
 // is why they live apart from the rest of the editor.
 
+import { EditorSelection } from '@codemirror/state'
 import * as TextRanges from './text-ranges.js'
 
 /**
@@ -58,6 +59,30 @@ export function outdentBy (view, count) {
     if (leading) changes.push({ from: line.from, to: line.from + Math.min(leading, count) })
   }
   if (changes.length) view.dispatch({ changes, userEvent: 'delete.dedent' })
+  return true
+}
+
+/**
+ * Return: a new line starting as deep as the one the caret was on — its leading spaces and tabs,
+ * character for character, so tabs stay tabs. CodeMirror's own Return measured the indent and
+ * wrote it back as spaces. A caret inside the indent takes only the part before it. A line that
+ * is nothing but indent up to the caret gives its indent to the new line rather than keeping it
+ * as trailing whitespace, so Return twice leaves a truly blank line. Lolext's Return indents
+ * nothing; this was asked for.
+ */
+export function insertNewlineKeepingIndent (view) {
+  const state = view.state
+  view.dispatch(state.changeByRange((range) => {
+    const line = state.doc.lineAt(range.from)
+    const before = line.text.slice(0, range.from - line.from)
+    const indent = /^[ \t]*/.exec(before)[0]
+    const from = indent.length === before.length ? line.from : range.from
+    const insert = `\n${indent}`
+    return {
+      changes: { from, to: range.to, insert },
+      range: EditorSelection.cursor(from + insert.length),
+    }
+  }), { scrollIntoView: true, userEvent: 'input' })
   return true
 }
 

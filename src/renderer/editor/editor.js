@@ -25,7 +25,7 @@ import { hangingIndent } from './hanging-indent.js'
 import { findBar, showFindBar } from './find-bar.js'
 import { enhancedTasks, moveItems } from './enhanced-view.js'
 import * as TextRanges from './text-ranges.js'
-import { cutWholeLines, indentBy, outdentBy, linesOfSelection } from './line-editing.js'
+import { cutWholeLines, indentBy, outdentBy, linesOfSelection, insertNewlineKeepingIndent } from './line-editing.js'
 import * as Emphasis from './emphasis-markers.js'
 import { FONT_CHOICES } from '../../shared/print/fonts.js'
 import { lineSpacingMultiple } from '../../shared/settings-shape.js'
@@ -77,6 +77,8 @@ export class Editor {
         keymap.of([
           // Tab indents here rather than leaving for the sidebar. Esc then Tab still leaves.
           { key: 'Tab', run: (view) => indentBy(view, this.tabSpaces), shift: (view) => outdentBy(view, this.tabSpaces) },
+          // Ahead of CodeMirror's own Return, which wrote a tab indent back as spaces.
+          { key: 'Enter', run: insertNewlineKeepingIndent },
           // Ahead of CodeMirror's own ⌥↑ / ⌥↓, which move a line; ⇧⌥ still copies one.
           { key: 'Alt-ArrowUp', run: (view) => moveItems(view, -1) },
           { key: 'Alt-ArrowDown', run: (view) => moveItems(view, 1) },
