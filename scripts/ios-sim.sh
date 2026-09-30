@@ -37,7 +37,7 @@ boot () {
 }
 
 build () {
-  (cd "$ROOT" && node build.mjs --mobile >/dev/null && npx cap sync ios >/dev/null)
+  (cd "$ROOT" && npm run -s ios:build >/dev/null)
   xcodebuild -project "$ROOT/ios/App/App.xcodeproj" -scheme App -configuration Debug \
     -destination 'generic/platform=iOS Simulator' -derivedDataPath "$DERIVED" build \
     | grep -E 'error:|BUILD (SUCCEEDED|FAILED)' || true

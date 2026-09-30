@@ -19,7 +19,7 @@
     "dmg": "bash scripts/make-dmg.sh",
     "release": "bash scripts/release.sh",
     "web:build": "node build.mjs --web",
-    "ios:build": "node build.mjs --mobile && npx cap sync ios",
+    "ios:build": "node build.mjs --mobile && npx cap sync ios && sed -i '' 's#node_modules\\.nosync/#node_modules/#' ios/App/CapApp-SPM/Package.swift",
     "ios:sim": "bash scripts/ios-sim.sh run",
     "ios:open": "npm run ios:build && npx cap open ios",
     "dependencies": "node scripts/keep-node-modules-out-of-icloud.mjs"
