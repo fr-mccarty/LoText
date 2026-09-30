@@ -11,7 +11,7 @@
 // undo, ⌫ after a fold), which show everything until the next click on that arrow or that task's
 // box; and the lines Hide Lines hid with no arrow to close, drawn with a ⋯ button that shows them.
 
-import { StateField, StateEffect, EditorState, EditorSelection, ChangeSet, MapMode, Text } from '@codemirror/state'
+import { StateField, StateEffect, Annotation, EditorState, EditorSelection, ChangeSet, MapMode, Text } from '@codemirror/state'
 import { EditorView, Decoration, WidgetType } from '@codemirror/view'
 import { invertedEffects } from '@codemirror/commands'
 import * as Tasks from './enhanced-tasks.js'
@@ -33,6 +33,12 @@ const selectionHidden = StateEffect.define()
 
 /** Show Lines or a click on ⋯: the start of the hidden selection to show. */
 const selectionShown = StateEffect.define()
+
+/**
+ * Marks a selection the app puts back itself — reopening a file where it was left, a reload from
+ * disk keeping the caret — rather than one Find or undo drops: it reveals nothing.
+ */
+const selectionRestored = Annotation.define()
 
 /** The user event of an arrow click: the one edit that may write a closed arrow. */
 const DISCLOSE = 'input.disclose'
@@ -157,8 +163,10 @@ export const enhancedField = StateField.define({
     revealed = new Set([...revealed].filter((pos) => alive.has(pos)))
 
     // A caret put inside hidden text — Find, undo — shows it. Either edge of the fold is
-    // outside it: both are drawn at the end of the line above.
-    if (tr.selection) {
+    // outside it: both are drawn at the end of the line above. A caret the app puts back is
+    // moved out instead (`restoreSelection`): revealed, a closed arrow would read `==>` over
+    // lines that show, and a click on it, opening it, would change nothing on screen.
+    if (tr.selection && !tr.annotation(selectionRestored)) {
       const head = tr.state.selection.main.head
       for (const range of hiddenRanges({ tasks, disclosures, revealed })) {
         if (inside(head, range)) revealed.add(range.pos)
@@ -242,10 +250,35 @@ function moveSelectionOutOfHidden (view) {
 }
 
 /**
- * A click on an arrow — a task's or a disclosure's — flips it and leaves the caret where it was,
- * unless that is inside what the click hides, when it goes to the end of the line the fold is
- * drawn on. A click on ⋯ shows the lines Hide Lines hid there.
+ * A click on the arrow on line `index` (0-based) — a task's or a disclosure's: it flips, or,
+ * closed with its lines shown by Find or an edit, hides them again. It leaves the caret where it was, unless that is inside what the click hides, when it goes to the
+ * end of the line the fold is drawn on. False when the line has no arrow.
  */
+export function clickArrow (view, index) {
+  const value = view.state.field(enhancedField)
+  const owner = ownerOnLine(value, index)
+  if (!owner) return false
+  // A closed arrow whose lines Find or an edit showed hides them again, the arrow as it is:
+  // opening it would change nothing on screen.
+  const click = !owner.open && value.revealed.has(owner.pos)
+    ? { effects: arrowClicked.of(owner.pos) }
+    : arrowClick(view.state.doc, owner)
+  view.dispatch({ ...click, userEvent: DISCLOSE })
+  moveSelectionOutOfHidden(view)
+  return true
+}
+
+/**
+ * Dispatches `spec`, whose selection the app puts back itself — reopening a file where it was
+ * left, a reload from disk keeping the caret. What is hidden stays hidden: a selection reaching
+ * into it goes to the end of the line the fold is drawn on, as after a click.
+ */
+export function restoreSelection (view, spec) {
+  view.dispatch({ ...spec, annotations: [spec.annotations ?? [], selectionRestored.of(true)].flat() })
+  moveSelectionOutOfHidden(view)
+}
+
+/** A click on an arrow is `clickArrow`. A click on ⋯ shows the lines Hide Lines hid there. */
 const clicks = EditorView.domEventHandlers({
   mousedown (event, view) {
     if (event.button !== 0 || event.shiftKey || event.metaKey || event.altKey) return false
@@ -262,11 +295,7 @@ const clicks = EditorView.domEventHandlers({
     }
     const target = element?.closest('.lo-disclosure')
     if (!target) return false
-    const doc = view.state.doc
-    const owner = ownerOnLine(view.state.field(enhancedField), doc.lineAt(view.posAtDOM(target)).number - 1)
-    if (!owner) return false
-    view.dispatch({ ...arrowClick(doc, owner), userEvent: DISCLOSE })
-    moveSelectionOutOfHidden(view)
+    if (!clickArrow(view, view.state.doc.lineAt(view.posAtDOM(target)).number - 1)) return false
     event.preventDefault()
     return true
   },

@@ -42,7 +42,8 @@ next line
 ## Clicking
 
 - **An arrow** flips `-->` ↔ `--v` (its third character). The caret does not move, unless it is
-  in what the click hides, when it goes to the end of the arrow's line. ⌘Z undoes it.
+  in what the click hides, when it goes to the end of the arrow's line. ⌘Z undoes it. A `-->`
+  whose lines Find or an edit has shown (Hiding) is not flipped: the click hides them again.
 - Collapsing an arrow hides its whole body, nested arrows and all. Expanding it shows the body,
   and the nested arrows then follow their own state.
 - A click on text places the caret, so the line and its body stay editable.
@@ -61,7 +62,9 @@ A collapsed arrow hides from the end of its line to the end of the last line of 
 as an enhanced task's folds are: the arrow is the only sign that something is folded — nothing is
 drawn after it — and the arrow keys skip the hidden lines. A caret that Find or undo drops into
 hidden lines shows them, and so does an edit that reaches into them; the arrow is not rewritten.
-That lasts until the next click on that arrow.
+That lasts until the next click on that arrow, which hides them again. A caret the app puts back
+itself — reopening a file where it was left, a reload from disk keeping its place — shows nothing:
+it goes to the end of the arrow's line instead.
 
 ## Hide Lines and Show Lines
 

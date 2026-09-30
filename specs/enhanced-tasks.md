@@ -22,7 +22,8 @@ Lolext. This file holds only how LoText reads, draws and edits them.
 ## Clicking
 
 - **The arrow** flips `==>` ↔ `==v` (its third character). The caret does not move unless it is
-  in what the click hides, when it goes to the end of the task line. ⌘Z undoes it.
+  in what the click hides, when it goes to the end of the task line. ⌘Z undoes it. A `==>` whose
+  lines Find or an edit has shown (Hiding) is not flipped: the click hides them again.
 - **The task's box**, `[[ ]]`, flips its mark. Checking it also writes `==>` in the same edit, so
   one ⌘Z brings both back. Unchecking changes no arrow. Nested disclosure arrows keep their state.
 - **A choice's box** flips, as any box does (`specs/task-boxes.md`).
@@ -41,7 +42,10 @@ Lolext. This file holds only how LoText reads, draws and edits them.
 The arrow is the only sign that something is hidden; nothing, no ellipsis, is drawn after it.
 Hidden lines are skipped by the arrow keys. A caret that Find or undo drops into hidden lines, or
 an edit that reaches into them, shows them; the arrow is not rewritten. That is the only state the
-view keeps, and it lasts until the next click on that task's arrow or its box being checked.
+view keeps, and it lasts until the next click on that task's arrow, which hides them again, or its
+box being checked. A caret the app puts back itself — reopening a file where it was left, a reload
+from disk keeping its place — shows nothing: it goes to the end of the task line instead, so a
+`==>` never sits over lines that show without Find or an edit having shown them.
 
 ## Moving
 

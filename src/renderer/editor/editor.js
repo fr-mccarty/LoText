@@ -23,7 +23,7 @@ import { invisibles } from './invisibles.js'
 import { taskBoxes } from './task-boxes.js'
 import { hangingIndent } from './hanging-indent.js'
 import { findBar, showFindBar } from './find-bar.js'
-import { enhancedTasks, moveItems, hideLines, showLines } from './enhanced-view.js'
+import { enhancedTasks, moveItems, hideLines, showLines, restoreSelection } from './enhanced-view.js'
 import * as TextRanges from './text-ranges.js'
 import { cutWholeLines, indentBy, outdentBy, linesOfSelection, insertNewlineKeepingIndent } from './line-editing.js'
 import * as Emphasis from './emphasis-markers.js'
@@ -124,7 +124,8 @@ export class Editor {
     const selection = this.view.state.selection.main.head
     const scroll = this.view.scrollDOM.scrollTop
     this.isProgrammatic = true
-    this.view.dispatch({
+    // A caret that now falls in lines a closed arrow hides moves out rather than showing them.
+    restoreSelection(this.view, {
       changes: { from: 0, to: this.view.state.doc.length, insert: text },
       selection: { anchor: Math.min(selection, text.length) },
       annotations: Transaction.addToHistory.of(false),
@@ -157,7 +158,9 @@ export class Editor {
     const doc = this.view.state.doc
     const clampTo = (value) => Math.min(Math.max(0, Number(value) || 0), doc.length)
     const top = doc.line(Math.min(Math.max(1, Number(position.top) || 1), doc.lines)).from
-    this.view.dispatch({
+    // Left in lines a closed arrow hides now, as another device may have closed it, the caret
+    // goes to the arrow's line rather than showing them.
+    restoreSelection(this.view, {
       selection: { anchor: clampTo(position.anchor), head: clampTo(position.head) },
       effects: EditorView.scrollIntoView(top, { y: 'start', yMargin: 0 }),
     })

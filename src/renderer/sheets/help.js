@@ -169,7 +169,7 @@ function enhancedTasksHelp (onDispose) {
     section('What is hidden',
       list(
         ['A collapsed task hides every line it owns. The arrow is the only sign: nothing is drawn after it.'],
-        'The arrow keys skip hidden lines. A caret that Find or undo drops into them shows them, without rewriting the arrow, until the next click on that task’s arrow.',
+        'The arrow keys skip hidden lines. A caret that Find or undo drops into them shows them, without rewriting the arrow, and they hide again at the next click on that task’s arrow.',
         ['A single-arrow disclosure (', code(' -->'), ') on a line under a task works as it does anywhere (Help ▸ Disclosure Arrows).'],
       )),
 
