@@ -284,6 +284,7 @@ next line                           ← back at the edge: ends both bodies`)),
     section('Hiding from the keyboard',
       list(
         ['Edit ▸ Hide Lines (⌘[) closes the arrow the caret is in, the same edit as a click; press it again to close the next arrow out. Edit ▸ Show Lines (⌘]) opens the arrow on the caret’s line.'],
+        ['A line needs no arrow: ⌘[ on it, or on a line under it, hides the lines indented deeper under it, with ', code('⋯'), ' after it.'],
         ['Select several lines and press ⌘[: the first line stays and the rest hide. When the first line has an arrow, that arrow closes. Otherwise nothing is written to the file, and ', code('⋯'), ' after the first line shows them again, as does ⌘] on that line.'],
         'Lines hidden with ⋯ show again when an edit or Find reaches into them, and are forgotten when the file closes.',
       )),

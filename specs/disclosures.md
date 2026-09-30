@@ -70,8 +70,13 @@ Unfold. They work the arrows from the keyboard, and hide lines that have no arro
 
 - **Hide Lines with a caret** closes the innermost arrow around it whose body is showing — a task's
   or a disclosure's, open, or closed but shown by Find or an edit — the same edit as a click, so
-  one ⌘Z opens it again. Pressed again, it closes the next arrow out. Outside every arrow it does
-  nothing.
+  one ⌘Z opens it again. Pressed again, it closes the next arrow out.
+- **Lines with no arrow** count as well. When the innermost line around the caret with lines
+  indented deeper under it — the caret's own line or one above — has no arrow, those lines hide as
+  a body would (the same rule: one blank line inside is kept, two end it), on screen only, with ⋯
+  after the line. Pressed again, it hides the next arrow or line out. Arrows and lines without
+  them nest together: whichever is innermost goes first. With nothing indented under or around
+  the caret it does nothing.
 - **Hide Lines with a selection over several lines** keeps the first line and hides the rest. When
   the first line has an arrow, it closes that arrow instead. Otherwise the lines are hidden on
   screen only: nothing is written to the file, and ⋯ is drawn after the first line. A selection

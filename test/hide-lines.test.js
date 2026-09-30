@@ -82,6 +82,88 @@ describe('Hide Lines with a caret', () => {
   })
 })
 
+describe('Hide Lines with a caret and no arrow', () => {
+  const OUTLINE = [
+    'Groceries',
+    '  milk',
+    '  fruit',
+    '    apples',
+    '',
+    '    pears',
+    'after',
+  ]
+
+  it('hides the lines indented deeper under the caret’s line, writing nothing to the file', () => {
+    const view = editorOver(OUTLINE, [2, 3])
+    expect(hideLines(view)).toBe(true)
+    expect(textOf(view)).toEqual(OUTLINE)
+    expect(hiddenLineNumbers(view)).toEqual([[4, 6]])
+    // The caret was on the line that stays, so it stays where it was.
+    expect(view.state.selection.main.head).toBe(view.state.doc.line(3).from + 3)
+  })
+
+  it('hides the lines around the caret from the line above them', () => {
+    const view = editorOver(OUTLINE, [3, 2])
+    hideLines(view)
+    expect(hiddenLineNumbers(view)).toEqual([[4, 6]])
+    // The caret was in what hides, so it goes to the end of the line above.
+    expect(view.state.selection.main.head).toBe(view.state.doc.line(3).to)
+  })
+
+  it('hides the next lines out when pressed again', () => {
+    const view = editorOver(OUTLINE, [3, 2])
+    hideLines(view)
+    hideLines(view)
+    expect(textOf(view)).toEqual(OUTLINE)
+    expect(hiddenLineNumbers(view)).toEqual([[2, 6]])
+    expect(view.state.selection.main.head).toBe(view.state.doc.line(1).to)
+  })
+
+  it('is undone by Show Lines on the line', () => {
+    const view = editorOver(OUTLINE, [0, 0])
+    hideLines(view)
+    expect(hiddenLineNumbers(view)).toEqual([[2, 6]])
+    expect(showLines(view)).toBe(true)
+    expect(hiddenLineNumbers(view)).toEqual([])
+  })
+
+  it('does nothing on a line with nothing under it and nothing around it', () => {
+    const view = editorOver(OUTLINE, [6, 2])
+    expect(hideLines(view)).toBe(false)
+  })
+
+  it('takes the innermost of an arrow and a line with none', () => {
+    const lines = ['Groceries --v', '  fruit', '    apples', 'Chores', '  sweep --v', '    stairs']
+    const view = editorOver(lines, [2, 2])
+    hideLines(view)
+    expect(textOf(view)).toEqual(lines)
+    expect(hiddenLineNumbers(view)).toEqual([[3, 3]])
+    hideLines(view)
+    expect(textOf(view)[0]).toBe('Groceries -->')
+    expect(hiddenLineNumbers(view)).toEqual([[2, 3]])
+
+    const inner = editorOver(lines, [5, 2])
+    hideLines(inner)
+    expect(textOf(inner)[4]).toBe('  sweep -->')
+    hideLines(inner)
+    expect(hiddenLineNumbers(inner)).toEqual([[5, 6]])
+  })
+
+  it('passes over a closed arrow’s line to the line with none above it', () => {
+    const lines = ['Groceries', '  fruit -->', '    apples', 'after']
+    const view = editorOver(lines, [1, 3])
+    hideLines(view)
+    expect(textOf(view)).toEqual(lines)
+    expect(hiddenLineNumbers(view)).toEqual([[2, 3]])
+  })
+
+  it('treats a selection within one line as a caret', () => {
+    const view = editorOver(OUTLINE, [0, 1], [0, 5])
+    hideLines(view)
+    expect(hiddenLineNumbers(view)).toEqual([[2, 6]])
+  })
+})
+
 describe('Hide Lines with a selection over several lines', () => {
   const PLAIN = ['intro', 'one', 'two', 'three', 'outro']
 

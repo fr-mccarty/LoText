@@ -48,12 +48,12 @@ export function parseDisclosures (lines, { skip = new Set() } = {}) {
   const arrowAt = (index) => skip.has(index) ? null : parseArrow(lines[index])
 
   const build = (index, arrow) => {
-    const disclosure = { line: index, ...arrow, body: null, children: [], lastLine: index }
+    const disclosure = { line: index, ...arrow, body: bodyUnder(lines, index, { skip }), children: [], lastLine: index }
     all.push(disclosure)
-    const deeper = (at) => at < lines.length && !skip.has(at) && !BLANK.test(lines[at]) && indentOf(lines[at]) > arrow.indent
-    let next = index + 1
-    while (deeper(next) || (next < lines.length && BLANK.test(lines[next]) && deeper(next + 1))) {
-      if (BLANK.test(lines[next])) { next++; continue }
+    if (!disclosure.body) return disclosure
+    disclosure.lastLine = disclosure.body[1]
+    let next = disclosure.body[0]
+    while (next <= disclosure.body[1]) {
       const nested = arrowAt(next)
       if (nested) {
         const child = build(next, nested)
@@ -62,10 +62,6 @@ export function parseDisclosures (lines, { skip = new Set() } = {}) {
       } else {
         next++
       }
-    }
-    if (next > index + 1) {
-      disclosure.body = [index + 1, next - 1]
-      disclosure.lastLine = next - 1
     }
     return disclosure
   }
@@ -76,6 +72,19 @@ export function parseDisclosures (lines, { skip = new Set() } = {}) {
     index = arrow ? build(index, arrow).lastLine + 1 : index + 1
   }
   return all
+}
+
+/**
+ * The lines indented deeper straight under line `index`, as [first, last], or null: a
+ * disclosure's body by the rule above, whether or not the line ends in an arrow. Hide Lines hides
+ * them under a line with no arrow.
+ */
+export function bodyUnder (lines, index, { skip = new Set() } = {}) {
+  const indent = indentOf(lines[index])
+  const deeper = (at) => at < lines.length && !skip.has(at) && !BLANK.test(lines[at]) && indentOf(lines[at]) > indent
+  let next = index + 1
+  while (deeper(next) || (next < lines.length && BLANK.test(lines[next]) && deeper(next + 1))) next++
+  return next > index + 1 ? [index + 1, next - 1] : null
 }
 
 /** The lines a closed disclosure hides, as for a task: [{ first, last }], or none. */

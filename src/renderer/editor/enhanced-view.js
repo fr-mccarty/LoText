@@ -291,9 +291,43 @@ function innermostShowing (value, index) {
 }
 
 /**
+ * The innermost line with no arrow around line `index` whose deeper lines under it are showing,
+ * as { line, from, to } with those lines as a document range, or null. The lines under it are
+ * a disclosure's body by the same rule, so `index` may be that line itself or one of them.
+ */
+function innermostPlainShowing (state, value, index) {
+  const doc = state.doc
+  const lines = linesOf(doc)
+  const skip = Disclosures.reservedLines(lines, value.tasks)
+  const folded = foldedRanges(state)
+  // Only a line less indented than every line between it and `index` can hold `index`.
+  let shallowest = Infinity
+  for (let line = index; line >= 0; line--) {
+    const text = lines[line]
+    if (/^\s*$/.test(text)) continue
+    const indent = Disclosures.indentOf(text)
+    if (line === index || indent < shallowest) {
+      const body = ownerOnLine(value, line) ? null : Disclosures.bodyUnder(lines, line, { skip })
+      if (body && body[1] >= index) {
+        const range = { line, from: doc.line(line + 1).to, to: doc.line(body[1] + 1).to }
+        if (!folded.some((fold) => fold.from <= range.from && fold.to >= range.to)) return range
+      }
+    }
+    shallowest = Math.min(shallowest, indent)
+    if (shallowest === 0) break
+  }
+  return null
+}
+
+/** `ranges` without repeats, as two carets under one line would give. */
+const unique = (ranges) => [...new Map(ranges.map((range) => [`${range.from}:${range.to}`, range])).values()]
+
+/**
  * ⌘[, Hide Lines, as VS Code's Fold and Fold Selection. A caret closes the innermost arrow around
  * it whose body is showing — the same edit as a click on it, so ⌘Z opens it again — and pressing
- * again closes the next arrow out. A selection over several lines keeps its first line and hides
+ * again closes the next arrow out. Lines with no arrow count too: where the innermost line around
+ * the caret with lines indented deeper under it has no arrow, those lines hide on screen only,
+ * with ⋯ after it. A selection over several lines keeps its first line and hides
  * the rest: by closing the first line's arrow when it has one, and otherwise on screen only,
  * nothing written to the file, with ⋯ after the first line to show them again. A selection
  * reaching into what is hidden goes to the end of the line it is drawn on. False when nothing
@@ -309,7 +343,9 @@ export function hideLines (view) {
     const { first, last } = linesCoveredBy(doc, range)
     if (first === last) {
       const owner = innermostShowing(value, first)
-      if (owner) owners.set(owner.pos, owner)
+      const plain = innermostPlainShowing(state, value, first)
+      if (plain && (!owner || plain.line > owner.line)) selections.push({ from: plain.from, to: plain.to })
+      else if (owner) owners.set(owner.pos, owner)
       continue
     }
     const owner = ownerOnLine(value, first)
@@ -320,7 +356,7 @@ export function hideLines (view) {
   const clicked = [...owners.values()].map((owner) => owner.open ? arrowClick(doc, owner) : { effects: arrowClicked.of(owner.pos) })
   view.dispatch({
     changes: clicked.flatMap((click) => click.changes ?? []),
-    effects: [...clicked.map((click) => click.effects), ...selections.map((range) => selectionHidden.of(range))],
+    effects: [...clicked.map((click) => click.effects), ...unique(selections).map((range) => selectionHidden.of(range))],
     userEvent: DISCLOSE,
   })
   moveSelectionOutOfHidden(view)
