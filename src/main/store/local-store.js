@@ -10,7 +10,7 @@
 // A file is named by its path *relative to the folder you opened*, so a file keeps its
 // identity even if the folder itself gets moved or renamed around it.
 
-import { promises as fs, watch as watchPath } from 'node:fs'
+import { promises as fs, watch as watchPath, realpathSync } from 'node:fs'
 import path from 'node:path'
 import { shell } from 'electron'
 import * as FilePath from '../../shared/file-path.js'
@@ -44,6 +44,20 @@ export class LocalStore {
 
   get isUnavailable () {
     return this.unavailable
+  }
+
+  /**
+   * On a mounted volume — a network share, an external drive — rather than the startup disk:
+   * everything mounted on a Mac is under `/Volumes`. The real path decides, so a folder reached
+   * through a link into a share counts, and `/Volumes/Macintosh HD`, a link to `/`, does not.
+   */
+  get isMounted () {
+    if (this.mounted === undefined) {
+      let real = this.root
+      try { real = realpathSync(this.root) } catch {}
+      this.mounted = real.startsWith('/Volumes/')
+    }
+    return this.mounted
   }
 
   /** The three things a folder on a server does not have; a local one has all of them. */

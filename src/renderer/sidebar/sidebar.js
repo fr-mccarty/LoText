@@ -94,7 +94,7 @@ export class Sidebar {
     }
 
     clear(this.headerNode)
-    if (model.folder) this.headerNode.append(this.buildRootHeader(model.folder.name))
+    if (model.folder) this.headerNode.append(this.buildRootHeader(model.folder))
 
     clear(this.noteNode)
 
@@ -104,15 +104,21 @@ export class Sidebar {
   /**
    * The opened folder's name, at the head of its own tree, doing the three jobs that fall to
    * the one place meaning *the top level*: it says which folder this is, it takes a drop, and a
-   * click makes a file or a folder there.
+   * click makes a file or a folder there. A folder that is not on this Mac's own disk says so
+   * with a small tag after its name: SSH for one on a server, MNT for one on a mounted volume.
    */
-  buildRootHeader (name) {
+  buildRootHeader (folder) {
+    const name = folder.name
+    const tag = folderTag(folder)
     const node = element('div', {
       class: 'sidebar-root',
       title: `${quote(name)} is the opened folder. Click it to add a file or folder at the top level.`,
       onclick: (event) => this.showNewItemMenu(event, FilePath.ROOT),
       oncontextmenu: (event) => this.showNewItemMenu(event, FilePath.ROOT),
-    }, [element('span', { text: name })])
+    }, [
+      element('span', { text: name }),
+      tag && element('span', { class: 'folder-tag', ...tag }),
+    ])
     node.dataset.dropPath = FilePath.ROOT
     return node
   }
@@ -496,4 +502,14 @@ function splitForEditing (name) {
 
 function cssEscape (value) {
   return String(value).replace(/["\\]/g, '\\$&')
+}
+
+/**
+ * The one tag after the folder's name, or null: SSH for a folder on a server, otherwise MNT for
+ * one on a mounted volume. A folder gets one tag at most, and a server folder is never MNT.
+ */
+export function folderTag (folder) {
+  if (folder?.kind === 'remote') return { text: 'SSH', title: 'This folder is on a server, reached over SSH.' }
+  if (folder?.isMounted) return { text: 'MNT', title: 'This folder is on a mounted volume, such as a network share or an external drive.' }
+  return null
 }

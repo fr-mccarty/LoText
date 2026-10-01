@@ -68,6 +68,7 @@ class AppWindow {
       key: this.store.identity,
       name: this.store.rootName,
       kind: this.store.kind,
+      isMounted: Boolean(this.store.isMounted),
       capabilities: this.store.capabilities,
       isUnavailable: this.store.isUnavailable,
       expansion: Session.expansion(this.store.identity),

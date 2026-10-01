@@ -185,6 +185,19 @@ body.dragging { cursor: col-resize; }
 .sidebar-root:hover { background: var(--selection); }
 .sidebar-root.drop-target { background: var(--selection-tint); color: #fff; }
 .sidebar-root span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* SSH or MNT after the folder's name: the name gives way to it, never the other way round. */
+.sidebar-root .folder-tag {
+  flex-shrink: 0;
+  margin-left: 6px;
+  padding: 0 4px;
+  border-radius: 3px;
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  line-height: 14px;
+  color: var(--text-secondary);
+  background: var(--control);
+}
 
 .banner {
   display: flex;
