@@ -23,8 +23,8 @@ const DAY = [
   '[[ ]] ==> (()) Call Ann',
   '  her number',
   '  [ ] ring',
-  'Groceries -->',
-  '  milk',
+  '  Groceries -->',
+  '    milk',
 ]
 
 describe('a click on an arrow', () => {
@@ -42,7 +42,7 @@ describe('a click on an arrow', () => {
   it('shows and hides what a disclosure arrow holds', () => {
     const view = editorOver(DAY.slice(3))
     clickArrow(view, 0)
-    expect(textOf(view)[0]).toBe('Groceries --v')
+    expect(textOf(view)[0]).toBe('  Groceries --v')
     expect(hiddenLines(view)).toEqual([])
     clickArrow(view, 0)
     expect(hiddenLines(view)).toEqual([[1, 1]])
@@ -76,7 +76,7 @@ describe('a caret put back inside hidden lines', () => {
 
   it('in a disclosure leaves it hidden too', () => {
     const view = editorOver(DAY.slice(3))
-    restoreSelection(view, { selection: { anchor: at(view, 1, 3) } })
+    restoreSelection(view, { selection: { anchor: at(view, 1, 5) } })
     expect(hiddenLines(view)).toEqual([[1, 1]])
     clickArrow(view, 0)
     expect(hiddenLines(view)).toEqual([])
@@ -117,10 +117,10 @@ describe('a caret put back inside hidden lines', () => {
 
   it('shown by an edit hide again at a click on a disclosure arrow', () => {
     const view = editorOver(DAY.slice(3))
-    view.dispatch({ changes: { from: at(view, 1, 2), insert: 'oat ' } })
+    view.dispatch({ changes: { from: at(view, 1, 4), insert: 'oat ' } })
     expect(hiddenLines(view)).toEqual([])
     clickArrow(view, 0)
-    expect(textOf(view)).toEqual(['Groceries -->', '  oat milk'])
+    expect(textOf(view)).toEqual(['  Groceries -->', '    oat milk'])
     expect(hiddenLines(view)).toEqual([[1, 1]])
   })
 })

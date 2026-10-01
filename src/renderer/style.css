@@ -421,7 +421,7 @@ body.row-dragging .row.selected:hover { background: var(--selection-inactive); }
 /* A task box, `[ ]` or `[x]`, stays its three characters; it only shows that a click flips it. */
 .lo-task-box { cursor: pointer; color: var(--accent); }
 
-/* Enhanced tasks (specs/enhanced-tasks.md) and disclosure arrows at the end of any line
+/* Enhanced tasks (specs/enhanced-tasks.md) and disclosure arrows anywhere on a line
    (specs/disclosures.md). The arrows, `==>` / `==v` and `-->` / `--v`, are text, drawn as small buttons,
    and are the only sign that something is folded: no ellipsis follows them. */
 .lo-disclosure, .lo-hidden-lines { white-space: nowrap; cursor: pointer; color: var(--accent); background: var(--control); border-radius: 3px; }

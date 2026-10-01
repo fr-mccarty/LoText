@@ -20,11 +20,11 @@ nobody has clicked it yet.
 - [ ] Help ▸ Enhanced Tasks, Help ▸ Disclosure Arrows and Help ▸ Markdown Formatting open as
       sheets; the try-it areas work (arrows, boxes, ⌥↑/⌥↓); Esc and Done close them. *Scripted.*
 - [ ] Enhanced tasks (`specs/enhanced-tasks.md`): click `==>` / `==v` on a task (it hides
-      everything down to the next task line), click and type into the `  [ ] ` choices, check
+      the lines indented under it), click and type into the `  [ ] ` choices, check
       the task's `[[ ]]` (it collapses, one ⌘Z restores), Find into hidden text.
-- [ ] Disclosure arrows (`specs/disclosures.md`): ` -->` / ` --v` ending any line folds the lines
-      deeper under it, nested; a blank or differently indented line ends a body;
-      `<!-- x -->` stays plain; typing an arrow writes `--v`. *Scripted.*
+- [ ] Disclosure arrows (`specs/disclosures.md`): the first `-->` / `--v` or `==>` / `==v`
+      anywhere on a line folds the lines deeper under it, nested; a blank or differently indented line ends a body;
+      `<!-- x -->` stays plain; typing an arrow writes `--v` / `==v`. *Scripted.*
 - [ ] Sidebar ▸ Copy Absolute Path on a file and on a folder puts its full path on the clipboard.
 - [ ] Read Help ▸ Enhanced Tasks and Help ▸ Disclosure Arrows against the app: every claim holds.
 - [ ] Task boxes (`specs/task-boxes.md`): click `[ ]` / `[x]` at a line's head to flip it; `[]`

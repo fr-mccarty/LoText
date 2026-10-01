@@ -26,7 +26,7 @@ async function cut (lines, ...carets) {
 const state0Line = (doc, line) => doc.split('\n').slice(0, line).reduce((at, text) => at + text.length + 1, 0)
 
 describe('⌘X on a collapsed item', () => {
-  it('cuts a collapsed enhanced task whole, down to the next task', async () => {
+  it('cuts a collapsed enhanced task whole, with the lines indented under it', async () => {
     const { left, clipboard } = await cut([
       '[[ ]] ==> (()) first',
       '  its description',

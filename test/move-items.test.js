@@ -15,10 +15,12 @@ const CLOSED_TASK = [
 const OPEN_TASK = ['[[x]] ==v (()) done', '  The description.', '  [x] a row', '  [ ] ']
 
 describe('a task', () => {
-  it('moves whole, everything down to the next task line with it', () => {
-    const lines = [...OPEN_TASK, 'at the edge', ...CLOSED_TASK]
-    expect(move(lines, [at(5)], UP)).toEqual({ lines: [...CLOSED_TASK, ...OPEN_TASK, 'at the edge'], shifts: [-5] })
+  it('moves whole, the lines indented under it with it', () => {
+    const lines = [...OPEN_TASK, ...CLOSED_TASK, 'at the edge']
+    expect(move(lines, [at(4)], UP)).toEqual({ lines: [...CLOSED_TASK, ...OPEN_TASK, 'at the edge'], shifts: [-4] })
     expect(move(lines, [at(0)], DOWN)).toEqual({ lines: [...CLOSED_TASK, ...OPEN_TASK, 'at the edge'], shifts: [4] })
+    // A line back at the edge is not the task's: the task steps over it alone.
+    expect(move(lines, [at(4)], DOWN)).toEqual({ lines: [...OPEN_TASK, 'at the edge', ...CLOSED_TASK], shifts: [1] })
   })
 
   it('moves whole when open, once the task line is in the range', () => {

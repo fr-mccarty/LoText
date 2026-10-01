@@ -1,33 +1,34 @@
-// Disclosure arrows at the end of any line: a line ending in ` -->` (collapsed) or ` --v`
-// (expanded) opens and closes the lines indented deeper under it. As with enhanced tasks, the
-// state is the text, so these are pure functions over arrays of lines, tested without an editor.
+// Disclosure arrows anywhere on a line: the first `-->` or `==>` (collapsed), `--v` or `==v`
+// (expanded) on a line opens and closes the lines indented deeper under it. As with enhanced
+// tasks, the state is the text, so these are pure functions over arrays of lines, tested without an editor.
 // `enhanced-view.js` is the CodeMirror side, for these and the task arrows alike. The rule is the
 // toolbox's disclosure-arrow spec; `specs/disclosures.md` holds what is LoText's own.
 //
 // Line numbers are 0-based. An edit is { line, column, char }: one character to replace.
 
 import { parseTaskLine, parseTasks } from './enhanced-tasks.js'
+import { bodyUnder, indentOf } from './indented-body.js'
 
-const ARROW_AT_END = /\s(-->|--v)\s*$/
-const BLANK = /^\s*$/
+export { bodyUnder, indentOf }
 
-/** How many spaces a line starts with. */
-export const indentOf = (text) => /^ */.exec(text)[0].length
-
+const ARROW = /(^|\s)(-->|--v|==>|==v)(?=\s|$)/
 /**
- * The arrow ending a line, or null: { column, open, indent }, with `column` at the first `-`.
- * It follows whitespace, and trailing spaces are allowed. A line with `<!--` before its arrow is
- * an HTML comment, not a disclosure.
+ * The first arrow on a line, or null: { column, open, indent }, with `column` at its first `-` or
+ * `=`. It starts the line or follows whitespace, and is followed by whitespace or the end of the
+ * line, so `a --> b` and `--> b` have one and `text-->`, `--verbose` do not. A line with `<!--`
+ * before its arrow is an HTML comment, and an arrow alone in the first column, as `-->` ends a
+ * longer comment, is plain text too.
  */
 export function parseArrow (text) {
-  const match = ARROW_AT_END.exec(text)
+  const match = ARROW.exec(text)
   if (!match) return null
-  const column = match.index + 1
+  const column = match.index + match[1].length
   if (text.slice(0, column).includes('<!--')) return null
-  return { column, open: match[1] === '--v', indent: indentOf(text) }
+  if (column === 0 && !text.slice(3).trim()) return null
+  return { column, open: match[2].endsWith('v'), indent: indentOf(text) }
 }
 
-/** The enhanced-task lines: never disclosures, whatever they end in, and the end of any body. */
+/** The enhanced-task lines: never disclosures, whatever they end in. */
 export function reservedLines (lines, tasks = parseTasks(lines)) {
   return new Set(tasks.map((task) => task.line))
 }
@@ -38,7 +39,7 @@ export function reservedLines (lines, tasks = parseTasks(lines)) {
  *   { line, column, open, indent, body: [first, last] | null, children: [disclosure], lastLine }
  *
  * The body is every line straight under the arrow's line indented deeper than it, however much
- * deeper; a body line ending in an arrow is a nested disclosure with a body of its own. One blank
+ * deeper; a body line with an arrow is a nested disclosure with a body of its own. One blank
  * line with a deeper line after it belongs to the body; two blank lines in a row, a blank line at
  * its end, a reserved line (`skip`), or a line no deeper than the arrow's line ends it. A
  * disclosure with no body is still one.
@@ -74,19 +75,6 @@ export function parseDisclosures (lines, { skip = new Set() } = {}) {
   return all
 }
 
-/**
- * The lines indented deeper straight under line `index`, as [first, last], or null: a
- * disclosure's body by the rule above, whether or not the line ends in an arrow. Hide Lines hides
- * them under a line with no arrow.
- */
-export function bodyUnder (lines, index, { skip = new Set() } = {}) {
-  const indent = indentOf(lines[index])
-  const deeper = (at) => at < lines.length && !skip.has(at) && !BLANK.test(lines[at]) && indentOf(lines[at]) > indent
-  let next = index + 1
-  while (deeper(next) || (next < lines.length && BLANK.test(lines[next]) && deeper(next + 1))) next++
-  return next > index + 1 ? [index + 1, next - 1] : null
-}
-
 /** The lines a closed disclosure hides, as for a task: [{ first, last }], or none. */
 export function hiddenLines (disclosure) {
   if (disclosure.open || !disclosure.body) return []
@@ -101,17 +89,15 @@ export function arrowFlip (disclosure) {
 // MARK: - Typed arrows open
 
 /**
- * Where an arrow could be on a line, by its text alone: a task's `==>` and a disclosure arrow at
- * the end. Columns of the first character, as { column, open }. Used to tell which arrows an
- * edit found already there.
+ * Where the arrow is on a line, by its text alone: a task line's `==>`, or the line's first
+ * disclosure arrow. The column of its first character, as [{ column, open }], or none. Used to
+ * tell which arrows an edit found already there.
  */
 export function arrowsOnLine (text) {
-  const out = []
   const task = parseTaskLine(text)
-  if (task) out.push({ column: task.arrowColumn, open: task.open })
-  const end = parseArrow(text)
-  if (end) out.push({ column: end.column, open: end.open })
-  return out
+  if (task) return [{ column: task.arrowColumn, open: task.open }]
+  const arrow = parseArrow(text)
+  return arrow ? [{ column: arrow.column, open: arrow.open }] : []
 }
 
 /**

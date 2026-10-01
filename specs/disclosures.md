@@ -1,13 +1,13 @@
 # Spec: disclosure arrows
 
-What a disclosure arrow is — the single arrow, `-->` collapsed and `--v` expanded, hiding the
-lines indented under it — is the toolbox's disclosure-arrow spec,
-`/Volumes/jam-dev-tools/specs/disclosure-arrow/README.md`. The double arrow, `==>`, is an enhanced
-task's (`specs/enhanced-tasks.md`). There is nothing like either in Lolext. This file holds only
-how LoText reads, draws and edits the single arrow.
+What a disclosure arrow is — `-->` collapsed and `--v` expanded, hiding the lines indented under
+it — is the toolbox's disclosure-arrow spec, `/Volumes/jam-dev-tools/specs/disclosure-arrow/README.md`.
+The double arrow, `==>` / `==v`, is a disclosure arrow too, except on an enhanced task's line,
+where it is the task's own (`specs/enhanced-tasks.md`). There is nothing like either in Lolext.
+This file holds only how LoText reads, draws and edits disclosure arrows.
 
 The user-facing name is *disclosure arrow*, in the Help and everywhere else; the code calls a line
-that ends in one a disclosure.
+that has one a disclosure.
 
 ## Reading the text
 
@@ -19,16 +19,19 @@ submission_to_tribunal_date* --v
 next line
 ```
 
-- **Where the arrow sits.** LoText reads the arrow only at the end of a line: ` -->` or ` --v`
-  after whitespace, or alone after the indent, trailing spaces allowed. An arrow in the middle
-  of a line (`a --> b`) or with no space before it (`text-->`) is plain text, so prose and code
-  that happen to contain `-->` are left alone.
+- **Where the arrow sits.** Anywhere on a line: `-->`, `--v`, `==>` or `==v` at the start of the
+  line or after whitespace, and followed by whitespace or the end of the line. So `--> Plan`,
+  `Plan --> week` and `Plan -->` have one; `text-->` and `--verbose` do not.
+- **Only the first arrow on a line counts.** In `a --v b --> c`, `--v` is the button and `-->`
+  is plain text. A line has one arrow or none.
 - **HTML comments.** A line with `<!--` before its arrow, such as `<!-- note -->`, is plain text,
   and so is a `-->` alone in the first column, the end of a longer comment.
 - **Enhanced-task lines** are never disclosures, whatever they end in, and end any body they
-  would fall into. Every other line a task owns may carry an arrow of its own.
+  would fall into, and any other arrow on a task line is plain text. A task owns the lines
+  indented under it by the same rule as a body. Every other line a task owns may carry an arrow
+  of its own.
 - **The body** is every line straight under the arrow's line indented deeper than it, by any
-  amount, in leading spaces; the Tab setting plays no part. A body line ending in an arrow owns
+  amount, in leading spaces; the Tab setting plays no part. A body line with an arrow owns
   the lines deeper than its own indent under it, and so on down. In the example, `Type: date`,
   `Width in Sixths` and `More Detail Here` belong to the first line, `More Detail Here` also
   belongs to `Width in Sixths`, and `next line` ends both.
@@ -50,8 +53,9 @@ next line
 
 ## Typing
 
-An arrow that typing or a paste brings into being is written expanded: typing ` -->` at the end
-of a line gives ` --v`, and nothing hides. Only an arrow that was not there before the edit is
+An arrow that typing or a paste brings into being is written expanded, wherever it is on the
+line: `-->` gives `--v` and `==>` gives `==v`, and nothing hides. It stays expanded until it is
+clicked. Only an arrow that was not there before the edit is
 rewritten, in the same edit, and the caret stays after it. Arrows already in a file when it is
 opened, or that arrive from disk (⌘R, a change made elsewhere), keep the state they were saved
 with, and so does anything undo or redo puts back. A click is the way to collapse an arrow.

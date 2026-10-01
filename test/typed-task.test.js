@@ -39,11 +39,11 @@ describe('a task typed in the editor', () => {
 describe('checking the task', () => {
   const doc = '[[ ]] ==v (()) T\n  description\n  [ ] a\nat the edge\n[[ ]] ==v (()) next\n  more'
 
-  it('collapses it in the same edit, hiding every line down to the next task', () => {
+  it('collapses it in the same edit, hiding the lines indented under it', () => {
     const state = replace(doc, 2, 'x')
     expect(state.doc.line(1).text).toBe('[[x]] ==> (()) T')
     expect(state.doc.line(5).text).toBe('[[ ]] ==v (()) next')
-    expect(hiddenLineNumbers(state)).toEqual([[[2, 4]], []])
+    expect(hiddenLineNumbers(state)).toEqual([[[2, 3]], []])
   })
 
   it('unchecking changes no arrow', () => {
@@ -60,5 +60,31 @@ describe('the choices', () => {
 
   it('an empty box outside a task stays empty', () => {
     expect(type('notes\n  [ ] ', 'milk').doc.toString()).toBe('notes\n  [ ] milk')
+  })
+})
+
+describe('an arrow typed anywhere on a line', () => {
+  const foldedCount = (state) => state.field(enhancedField).disclosures.filter((d) => !d.open && d.body).length
+
+  it('in the middle arrives expanded and stays so as typing goes on', () => {
+    const state = type('Plan\n  Monday', ' --> week', 4)
+    expect(state.doc.toString()).toBe('Plan --v week\n  Monday')
+    expect(foldedCount(state)).toBe(0)
+  })
+
+  it('the double arrow too, off a task line', () => {
+    const state = type('Plan\n  Monday', ' ==> week', 4)
+    expect(state.doc.toString()).toBe('Plan ==v week\n  Monday')
+  })
+
+  it('at the start of a line arrives expanded', () => {
+    const state = type('Plan\n  Monday', '--> ', 0)
+    expect(state.doc.toString()).toBe('--v Plan\n  Monday')
+    expect(foldedCount(state)).toBe(0)
+  })
+
+  it('leaves a second arrow on the line as typed', () => {
+    const state = type('a --v b\n  c', ' -->', 7)
+    expect(state.doc.toString()).toBe('a --v b -->\n  c')
   })
 })

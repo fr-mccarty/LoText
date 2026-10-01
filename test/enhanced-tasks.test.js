@@ -67,21 +67,27 @@ describe('what a task owns', () => {
     expect(only(EXPANDED)).toMatchObject({ line: 0, body: [1, 4], lastLine: 4 })
   })
 
-  it('owns every line down to the next task line, whatever its indentation', () => {
+  it('owns the lines indented under it, as a disclosure arrow does', () => {
     const lines = [
       '[[ ]] ==> (()) first',
       '  description',
-      'a line at the edge',
-      '',
       '',
       '    deeper',
+      'a line at the edge',
+      '  indented, but under the edge line',
       '[[x]] ==v (()) second',
       '  its description',
+      '',
+      '',
+      '  after two blank lines',
     ]
     const tasks = parseTasks(lines)
-    expect(tasks.map((task) => [task.line, task.body, task.lastLine])).toEqual([[0, [1, 5], 5], [6, [7, 7], 7]])
-    expect(taskAt(tasks, 3).line).toBe(0)
+    expect(tasks.map((task) => [task.line, task.body, task.lastLine])).toEqual([[0, [1, 3], 3], [6, [7, 7], 7]])
+    expect(taskAt(tasks, 2).line).toBe(0)
+    expect(taskAt(tasks, 4)).toBe(null)
+    expect(taskAt(tasks, 5)).toBe(null)
     expect(taskAt(tasks, 7).line).toBe(6)
+    expect(taskAt(tasks, 10)).toBe(null)
   })
 
   it('owns nothing when the next line is a task line, or there is none', () => {
@@ -106,9 +112,9 @@ describe('what is hidden', () => {
     expect(hiddenLines(only(EXPANDED))).toEqual([])
   })
 
-  it('a collapsed task hides up to the next task line and no further', () => {
+  it('a collapsed task hides its indented lines and no further', () => {
     const tasks = parseTasks(['[[ ]] ==> (()) a', '  one', 'two', '[[ ]] ==v (()) b', '  three'])
-    expect(tasks.map(hiddenLines)).toEqual([[{ first: 1, last: 2 }], []])
+    expect(tasks.map(hiddenLines)).toEqual([[{ first: 1, last: 1 }], []])
   })
 })
 

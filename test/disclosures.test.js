@@ -23,13 +23,30 @@ const apply = (lines, edits) => {
 }
 
 describe('the arrow', () => {
-  it('ends a line after whitespace, trailing spaces allowed', () => {
+  it('starts the line or follows whitespace, and is followed by whitespace or the end of the line', () => {
     expect(parseArrow('Thread -->')).toEqual({ column: 7, open: false, indent: 0 })
     expect(parseArrow('  Thread --v   ')).toEqual({ column: 9, open: true, indent: 2 })
     expect(parseArrow('    -->')).toEqual({ column: 4, open: false, indent: 4 })
     expect(parseArrow('Thread-->')).toBeNull()
-    expect(parseArrow('--> Thread')).toBeNull()
+    expect(parseArrow('--> Thread')).toEqual({ column: 0, open: false, indent: 0 })
+    expect(parseArrow('==v Thread')).toEqual({ column: 0, open: true, indent: 0 })
+    // Alone in the first column it ends an HTML comment.
     expect(parseArrow('-->')).toBeNull()
+    expect(parseArrow('-->  ')).toBeNull()
+    expect(parseArrow('run --verbose')).toBeNull()
+    expect(parseArrow('a -->b')).toBeNull()
+  })
+
+  it('sits anywhere on the line, the first one counting', () => {
+    expect(parseArrow('a --> b')).toEqual({ column: 2, open: false, indent: 0 })
+    expect(parseArrow('  a --v b --> c')).toEqual({ column: 4, open: true, indent: 2 })
+    expect(parseArrow('x-->y --> z')).toEqual({ column: 6, open: false, indent: 0 })
+  })
+
+  it('may be the double arrow, off a task line', () => {
+    expect(parseArrow('Plan ==> the week')).toEqual({ column: 5, open: false, indent: 0 })
+    expect(parseArrow('Plan ==v')).toEqual({ column: 5, open: true, indent: 0 })
+    expect(parseArrow('a <==> b')).toBeNull()
   })
 
   it('is not one after `<!--` on its line', () => {
@@ -173,7 +190,8 @@ describe('with enhanced tasks', () => {
 
 describe('typed arrows open', () => {
   it('reads the arrows a line could have, by text alone', () => {
-    expect(arrowsOnLine('[[ ]] ==> (()) title -->')).toEqual([{ column: 6, open: false }, { column: 21, open: false }])
+    expect(arrowsOnLine('[[ ]] ==> (()) title -->')).toEqual([{ column: 6, open: false }])
+    expect(arrowsOnLine('a --> b --v')).toEqual([{ column: 2, open: false }])
     expect(arrowsOnLine('  Thread --v')).toEqual([{ column: 9, open: true }])
     expect(arrowsOnLine('Thread')).toEqual([])
   })
@@ -195,7 +213,7 @@ describe('typed arrows open', () => {
 })
 
 describe('where an arrow can sit', () => {
-  it('is a button only at the end of a line; the double arrow is the task’s', () => {
+  it('is a button anywhere on a line but a task line, whose own arrow is the task’s', () => {
     const lines = [
       'a --> b',
       '- item --> more',
@@ -204,9 +222,10 @@ describe('where an arrow can sit', () => {
       '[ ] milk -->',
       '[[ ]] ==> (()) task title -->',
       '  desc',
+      'notes ==v for Monday',
     ]
     const found = parseDisclosures(lines, { skip: reservedLines(lines) }).map((d) => d.line)
-    expect(found).toEqual([3, 4])
+    expect(found).toEqual([0, 1, 3, 4, 7])
     expect(parseTasks(lines).map((task) => [task.line, task.arrowColumn])).toEqual([[5, 6]])
   })
 })

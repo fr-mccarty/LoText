@@ -1,10 +1,12 @@
-// Enhanced tasks: a `[[ ]] ==> (()) title` line and every line under it up to the next task line.
+// Enhanced tasks: a `[[ ]] ==> (()) title` line and the lines indented under it.
 // Everything is plain text, and whether a task is open is written in the text itself (`==>`
 // collapsed, `==v` expanded), so the parts here are pure functions over arrays of lines, tested
 // without an editor. `enhanced-view.js` is the CodeMirror side. The rules are the toolbox's
 // enhanced-task and enhanced-selection specs; `specs/enhanced-tasks.md` holds what is LoText's own.
 //
 // Line numbers are 0-based. An edit is { line, column, char }: one character to replace.
+
+import { bodyUnder } from './indented-body.js'
 
 const TASK = /^\[\[([ xX])\]\] (==>|==v) \(\((.*?)\)\)(?: (.*))?$/
 const CHOICE = /^ {2}\[([ xX])\](?: (.*))?$/
@@ -47,9 +49,9 @@ export function parseChoice (text) {
  *     choices: [{ line, checked, label }],
  *     lastLine }
  *
- * A task owns every line after its own up to the next task line, or the end of the document.
- * Indentation plays no part. `body` is those lines, inclusive; `choices` are the enhanced-selection
- * rows among them.
+ * A task owns the lines indented deeper straight under it, as a disclosure arrow's line does
+ * (`bodyUnder`): the first line back at column 0, or two blank lines in a row, ends it. `body` is
+ * those lines, inclusive; `choices` are the enhanced-selection rows among them.
  */
 export function parseTasks (lines) {
   const heads = []
@@ -57,14 +59,15 @@ export function parseTasks (lines) {
     const head = parseTaskLine(text)
     if (head) heads.push({ line, ...head })
   })
-  return heads.map((head, index) => {
-    const lastLine = index + 1 < heads.length ? heads[index + 1].line - 1 : lines.length - 1
+  return heads.map((head) => {
+    const body = bodyUnder(lines, head.line)
+    const lastLine = body ? body[1] : head.line
     const choices = []
     for (let line = head.line + 1; line <= lastLine; line++) {
       const choice = parseChoice(lines[line])
       if (choice) choices.push({ line, ...choice })
     }
-    return { ...head, body: lastLine > head.line ? [head.line + 1, lastLine] : null, choices, lastLine }
+    return { ...head, body, choices, lastLine }
   })
 }
 

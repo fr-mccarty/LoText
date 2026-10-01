@@ -138,7 +138,7 @@ function enhancedTasksHelp (onDispose) {
 
     section('The parts',
       source(`[[ ]] ==v (()) This is an enhanced task  ← the task line, always shown
-  This is the description.              ← everything under it, down to the next task line
+  This is the description.              ← everything indented under it
   Email id: 5678987656789               ← reference data
   [ ] send an email                     ← the choices, the actions it proposes
   [ ] send a text`),
@@ -147,13 +147,13 @@ function enhancedTasksHelp (onDispose) {
         ['The ', strong('arrow'), ', ', code('==>'), ' or ', code('==v'), ', shows the task collapsed or expanded.'],
         ['The ', strong('feedback slot'), ', ', code('(())'), ', is where you write to the agent: ', code('((ring first))'), '.'],
         ['The ', strong('choices'), ' are ', code('  [ ]'), ' lines under the task, indented two spaces. The agent carries out the ones you check.'],
-        ['A task owns every line under it until the next task line, or the end of the file. Indentation does not decide it; lines under a task are indented two spaces only so they read as belonging to it.'],
+        ['A task owns the lines indented under it, as a disclosure arrow does: the first line back at the left edge, or two empty lines in a row, ends it. A single empty line with an indented line after it belongs to the task.'],
       )),
 
     section('Clicking',
       list(
         ['The ', strong('arrow'), ' flips between ', code('==>'), ' and ', code('==v'), '. The caret stays put, and ⌘Z undoes it.'],
-        ['The ', strong('task’s box'), ' flips between empty and checked. Checking it also turns ', code('==v'), ' into ', code('==>'), ' in the same edit, so everything but the task line hides. Unchecking changes no arrow.'],
+        ['The ', strong('task’s box'), ' flips between empty and checked. Checking it also turns ', code('==v'), ' into ', code('==>'), ' in the same edit, so the lines indented under it hide. Unchecking changes no arrow.'],
         ['A ', strong('choice’s box'), ' flips, as any box does.'],
         'A click on text places the caret, so the title and everything under it stay editable.',
       )),
@@ -170,7 +170,7 @@ function enhancedTasksHelp (onDispose) {
       list(
         ['A collapsed task hides every line it owns. The arrow is the only sign: nothing is drawn after it.'],
         'The arrow keys skip hidden lines. A caret that Find or undo drops into them shows them, without rewriting the arrow, and they hide again at the next click on that task’s arrow.',
-        ['A single-arrow disclosure (', code(' -->'), ') on a line under a task works as it does anywhere (Help ▸ Disclosure Arrows).'],
+        ['A disclosure arrow (', code('-->'), ' or ', code('==>'), ') on a line under a task works as it does anywhere (Help ▸ Disclosure Arrows).'],
       )),
 
     section('Moving',
@@ -228,17 +228,17 @@ const DISCLOSURE_TASK_EXAMPLE = `[[ ]] ==v (()) do something agent
 
 function disclosuresHelp (onDispose) {
   return [
-    para('A disclosure arrow is a ', code(' -->'), ' or ', code(' --v'), ' at the end of a line. It shows and hides the ',
+    para('A disclosure arrow is a ', code('-->'), ' or ', code('--v'), ' anywhere on a line. It shows and hides the ',
       'lines under it indented deeper — its body — so a long note folds down to its headings. ',
-      code('-->'), ' is closed, the body hidden; ', code('--v'), ' is open. The arrow is ordinary text drawn as a small ',
-      'button, so which parts are open is saved with the file.'),
+      code('-->'), ' is closed, the body hidden; ', code('--v'), ' is open. The double arrow, ', code('==>'), ' / ', code('==v'),
+      ', works the same way. The arrow is ordinary text drawn as a small button, so which parts are open is saved with the file.'),
 
     section('Try it',
       para('A live editor running the app’s own code, at 2 spaces. Click the arrows. Nothing here is saved.'),
       tryIt(DISCLOSURE_EXAMPLE, onDispose)),
 
     section('The parts',
-      source(`submission_to_tribunal_date* --v    ← a line ending in a disclosure arrow
+      source(`submission_to_tribunal_date* --v    ← a line with a disclosure arrow
   Type: date                        ← its body: every line deeper
   Width in Sixths: 3 --v            ← a body line with an arrow of its own
     More Detail Here: ;lkjlkajsfdf  ← that arrow’s body, one more step deeper
@@ -246,16 +246,17 @@ next line                           ← back at the edge: ends both bodies`)),
 
     section('Where one can sit',
       list(
-        'At the end of a line, after a space. Spaces after it are allowed.',
-        ['In the middle of a line (', code('a --> b'), '), or with no space before it (', code('text-->'), '), it is plain text.'],
+        ['Anywhere on a line: at its start (', code('--> Plan'), '), in the middle (', code('Plan --> week'), ') or at its end (', code('Plan -->'), ').'],
+        ['It needs a space or the start of the line before it, and a space or the end of the line after it. ', code('text-->'), ' and ', code('--verbose'), ' are plain text.'],
+        ['Only the first arrow on a line counts. In ', code('a --v b --> c'), ' the ', code('--v'), ' is the button and the ', code('-->'), ' is plain text.'],
+        ['The double arrow, ', code('==>'), ' / ', code('==v'), ', is a disclosure arrow too, except on an enhanced task’s line, where it is the task’s own (Help ▸ Enhanced Tasks).'],
         ['A line with ', code('<!--'), ' before the arrow, such as ', code('<!-- note -->'), ', is an HTML comment and stays plain text. So does ', code('-->'), ' alone in the first column, the end of a longer comment.'],
-        ['The double arrow, ', code('==>'), ', is an enhanced task’s, not a disclosure arrow (Help ▸ Enhanced Tasks).'],
       )),
 
     section('What belongs to it',
       list(
         'The body is every line straight under the arrow’s line indented deeper than it, by any amount. Closing the arrow hides them all.',
-        ['A body line ending in an arrow owns the lines deeper still under it, and so on. Above, everything down to ', code('More Detail Here'), ' belongs to the first line, and ', code('More Detail Here'), ' also belongs to ', code('Width in Sixths'), '.'],
+        ['A body line with an arrow owns the lines deeper still under it, and so on. Above, everything down to ', code('More Detail Here'), ' belongs to the first line, and ', code('More Detail Here'), ' also belongs to ', code('Width in Sixths'), '.'],
         'A line indented no deeper than the arrow’s line ends the body, and so do two empty lines in a row. A single empty line with a deeper line after it belongs to the body and hides with it.',
         'An arrow with nothing under it still takes a click; it only changes the text.',
       )),
@@ -270,7 +271,7 @@ next line                           ← back at the edge: ends both bodies`)),
 
     section('Typing',
       list(
-        ['An arrow you type or paste arrives open: ', code(' -->'), ' typed at the end of a line gives ', code(' --v'), ', so nothing hides. The caret stays after it.'],
+        ['An arrow you type or paste arrives open, wherever it is on the line: ', code('-->'), ' is written ', code('--v'), ' and ', code('==>'), ' is written ', code('==v'), ', so nothing hides. It stays open until you click it. The caret stays after it.'],
         'Arrows already in the file, arriving from disk (⌘R, a change made elsewhere), or put back by undo keep their state. A click is the way to close one.',
       )),
 
@@ -304,8 +305,8 @@ next line                           ← back at the edge: ends both bodies`)),
     section('Inside an enhanced task',
       tryIt(DISCLOSURE_TASK_EXAMPLE, onDispose),
       list(
-        ['A line under a task may end in a disclosure arrow, with its own indent as the base: ', code('  Thread --v'), ' owns ', code('    id: abc'), '.'],
-        'The task line is never a disclosure: an arrow at the end of its title is plain text.',
+        ['A line under a task may have a disclosure arrow, with its own indent as the base: ', code('  Thread --v'), ' owns ', code('    id: abc'), '.'],
+        'The task line is never a disclosure: its only button is the task’s own arrow, and any other arrow in its title is plain text.',
         'Collapsing the task hides these lines with the rest; their arrows keep their state.',
       )),
 

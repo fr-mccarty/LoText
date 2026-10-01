@@ -11,12 +11,17 @@ Lolext. This file holds only how LoText reads, draws and edits them.
 - A task line is exactly `[[`, a mark, `]] `, the arrow, a space, `((`, the feedback, `))`, and
   then optionally a space and the title, starting in column 0. The mark is a space, `x` or `X`;
   the app writes `x`. Other spacing is plain text, not a task line.
+- **What a task owns** is the lines indented deeper straight under it, by the same rule as a
+  disclosure arrow's body (`specs/disclosures.md`): the first line back at column 0 ends it, and so
+  do two blank lines in a row; one blank line with an indented line after it belongs to it.
 - A choice is a line of two spaces, `[ ]` or `[x]`, and optionally a space and its label, among
   the lines a task owns.
 - The arrows are text: `==>` and `==v` are exactly what is saved. The editor draws the task arrow
   as a small button and the title in bold. Every character on disk is a character in the buffer.
-- A line a task owns may end in a disclosure arrow of its own (`specs/disclosures.md`). The task
-  line itself never is one: a ` -->` at the end of its title is plain text.
+- A line a task owns may have a disclosure arrow of its own, `-->` or `==>`
+  (`specs/disclosures.md`). The task line itself never is one: its own `==>` is the task's, and
+  any other arrow in its title is plain text. A `==>` on any line that is not a task line is a
+  disclosure arrow.
 - A long line under a task wraps as any indented line does (the hanging indent in `CLAUDE.md`).
 
 ## Clicking
@@ -61,8 +66,8 @@ bottom of the file nothing happens.
 ## Cutting
 
 ⌘X with nothing selected cuts the caret's line (`cutWholeLines` in `line-editing.js`).
-On a **collapsed** task's line it cuts the whole task: the line and every line it hides, down to
-the next task, nested disclosures and all. An expanded task's line is cut alone, as any line.
+On a **collapsed** task's line it cuts the whole task: the line and every indented line it hides,
+nested disclosures and all. An expanded task's line is cut alone, as any line.
 What goes to the clipboard is exactly what left the text, and one ⌘Z puts it back.
 
 ## Printing
@@ -73,7 +78,8 @@ purpose, so enhanced tasks are an editor feature only.
 ## Where it lives
 
 - `src/renderer/editor/enhanced-tasks.js` — parsing, what is hidden, the arrow and choice edits.
-  Pure functions, tested in `test/enhanced-tasks.test.js`.
+  Pure functions, tested in `test/enhanced-tasks.test.js`. What a task owns comes from `bodyUnder`
+  in `indented-body.js`, shared with disclosures and Hide Lines.
 - `src/renderer/editor/enhanced-view.js` — the CodeMirror side: the arrows, hiding, clicks and
   the typing filters, shared with `specs/disclosures.md`. Tested in `test/typed-task.test.js`.
 - `src/renderer/editor/task-boxes.js` — the `[[ ]]` box is drawn and clicked as a plain box is.
