@@ -31,8 +31,10 @@ new image never has the same name as the one already on the site.
 
 ### Where the images are kept
 
-- **Each export** is written to `exports/LoText-<version>.dmg` in this project, replacing a file
-  of the same name. Older versions stay there beside it. To write it somewhere else, pass a
+- **Each export** is written to `LoText-<version>.dmg` in the export folder, replacing a file
+  of the same name. The export folder is set in one place, `scripts/export-folder.sh`, and
+  running that script prints it. It is outside this project, in iCloud Drive, so the images are
+  on every Mac while the project itself stays out of iCloud. Older versions stay there beside it. To write it somewhere else, pass a
   path: `npm run release -- ~/somewhere/LoText.dmg`.
 - **A copy on the Desktop** is made only if you want one. When the export finishes, the script
   asks `Copy it to the Desktop? [y/N]`; the answer is no unless you type `y`. To decide in
@@ -41,18 +43,18 @@ new image never has the same name as the one already on the site.
 - **The published image** is the copy in `~/peru/storage/lolekproductions-org-downloads/`
   (step 2 below).
 
-None of these is in git. Older exports can stay in `exports/`; only the site is limited to the
-latest version (section 2).
+None of these is in git. Older exports can stay in the export folder; only the site is limited
+to the latest version (section 2).
 
 ### Checking an image
 
-These need no keychain, so they work from anywhere, SSH included. Put your version in place of
-`1.0.2`:
+These need no keychain, so they work from anywhere, SSH included. Run them from the project
+folder and put your version in place of `1.0.2`:
 
 ```sh
-xcrun stapler validate ~/Documents/LoText/exports/LoText-1.0.2.dmg
+xcrun stapler validate "$(scripts/export-folder.sh)/LoText-1.0.2.dmg"
 # => The validate action worked!
-spctl --assess --type open --context context:primary-signature -vv ~/Documents/LoText/exports/LoText-1.0.2.dmg
+spctl --assess --type open --context context:primary-signature -vv "$(scripts/export-folder.sh)/LoText-1.0.2.dmg"
 # => accepted  source=Notarized Developer ID
 ```
 
@@ -66,7 +68,7 @@ image where the site serves files from, and pointing the LoText page at it.
 
 **The site offers one version only: the latest.** When publishing is done, the storage folder
 holds exactly one LoText image, the one the page links to. Older versions are not kept on the
-site; they stay in `exports/` here.
+site; they stay in the export folder.
 
 ### Where the files live
 
@@ -98,8 +100,10 @@ An `npm run dmg` image is never offered: it is not notarized.
 To publish an image already made, run the script on it:
 
 ```sh
-scripts/publish-to-website.sh exports/LoText-1.0.3.dmg
+scripts/publish-to-website.sh LoText-1.0.3.dmg
 ```
+
+A bare name is looked for in the export folder; a path is used as it is.
 
 It refuses an image that is not notarized, and a version the site already offers from a
 different image. If it stops partway, running it again finishes the job: a page change already
@@ -115,7 +119,7 @@ place of 1.0.0. Put your own versions in their place.
    live page links to it until the deploy.
 
    ```sh
-   cp ~/Documents/LoText/exports/LoText-1.0.2.dmg ~/peru/storage/lolekproductions-org-downloads/
+   cp "$(scripts/export-folder.sh)/LoText-1.0.2.dmg" ~/peru/storage/lolekproductions-org-downloads/
    ```
 
 2. **Check that the site serves it.** `206` means it is reachable:

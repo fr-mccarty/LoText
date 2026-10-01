@@ -100,7 +100,7 @@ electron . --list-presets
 ## Building a .dmg
 
 ```sh
-npm run dmg                      # => exports/LoText-<version>.dmg, then asks about the Desktop
+npm run dmg                      # => the export folder (scripts/export-folder.sh), then asks about the Desktop
 npm run dmg -- /path/out.dmg     # somewhere else
 npm run dmg -- --desktop         # also copy it to the Desktop, without asking
 npm run dmg -- --no-desktop      # no Desktop copy, without asking

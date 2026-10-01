@@ -12,8 +12,9 @@ npm run build      # esbuild → dist/ (main, preload, renderer, settings, print
 npm start          # build, then launch
 npm run dev        # same, plus View → Toggle Developer Tools
 npm test           # vitest run — tests live in test/
-npm run dmg        # ad-hoc signed .app + .dmg → exports/ (runs on this Mac only)
-npm run release    # Developer ID signed + notarized .dmg → exports/ — the user runs it at the Mac
+npm run dmg        # ad-hoc signed .app + .dmg → the export folder, scripts/export-folder.sh
+                   # (runs on this Mac only)
+npm run release    # Developer ID signed + notarized .dmg → the export folder — the user runs it at the Mac
                    # both ask whether to copy it to the Desktop; -- --desktop / --no-desktop to say
                    # release then asks whether to publish it (scripts/publish-to-website.sh)
 electron . --list-presets

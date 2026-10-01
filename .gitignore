@@ -4,7 +4,6 @@ node_modules.nosync
 dist/
 dist-mobile/
 dist-web/
-exports/
 
 # Written into ios/ by cap sync
 ios/App/App/public/

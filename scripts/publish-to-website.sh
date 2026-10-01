@@ -3,8 +3,9 @@
 # Publish a notarized LoText disk image on lolekproductions.org/LoText, replacing the one there.
 # This is docs/publishing-the-mac-download.md as a script.
 #
-#   scripts/publish-to-website.sh exports/LoText-1.0.3.dmg
-#   scripts/publish-to-website.sh exports/LoText-1.0.3.dmg --yes     no questions: for a script
+#   scripts/publish-to-website.sh LoText-1.0.3.dmg          one in the export folder (scripts/export-folder.sh)
+#   scripts/publish-to-website.sh path/to/LoText-1.0.3.dmg  one anywhere else
+#   scripts/publish-to-website.sh LoText-1.0.3.dmg --yes    no questions: for a script
 #
 # `npm run release` offers to run it once a notarized image is made.
 #
@@ -17,7 +18,8 @@
 #   4. Deploys Peru. Anything else on main that is not yet live goes with it, so those commits are
 #      listed and a second yes is asked for.
 #   5. Once the deploy has succeeded, takes every other LoText image out of the download folder,
-#      so the site offers the latest version only. One not already kept in exports/ is moved there.
+#      so the site offers the latest version only. One not already kept in the
+#      export folder is moved there.
 #
 # The site's one-version rule is why the old image stays until step 5: until the deploy, the live
 # page still links to it. A run that stopped partway is finished by running it again: a page
@@ -27,6 +29,7 @@ set -euo pipefail
 
 cd "$(dirname "$0")/.."
 ROOT=$(pwd)
+source "$ROOT/scripts/export-folder.sh"
 
 PERU=${LOTEXT_PERU_ROOT:-"$HOME/peru"}
 SITE=${LOTEXT_SITE_ORIGIN:-"https://lolekproductions.org"}
@@ -60,7 +63,8 @@ for arg in "$@"; do
     *) IMAGE=$arg ;;
   esac
 done
-[ -n "$IMAGE" ] || fail "Which disk image? scripts/publish-to-website.sh exports/LoText-<version>.dmg"
+[ -n "$IMAGE" ] || fail "Which disk image? scripts/publish-to-website.sh LoText-<version>.dmg"
+[ -f "$IMAGE" ] || [ ! -f "$EXPORTS/$IMAGE" ] || IMAGE="$EXPORTS/$IMAGE"
 [ -f "$IMAGE" ] || fail "No such file: $IMAGE"
 
 NAME=$(basename "$IMAGE")
@@ -149,19 +153,19 @@ deploy_peru () {
 # ── 5. One version on the site ───────────────────────────────────────────────
 take_older_images_off_the_site () {
   echo "▸ Taking older images off the site"
-  mkdir -p "$ROOT/exports"
+  mkdir -p "$EXPORTS"
   local old kept
   for old in "$DOWNLOADS"/LoText-*.dmg; do
     [ "$(basename "$old")" = "$NAME" ] && continue
-    kept="$ROOT/exports/$(basename "$old")"
+    kept="$EXPORTS/$(basename "$old")"
     if [ -f "$kept" ] && cmp -s "$old" "$kept"; then
       rm "$old"
-      echo "  removed $(basename "$old") (a copy is in exports/)"
+      echo "  removed $(basename "$old") (a copy is in $EXPORTS)"
     elif [ ! -e "$kept" ]; then
       mv "$old" "$kept"
-      echo "  moved $(basename "$old") into exports/"
+      echo "  moved $(basename "$old") into $EXPORTS"
     else
-      fail "$(basename "$old") differs from the copy in exports/, so it was left on the site." \
+      fail "$(basename "$old") differs from the copy in $EXPORTS, so it was left on the site." \
            "Decide which to keep, then remove it from $DOWNLOADS."
     fi
   done

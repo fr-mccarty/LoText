@@ -2,7 +2,7 @@
 #
 # Build a signed, notarized LoText disk image — the one to hand to other people.
 #
-#   npm run release                      → exports/LoText-<version>.dmg, then asks about the Desktop
+#   npm run release                      → LoText-<version>.dmg in the export folder, then asks about the Desktop
 #                                          and about publishing it on lolekproductions.org
 #   npm run release -- /path/out.dmg     → there instead
 #   npm run release -- --desktop         … and a copy on the Desktop, without asking

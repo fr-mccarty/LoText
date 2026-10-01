@@ -2,7 +2,8 @@
 #
 # Build LoText.app and wrap it in a disk image.
 #
-#   scripts/make-dmg.sh                      → exports/LoText-<version>.dmg
+#   scripts/make-dmg.sh                      → LoText-<version>.dmg in the export folder
+#                                              (scripts/export-folder.sh)
 #   scripts/make-dmg.sh /path/to/out.dmg     → there instead
 #   scripts/make-dmg.sh --desktop            … and a copy on the Desktop
 #   scripts/make-dmg.sh --no-desktop         … and no copy, without asking
@@ -37,6 +38,7 @@ set -euo pipefail
 
 cd "$(dirname "$0")/.."
 ROOT=$(pwd)
+source "$ROOT/scripts/export-folder.sh"
 
 APP_NAME=$(node -p "require('./package.json').productName")
 VERSION=$(node -p "require('./package.json').version")
@@ -54,8 +56,8 @@ for arg in "$@"; do
   esac
 done
 if [ -z "$OUT" ]; then
-  mkdir -p "$ROOT/exports"
-  OUT="$ROOT/exports/$APP_NAME-$VERSION.dmg"
+  mkdir -p "$EXPORTS"
+  OUT="$EXPORTS/$APP_NAME-$VERSION.dmg"
 fi
 
 # The bundle identifier lives in package.json, not here. macOS keys a great deal off it — the

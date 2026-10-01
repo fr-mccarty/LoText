@@ -2,7 +2,8 @@
 
 *2026-09-22*
 
-`npm run dmg` (`scripts/make-dmg.sh`) builds `exports/LoText-<version>.dmg`. This is what the
+`npm run dmg` (`scripts/make-dmg.sh`) builds `LoText-<version>.dmg` in the export folder
+(`scripts/export-folder.sh`). This is what the
 script knows that is not obvious from reading it.
 
 ## No packaging dependency
@@ -118,8 +119,8 @@ reason. Checking a finished image works fine remotely — `spctl --assess` and
 `stapler validate` need no key:
 
 ```sh
-xcrun stapler validate exports/LoText-1.0.0.dmg
-spctl --assess --type open --context context:primary-signature -vv exports/LoText-1.0.0.dmg
+xcrun stapler validate "$(scripts/export-folder.sh)/LoText-1.0.0.dmg"
+spctl --assess --type open --context context:primary-signature -vv "$(scripts/export-folder.sh)/LoText-1.0.0.dmg"
 # => accepted  source=Notarized Developer ID
 ```
 
