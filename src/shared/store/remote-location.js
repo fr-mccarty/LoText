@@ -68,6 +68,17 @@ function pathColon (text) {
   return colon
 }
 
+/**
+ * The address a remembered location is reconnected by: the `scp` spelling, or the URL one
+ * when there is a port to carry. `parseLocation` reads it back as the same location.
+ */
+export function address (location) {
+  const authority = target(location)
+  return location.port
+    ? `ssh://${authority}:${location.port}${location.path.startsWith('/') ? '' : '/'}${location.path}`
+    : `${authority}:${location.path}`
+}
+
 /** What `ssh` is handed: `user@host`, or just `host` when the user was left out. */
 export function target (location) {
   return location.user ? `${location.user}@${location.host}` : location.host

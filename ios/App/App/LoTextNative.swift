@@ -9,6 +9,7 @@
 //   app data       readData  writeData  removeData      — Application Support, never the folder
 //   DayCap         dayCapFolder  pickDayCapFolder  writeToDayCap — Cut and Send to DayCap's folder
 //   iCloud         cloudAvailable  cloudList  cloudRead  cloudWrite    (LoTextNative+Cloud.swift)
+//   servers        sshPublicKey  sshRun  sshClose                       (LoTextNative+SSH.swift)
 //   the screen     alert  menu  exportFile  importFile  quickLook  print  (LoTextNative+UI.swift)
 //   events         appState { active }                  — background is the Mac's focus loss
 //
@@ -31,6 +32,7 @@ public class LoTextNativePlugin: CAPPlugin, CAPBridgedPlugin {
         "readData", "writeData", "removeData",
         "dayCapFolder", "pickDayCapFolder", "writeToDayCap",
         "cloudAvailable", "cloudList", "cloudRead", "cloudWrite",
+        "sshPublicKey", "sshRun", "sshClose",
         "alert", "menu", "exportFile", "importFile", "quickLook", "print",
         "answer",
     ].map { CAPPluginMethod(name: $0, returnType: CAPPluginReturnPromise) }

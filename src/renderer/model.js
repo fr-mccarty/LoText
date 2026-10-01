@@ -16,6 +16,7 @@
 
 import * as FilePath from '../shared/file-path.js'
 import { stampsMatch } from '../shared/file-stamp.js'
+import { address as addressOf } from '../shared/store/remote-location.js'
 import { openability, viewerFor, isBinary, isPreviewable } from '../shared/binary-types.js'
 import { FileTree } from './tree.js'
 import { OpenFile } from './open-file.js'
@@ -1140,11 +1141,4 @@ export class AppModel {
       this.reportMenuState()
     }
   }
-}
-
-function addressOf (location) {
-  const authority = location.user ? `${location.user}@${location.host}` : location.host
-  return location.port
-    ? `ssh://${authority}:${location.port}${location.path.startsWith('/') ? '' : '/'}${location.path}`
-    : `${authority}:${location.path}`
 }

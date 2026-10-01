@@ -52,7 +52,7 @@ shortcut: ⌘R is **Refresh**, which re-lists the folder in the sidebar and re-r
 
 ```
 src/main/       the main process — windows, menu, IPC, session, settings, printing
-  store/        the two file stores: local disk, and a remote folder over SSH
+  store/        the local disk store, and how a remote folder reaches its server (ssh)
   print/        the print window and the PDF writer
   viewers/      reading the formats that are not plain text
 src/renderer/   one window's world — the model, and the views that ask it for things
@@ -61,7 +61,7 @@ src/renderer/   one window's world — the model, and the views that ask it for 
   sheets/       Find File, Recent Folders, Connect to Server
   settings/     the Settings panel
 src/shared/     code both sides run: markdown, print layout, file paths, settings, the stores'
-                naming and walking, text decoding, the document viewers
+                naming and walking, the remote folder store, text decoding, the document viewers
 src/mobile/     the iOS app's stand-in for src/main/: the bridge, its store, and the bars and
                 menus a phone needs around the renderer's views
 ios/            the Xcode project (Capacitor); the native plugin is ios/App/App/LoTextNative*.swift

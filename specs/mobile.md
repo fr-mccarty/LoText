@@ -9,7 +9,6 @@ plugin, `LoTextNative` (`ios/App/App/LoTextNative.swift`).
 
 ## What is left out, on purpose
 
-- **Connect to Server.** iOS apps cannot run `ssh`. No menu item, no sheet, no recent servers.
 - **New Window.** One scene, one folder. iPad multi-window may come later.
 - **The command line** (`--pdf`, `--list-presets`) and **Open in Finder**.
 - **Drag to move** in the sidebar. A touch cannot be told apart from a scroll soon enough; rows
@@ -30,6 +29,29 @@ The unit of work is still one folder. It is named in one of two ways:
   folder rather than a button. It is a convenience, never a fence: same store, same rules.
 
 Folder ▸ button in the sidebar lists both, and the recent folders, as one menu.
+
+## A folder on a server
+
+**Connect to Server…** is in the Folder button's menu, and opens the Mac's sheet: an address
+(`user@host:/path`), the servers that have answered, and this device's key. Once connected the
+folder behaves as it does on the Mac — the same store (`src/shared/store/remote-store.js`), the
+same remote script, the same conflict check — and the folder is on the recent list, and reopens
+after a relaunch, like any other.
+
+- **SSH runs in the app**, since iOS has no `ssh` to run: Apple's SwiftNIO SSH in
+  `ios/App/App/LoTextNative+SSH.swift`, one connection per server kept open and shared by every
+  command, as the Mac's multiplexed master is. Only Ed25519, ECDSA host keys and AES-GCM ciphers —
+  what SwiftNIO SSH speaks, and what any OpenSSH of the last decade offers.
+- **The device has its own key**, made on first use, kept in the keychain as this-device-only
+  (never backed up or synced). The sheet shows its public line; the user adds it to the server's
+  `authorized_keys` once per device. The Mac logs in with its own `~/.ssh` keys instead.
+- **First contact with a server is trusted**, and its key remembered
+  (`Application Support/LoText/ssh-known-hosts.json`); a server whose key changes is refused.
+- **No passwords**, as on the Mac.
+- With iCloud sync on, the saved servers and the reading positions in a server's files travel
+  between devices (`specs/icloud-sync.md`): a server connected to on the Mac is listed here, and
+  needs only this device's key added to it.
+- A PDF on a server opens in Quick Look from a copy of its bytes; video and audio play from them.
 
 ## Layout
 

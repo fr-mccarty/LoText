@@ -178,3 +178,34 @@ describe('reading positions', () => {
     expect(mac.cloud.position('icloud:com~apple~CloudDocs/a.md')).toEqual({ anchor: 90, head: 95, top: 30 })
   })
 })
+
+describe('saved servers', () => {
+  const location = { user: 'Leo', host: '203.0.113.5', port: null, path: 'stleo-office' }
+  const server = { id: 'ssh://Leo@203.0.113.5/stleo-office', address: 'Leo@203.0.113.5:stleo-office', location }
+
+  it('keeps the list on the device whether or not sync is on, newest first, once each', () => {
+    const mac = device('mac', new Map())
+    mac.cloud.rememberServer(server)
+    clock = 2000
+    mac.cloud.rememberServer({ ...server, id: 'ssh://me@other/x', address: 'me@other:x' })
+    clock = 3000
+    mac.cloud.rememberServer(server)
+    expect(mac.cloud.servers().map((entry) => entry.address)).toEqual(['Leo@203.0.113.5:stleo-office', 'me@other:x'])
+  })
+
+  it('lists a server saved on the Mac on the phone, with positions in its files', async () => {
+    const files = new Map()
+    const mac = device('mac', files)
+    const phone = device('phone', files)
+    await mac.cloud.setEnabled(true)
+    await phone.cloud.setEnabled(true)
+
+    clock = 5000
+    mac.cloud.rememberServer(server)
+    mac.cloud.rememberPosition(`ssh:${server.id}/notes.md`, { anchor: 12, head: 12, top: 4 })
+    await mac.cloud.flush()
+    await phone.cloud.refresh()
+    expect(phone.cloud.servers()).toEqual([{ ...server, at: 5000 }])
+    expect(phone.cloud.position(`ssh:${server.id}/notes.md`)).toEqual({ anchor: 12, head: 12, top: 4 })
+  })
+})

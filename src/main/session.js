@@ -1,12 +1,10 @@
-// The three lists the app keeps between launches, and the one thing they have in common: none
-// of them is ever the same list as another.
+// The lists the app keeps between launches, and the one thing they have in common: none of
+// them is ever the same list as another. (Connect to Server's list of servers is kept by
+// `src/shared/sync/cloud-sync.js`, since it travels between devices.)
 //
 // RECENT FOLDERS   folders opened as a window's folder. Ten, newest first, one menu item each.
 //                  App-wide rather than per window: which folders have been worked in is a
 //                  fact about the person, not about any one window.
-// RECENT SERVERS   addresses that have *answered*, written down only after a connection
-//                  succeeded. Not on a menu — it belongs in the sheet where the next
-//                  connection is being made, under the field it would otherwise be typed into.
 // WINDOW SESSIONS  where each window was and which file was open in it. A window closed
 //                  before the quit is not reopened; one open at the quit is.
 //
@@ -16,13 +14,11 @@ import path from 'node:path'
 import * as prefs from './prefs.js'
 
 const FOLDERS_KEY = 'recentFolders'
-const SERVERS_KEY = 'recentServers'
 const WINDOWS_KEY = 'windowSessions'
 const EXPANSION_KEY = 'expansion'
 
 /** What the stock Open Recent menu keeps: long enough to reach last week's folder. */
 const MAX_FOLDERS = 10
-const MAX_SERVERS = 10
 
 // MARK: - Recent folders
 
@@ -67,19 +63,6 @@ export function recentFolderTitles () {
       : path.basename(path.dirname(entry.id))
     return { entry, title: above ? `${entry.name} — ${above}` : entry.name }
   })
-}
-
-// MARK: - Recent servers
-
-export function recentServers () {
-  const list = prefs.get(SERVERS_KEY, [])
-  return Array.isArray(list) ? list : []
-}
-
-export function rememberServer (entry) {
-  const list = recentServers().filter((item) => item.id !== entry.id)
-  list.unshift(entry)
-  prefs.set(SERVERS_KEY, list.slice(0, MAX_SERVERS))
 }
 
 // MARK: - Window sessions

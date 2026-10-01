@@ -77,11 +77,17 @@ A rebuild does not reload the running app — restart `electron .`. ⌘R is Refr
 - **iOS is the same app with `src/mobile/` in place of `src/main/`** (`specs/mobile.md`). The
   model does not know which platform it is on: `src/mobile/bridge.js` answers every method
   `preload.js` has. Logic both need goes in `src/shared/` (the stores' naming, walk, recent,
-  text coding, settings, document viewers) — never copied. Renderer code may ask
-  `bridge.platform === 'ios'` for wording only. iOS leaves out, on purpose: Connect to Server,
-  New Window, the CLI, Open in Finder, dragging rows (Move To… instead), and the folder watcher
+  text coding, settings, document viewers, the remote store) — never copied. Renderer code may ask
+  `bridge.platform === 'ios'` for wording only. iOS leaves out, on purpose: New Window, the CLI, Open in Finder, dragging rows (Move To… instead), and the folder watcher
   (the app re-checks on coming forward). Native code is one plugin, `ios/App/App/LoTextNative*.swift`
   and `FolderStore.swift`; a new Swift file must be added to `project.pbxproj`.
+- **A folder on a server is one store with two transports** (`src/shared/store/remote-store.js`).
+  The Mac runs `/usr/bin/ssh` and logs in with the Mac's own `~/.ssh` keys, LoText's own key
+  last (`src/main/store/ssh-transport.js`); iOS runs SwiftNIO SSH in the app with a key of the
+  device's own (`LoTextNative+SSH.swift`). See `discoveries/remote-folders.md`. **iOS
+  encrypts only through Apple's CryptoKit**, which is what keeps `ITSAppUsesNonExemptEncryption`
+  NO: add no Swift package that carries its own crypto (BoringSSL, OpenSSL, `_CryptoExtras`,
+  Citadel) — `packaging/app-store/ios.md`.
 - **Views ask the model, the model asks the bridge, the bridge touches the disk.** Nothing in
   `src/renderer/` imports from `src/main/`. `src/shared/` is code both sides run.
 - **Paths are store-relative strings** (`src/shared/file-path.js`), `""` is the root — never
@@ -136,6 +142,8 @@ A rebuild does not reload the running app — restart `electron .`. ⌘R is Refr
     base theme, ⌥-arrows vs the menu, grid layout, and how the editor was checked against Lolext.
   - `packaging-a-dmg.md` — building, signing and notarizing; first-time release setup; which
     Apple certificate is which.
+  - `remote-folders.md` — why Connect to Server never worked (an unquoted path, `-i` hiding
+    the Mac's keys, a save check that always failed), and testing against a throwaway sshd.
   - `recently-edited-speed.md` — what made ⇧⌘O slow (listing a network share's folders one at
     a time), how it was measured, and why there is no cache.
   - `running-lotext-on-ios.md` — the simulator harness (`scripts/ios-sim.sh`), answering native

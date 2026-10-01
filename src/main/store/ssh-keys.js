@@ -1,11 +1,11 @@
-// The key this app logs in with, and the two files that go with it.
+// LoText's own key, and the list of keys a connection offers.
 //
-// It is **LoText's own** key, kept in the app's own data directory, and not the one in
-// `~/.ssh`. The app has a key of its own, shows the user the public half, and the user
-// installs that half on the server the way they would for any other client — which is also
-// what keeps this app from quietly borrowing an identity the user never offered it.
+// A connection offers **the Mac's keys first** — the ones in `~/.ssh` that Terminal's `ssh`
+// would use — so a server that already lets this Mac in lets LoText in too. LoText's own key,
+// kept in the app's data directory, is offered last: it is for a server the user would rather
+// give a key of its own, and the Connect to Server sheet shows its public half for that.
 
-import { promises as fs } from 'node:fs'
+import { promises as fs, existsSync } from 'node:fs'
 import path from 'node:path'
 import { execFile } from 'node:child_process'
 import os from 'node:os'
@@ -31,6 +31,18 @@ export const publicKey = () => path.join(directory(), 'id_ed25519.pub')
  */
 export const knownHosts = () => path.join(directory(), 'known_hosts')
 export const socketDirectory = () => directory()
+
+/**
+ * The standard key files in `~/.ssh`, in the order `ssh` tries them, that exist here — then
+ * LoText's own. ssh only falls back on the standard files when no key is named, so naming
+ * LoText's would otherwise shut the Mac's own out.
+ */
+export function identityFiles () {
+  const standard = ['id_rsa', 'id_ecdsa', 'id_ecdsa_sk', 'id_ed25519', 'id_ed25519_sk']
+    .map((name) => path.join(os.homedir(), '.ssh', name))
+    .filter((file) => existsSync(file))
+  return [...standard, privateKey()]
+}
 
 export async function exists () {
   try { await fs.access(privateKey()); return true } catch { return false }

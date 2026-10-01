@@ -14,7 +14,13 @@ What the iOS app needs to get from this folder to the App Store, in order. The M
     Deployment target    iOS 17.0, iPhone and iPad
     Version / build      1.1 (4)   — MARKETING_VERSION / CURRENT_PROJECT_VERSION in the target
     Category             public.app-category.productivity
-    Encryption           ITSAppUsesNonExemptEncryption = NO, so no export question per upload
+    Encryption           ITSAppUsesNonExemptEncryption = NO, so no export question per upload.
+                         Connect to Server's SSH encrypts, but only through Apple's CryptoKit
+                         (swift-crypto re-exports it on iOS), which Apple counts as "encryption
+                         limited to that within the Apple operating system" — no documentation.
+                         Holds only while no package brings its own crypto (BoringSSL, OpenSSL,
+                         _CryptoExtras, Citadel). Check a build: `otool -L` shows CryptoKit.framework
+                         and `nm -gU` finds no BoringSSL symbols
     Privacy manifest     ios/App/App/PrivacyInfo.xcprivacy — file timestamps (3B52.1, C617.1),
                          user defaults (CA92.1); no tracking, nothing collected
     iCloud               iCloud Documents, container iCloud.com.lolekproductions.lotext

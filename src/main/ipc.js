@@ -22,7 +22,7 @@ import { decode, encode } from '../shared/text-coding.js'
 import { walk } from '../shared/store/walk.js'
 import { recentlyEdited } from '../shared/store/recent.js'
 import { extract } from '../shared/viewers/document-text.js'
-import { parseLocation, identity as remoteIdentity } from './store/remote-location.js'
+import { parseLocation, identity as remoteIdentity } from '../shared/store/remote-location.js'
 import { print as runPrint } from './print/printer.js'
 import * as Windows from './window.js'
 import { openSettingsWindow, settingsWindow } from './settings-window.js'
@@ -70,7 +70,7 @@ export function registerHandlers () {
     const described = await entry.adopt(store)
     // An address is written down only *after* a connection has succeeded, so the list is
     // places that have answered rather than a history of things that were typed.
-    Session.rememberServer({
+    cloud.rememberServer({
       id: remoteIdentity(location),
       address: address.trim(),
       location,
@@ -284,7 +284,7 @@ export function registerHandlers () {
   }))
   ipcMain.handle('recents:forgetFolder', answer((_entry, id) => { Session.forgetFolder(id); return true }))
   ipcMain.handle('recents:clearFolders', answer(() => { Session.clearRecentFolders(); return true }))
-  ipcMain.handle('recents:servers', answer(() => Session.recentServers()))
+  ipcMain.handle('recents:servers', answer(() => cloud.servers()))
 
   ipcMain.handle('ssh:publicKey', answer(async () => {
     await Keys.ensure()

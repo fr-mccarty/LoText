@@ -9,7 +9,7 @@ import { BrowserWindow, app } from 'electron'
 import { LocalStore } from './store/local-store.js'
 import { RemoteStore } from './store/remote-store.js'
 import * as Session from './session.js'
-import { identity as remoteIdentity, displayName as remoteName, target } from './store/remote-location.js'
+import { identity as remoteIdentity, displayName as remoteName, target } from '../shared/store/remote-location.js'
 
 const windows = new Map()
 

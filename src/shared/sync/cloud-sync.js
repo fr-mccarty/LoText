@@ -1,4 +1,4 @@
-// Settings and reading positions over iCloud: optional, off until the user turns it on, and the
+// Settings, reading positions and saved servers over iCloud: optional, off until the user turns it on, and the
 // same code on the Mac (main process) and on iOS (the web view). `specs/icloud-sync.md` is the
 // design; this is the part both platforms run.
 //
@@ -11,7 +11,7 @@
 // THE MERGE     Per key, the newest change wins: each synced value carries the time it was set.
 //               Settings sync as the editor's keys one by one and the print presets as one unit
 //               (a list cannot be merged by key without becoming a database). A position is one
-//               key per document.
+//               key per document; a saved server, one entry per address.
 //
 // Local-first: the settings store stays the source of truth and nothing asks this module for a
 // setting. A local change is found by diffing against `cloud.mirror`, the values last seen; a
@@ -27,6 +27,7 @@ const MIRROR_KEY = 'cloud.mirror'
 /** False from turning it on until the first time iCloud answers: the first merge is a joining. */
 const JOINED_KEY = 'cloud.joined'
 const POSITIONS_KEY = 'positions'
+const SERVERS_KEY = 'recentServers'
 
 const FORMAT = 'lotext.sync'
 const VERSION = 1
@@ -39,6 +40,9 @@ export const SYNC_KEYS = [...VIEW_SYNC_KEYS, PRINT_KEY]
 /** Positions kept on this device, and how many of the iCloud ones go into its sync file. */
 const MAX_LOCAL_POSITIONS = 1000
 const MAX_SYNCED_POSITIONS = 500
+
+/** Connect to Server's list: the servers that answered, newest first. */
+const MAX_SERVERS = 10
 
 const WRITE_DELAY = 1000
 
@@ -145,6 +149,28 @@ export function createCloudSync ({ prefs, settings, folder, deviceName, newID, n
     if (old && old.anchor === entry.anchor && old.head === entry.head && old.top === entry.top) return
     prefs.set(POSITIONS_KEY, capped({ ...all, [key]: { ...entry, at: now() } }, MAX_LOCAL_POSITIONS))
     if (enabled() && isCloudKey(key)) scheduleWrite()
+  }
+
+  // MARK: - Saved servers
+
+  /**
+   * Connect to Server's list. An address is written down only after a connection to it has
+   * succeeded, so the list is places that have answered. Kept on this device whether or not
+   * iCloud is on, and with it on, a server saved on the Mac is listed on the iPhone too — each
+   * device still needs its own key on the server, so a listed server is a place to go, not a
+   * way in.
+   */
+  function servers () {
+    const list = prefs.get(SERVERS_KEY, [])
+    return Array.isArray(list) ? list : []
+  }
+
+  function rememberServer (entry) {
+    if (!entry?.id) return
+    const list = servers().filter((item) => item.id !== entry.id)
+    list.unshift({ ...entry, at: now() })
+    prefs.set(SERVERS_KEY, list.slice(0, MAX_SERVERS))
+    if (enabled()) scheduleWrite()
   }
 
   // MARK: - Turning it on and off
@@ -277,6 +303,21 @@ export function createCloudSync ({ prefs, settings, folder, deviceName, newID, n
       }
     }
     if (moved) prefs.set(POSITIONS_KEY, capped(all, MAX_LOCAL_POSITIONS))
+
+    const saved = new Map(servers().map((entry) => [entry.id, entry]))
+    let added = false
+    for (const file of others) {
+      for (const entry of Array.isArray(file.servers) ? file.servers : []) {
+        if (!entry?.id || typeof entry.address !== 'string' || !entry.location?.host) continue
+        if (!(Number(entry.at) > (saved.get(entry.id)?.at ?? 0))) continue
+        saved.set(entry.id, { id: entry.id, address: entry.address, location: entry.location, at: Number(entry.at) })
+        added = true
+      }
+    }
+    if (added) {
+      const list = [...saved.values()].sort((a, b) => (b.at ?? 0) - (a.at ?? 0))
+      prefs.set(SERVERS_KEY, list.slice(0, MAX_SERVERS))
+    }
   }
 
   /** After joining, what nobody else had set is this device's to publish. */
@@ -320,6 +361,7 @@ export function createCloudSync ({ prefs, settings, folder, deviceName, newID, n
       device: deviceName,
       settings: synced,
       positions: capped(cloudPositions, MAX_SYNCED_POSITIONS),
+      servers: servers().map(({ id, address, location, at }) => ({ id, address, location, at: at ?? 0 })),
     }
     const text = JSON.stringify(file, null, 2) + '\n'
     if (text === lastWritten) return
@@ -338,6 +380,8 @@ export function createCloudSync ({ prefs, settings, folder, deviceName, newID, n
     flush,
     position,
     rememberPosition,
+    servers,
+    rememberServer,
     isEnabled: enabled,
     /** A write is waiting: the Mac holds the quit for it. */
     pending: () => timer !== null,
@@ -346,9 +390,12 @@ export function createCloudSync ({ prefs, settings, folder, deviceName, newID, n
 
 // MARK: - Helpers
 
-/** The key a position is filed under, when the document is somewhere in iCloud Drive. */
+/**
+ * The keys a position is synced under: a document somewhere in iCloud Drive, or one on a
+ * server, whose name (`ssh://user@host/path` and the file) is the same from every device.
+ */
 export function isCloudKey (key) {
-  return typeof key === 'string' && key.startsWith('icloud:')
+  return typeof key === 'string' && (key.startsWith('icloud:') || key.startsWith('ssh:'))
 }
 
 const MOBILE_DOCUMENTS = '/Mobile Documents/'

@@ -14,10 +14,14 @@ platforms), `src/main/cloud.js` (Mac), `src/mobile/cloud.js` + `ios/App/App/LoTe
   on the long side when chosen, at most 3 MB each). So an image chosen on the iPhone prints on
   the Mac, and an exported settings file carries it too.
 - **Where each document was left**: the selection and the line at the top of the pane. Only for
-  documents in iCloud Drive, because only those have a name both devices share: the path below
-  `Mobile Documents/`, e.g. `icloud:com~apple~CloudDocs/Notes/a.md`. On the Mac,
-  `~/Documents` and `~/Desktop` count when Desktop & Documents is on (iCloud Drive holds links to
-  them). Everything else is remembered on the device only (`local:` / `ssh:` keys).
+  documents with a name both devices share: those in iCloud Drive, by the path below
+  `Mobile Documents/`, e.g. `icloud:com~apple~CloudDocs/Notes/a.md` (on the Mac, `~/Documents`
+  and `~/Desktop` count when Desktop & Documents is on — iCloud Drive holds links to them), and
+  those in a folder on a server, by its address and the file (`ssh:ssh://user@host/path/a.md`).
+  Everything else is remembered on the device only (`local:` keys).
+- **The saved servers** — Connect to Server's list — one entry per address, newest wins. A
+  server saved on one device is listed on the other; each device still logs in with its own key
+  (`specs/mobile.md`), so nothing secret travels.
 
 Reopening a file restores its position whether or not sync is on — a deliberate departure from
 Lolext, where every open starts at the top. Positions are noted when leaving a file, when the

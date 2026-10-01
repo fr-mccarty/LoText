@@ -1,7 +1,7 @@
 {
   "name": "lotext",
   "productName": "LoText",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "description": "A folder-based plain-text editor. One window is one folder; one file is open at a time.",
   "main": "dist/main.js",
   "bundleId": "com.lolekproductions.lotext",

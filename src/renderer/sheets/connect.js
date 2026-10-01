@@ -5,10 +5,12 @@
 // files open in the editor, ⌘S writes them back, and new, rename, duplicate, move, delete and
 // drag-to-rearrange all do what they do locally.
 //
-// **The app has its own key.** It logs in with that and nothing else, so the first connection
-// to any server fails until that line is in the server's `authorized_keys` — and this sheet is
-// where the user finds that out. Passwords are not offered: there is no terminal behind this
-// process to type one into.
+// **On the Mac it logs in with the Mac's own SSH keys**, the ones in `~/.ssh`, so a server
+// Terminal can reach needs nothing more. LoText also has a key of its own, offered last, and
+// this sheet shows its public half for a server that should get that one instead. **On iPhone
+// and iPad the device's own key is the only one**, so there the line shown is the one every
+// server needs. Passwords are not
+// offered: there is no terminal behind this process to type one into.
 //
 // **Servers that answered are remembered — ten of them, here in the sheet.** An address is
 // written down only after a connection has succeeded, so the list is places that have answered
@@ -30,6 +32,10 @@ export class ConnectSheet {
       type: 'text',
       placeholder: 'user@host:/path',
       spellcheck: 'false',
+      // An address, not a sentence: iOS would otherwise capitalize the user's name.
+      autocapitalize: 'off',
+      autocorrect: 'off',
+      autocomplete: 'off',
       onkeydown: (event) => {
         if (event.key === 'Enter') { event.preventDefault(); this.connect(this.field.value) }
         if (event.key === 'Escape') { event.preventDefault(); this.model.closeSheet() }
@@ -47,7 +53,9 @@ export class ConnectSheet {
       element('div', { class: 'key-block' }, [
         element('p', {
           class: 'key-explain',
-          text: 'LoText logs in with its own key. Put this line in the server’s ~/.ssh/authorized_keys before the first connection.',
+          text: this.model.bridge.platform === 'ios'
+            ? 'LoText on this device logs in with a key of its own. Put this line in the server’s ~/.ssh/authorized_keys before the first connection.'
+            : 'LoText logs in with this Mac’s SSH keys in ~/.ssh. For a server that has none of them, put this line in its ~/.ssh/authorized_keys.',
         }),
         this.keyNode,
         element('button', {

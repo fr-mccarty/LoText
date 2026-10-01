@@ -1,7 +1,7 @@
 // The iOS bridge: what src/main/preload.js and src/main/ipc.js are on the Mac, as one object the
 // model is handed as `window.lotext`. Every method the Mac's bridge has is here, with the same
 // answers, so the model does not know which platform it is on. Where iOS has no equivalent —
-// windows, the menu bar, SSH — the method is a quiet no-op or refuses in a sentence.
+// windows, the menu bar — the method is a quiet no-op or refuses in a sentence.
 //
 // The store is the only thing that touches the disk, as on the Mac: nothing here resolves a
 // path, and every file operation goes to the store for the folder being held open.
@@ -16,6 +16,9 @@ import { createSettings } from '../shared/settings-store.js'
 import { createCloudSync, positionKey } from '../shared/sync/cloud-sync.js'
 import { sendToDayCap } from './daycap.js'
 import { MobileStore } from './mobile-store.js'
+import { RemoteStore } from '../shared/store/remote-store.js'
+import { parseLocation, address as addressOf, identity as remoteIdentity, displayName as remoteName, target } from '../shared/store/remote-location.js'
+import { sshTransport, publicKey } from './ssh-transport.js'
 import { Native, fromBase64, toBase64, chooseFrom } from './native.js'
 import * as prefs from './prefs.js'
 import * as Recovery from './recovery.js'
@@ -114,7 +117,30 @@ export function createBridge () {
     return describe()
   }
 
+  /**
+   * Connect to Server: a folder on another machine, over the app's own SSH. As on the Mac, an
+   * address is written down only after the connection has succeeded.
+   */
+  async function connectToServer (address) {
+    const location = parseLocation(address)
+    if (!location) {
+      throw new StoreError('badAddress', 'That is not an address this understands. Try user@host:/path.')
+    }
+    const remote = new RemoteStore(location, sshTransport)
+    await remote.connect()
+    store?.close()
+    store = remote
+    const id = remoteIdentity(location)
+    cloud.rememberServer({ id, address: address.trim(), location })
+    rememberFolder({ id, kind: 'remote', name: remoteName(location), detail: target(location), location })
+    saveSession({ folder: { kind: 'remote', location, name: remoteName(location) }, openFile: null })
+    emit('ui:folder', describe())
+    return describe()
+  }
+
   async function openFolderByID (id) {
+    const remote = recentFolders().find((entry) => entry.id === id && entry.kind === 'remote')
+    if (remote) return connectToServer(addressOf(remote.location))
     try {
       return await adopt(await Native.openFolder({ id }))
     } catch (error) {
@@ -133,6 +159,8 @@ export function createBridge () {
     const choices = [
       { title: 'Choose Folder…', run: pickFolder },
       { title: `On My ${deviceName()} ▸ LoText`, run: () => openFolderByID(APP_FOLDER) },
+      // The sheet is the model's, as ⇧⌘K's is on the Mac; this only asks for it.
+      { title: 'Connect to Server…', run: () => { emit('menu:command', { command: 'connectToServer' }); return null } },
       ...titled(recents).map(({ entry, title }) => ({ title, run: () => openFolderByID(entry.id) })),
     ]
     const index = await chooseFrom(choices, { title: 'Open Folder' })
@@ -152,6 +180,7 @@ export function createBridge () {
    */
   function documentKey (file) {
     const current = withStore()
+    if (current.kind === 'remote') return `ssh:${current.identity}/${file}`
     return current.rootPath
       ? positionKey(`${current.rootPath}/${file}`)
       : `local:${current.identity}/${file}`
@@ -188,6 +217,7 @@ export function createBridge () {
 
   async function loadForViewer (file, viewer) {
     const current = withStore()
+    if (current.kind === 'remote') return loadRemoteForViewer(current, file, viewer)
     if (viewer === 'media') {
       const { url } = await Native.fileURL({ path: file })
       return { kind: 'file', url: window.Capacitor?.convertFileSrc?.(url) ?? url }
@@ -204,6 +234,17 @@ export function createBridge () {
     return document
   }
 
+  /** A server's file has no URL here: everything is built from its bytes. */
+  async function loadRemoteForViewer (current, file, viewer) {
+    const { data } = await current.read(file)
+    if (viewer === 'pdf') return { kind: 'pdf', quickLook: true }
+    if (viewer === 'media') return { kind: 'file', url: dataURL(data, mimeFor(file)) }
+    if (viewer === 'image') return { kind: 'image', dataURL: dataURL(data, mimeFor(file)) }
+    const document = await extract(data, FilePath.name(file), inflateRaw)
+    if (document.kind === 'image') return { kind: 'image', dataURL: dataURL(document.data, document.mime) }
+    return document
+  }
+
   // MARK: - The bridge
 
   const bridge = {
@@ -212,9 +253,7 @@ export function createBridge () {
     // The folder
     openFolder,
     adoptFolder: (id) => openFolderByID(id),
-    connectToServer: async () => {
-      throw new StoreError('unsupported', 'Connecting to a server is not available on iPhone or iPad.')
-    },
+    connectToServer,
     describeFolder: async () => describe(),
     refreshAvailability: async () => {
       const current = withStore()
@@ -258,7 +297,13 @@ export function createBridge () {
     // The viewers
     loadForViewer,
     /** iOS only: a PDF in Quick Look, which pages and zooms it. */
-    quickLook: async (file) => Native.quickLook({ path: file }),
+    quickLook: async (file) => {
+      const current = withStore()
+      if (current.kind !== 'remote') return Native.quickLook({ path: file })
+      // A server's PDF is handed over as bytes, for a copy Quick Look can open.
+      const { data } = await current.read(file)
+      return Native.quickLook({ name: FilePath.name(file), data: toBase64(data) })
+    },
 
     // Finding a file by name
     startWalk: async (token) => {
@@ -336,13 +381,14 @@ export function createBridge () {
     recentFolders: async () => titled(recentFolders()),
     openRecentFolder: async (id) => openFolderByID(id),
     forgetRecentFolder: async (id) => {
+      const entry = recentFolders().find((item) => item.id === id)
       prefs.set(RECENTS_KEY, recentFolders().filter((item) => item.id !== id))
-      if (id !== APP_FOLDER) await Native.forgetFolder({ id }).catch(() => {})
+      if (id !== APP_FOLDER && entry?.kind !== 'remote') await Native.forgetFolder({ id }).catch(() => {})
       return true
     },
     clearRecentFolders: async () => { prefs.set(RECENTS_KEY, []); return true },
-    recentServers: async () => [],
-    publicKey: async () => null,
+    recentServers: async () => cloud.servers(),
+    publicKey: async () => publicKey(deviceName()),
     copyToClipboard: async (text) => { await navigator.clipboard?.writeText(text); return true },
     performEdit: async (action) => document.execCommand(action),
 

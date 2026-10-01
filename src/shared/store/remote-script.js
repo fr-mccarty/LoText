@@ -79,9 +79,8 @@ read)
 write)
   dst=$1; want=$2
   if [ "$want" != '-' ]; then
-    cur=$(lx_one "$dst" 2>/dev/null) || exit 4
-    cur=\${cur%|*}
-    if [ "$cur" != "$want" ]; then printf '%s\\n' "$cur"; exit 9; fi
+    now=$(lx_one "$dst" 2>/dev/null) || exit 4
+    if [ "\${now%%|*}" != "$want" ]; then printf '%s\\n' "$now"; exit 9; fi
   fi
   tmp="$dst.lotext-part.$$"
   cat > "$tmp" || { rm -f "$tmp"; exit 10; }
