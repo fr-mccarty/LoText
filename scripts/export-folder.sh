@@ -8,9 +8,9 @@
 #
 # The project itself lives outside ~/Documents, because iCloud Drive syncing a working tree
 # (node_modules, .git, build output) caused trouble. The images are the opposite case — finished
-# files worth having on every Mac — so they stay in iCloud, in a folder of the old name.
+# files worth having on every Mac — so they are kept in iCloud, in ~/Documents.
 
-EXPORTS="$HOME/Documents/LoText/exports"
+EXPORTS="$HOME/Documents/LoText-exports"
 
 if [ "${BASH_SOURCE[0]}" = "$0" ]; then
   echo "$EXPORTS"
