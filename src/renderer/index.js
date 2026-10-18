@@ -12,8 +12,10 @@ import { HelpSheet, HELP_TOPICS } from './sheets/help.js'
 import { clear } from './dom.js'
 import { attachEditorMenu } from './editor/editor-menu.js'
 import { restoringErrors } from './bridge-errors.js'
+import { markPlatform } from './platform.js'
 
 const bridge = restoringErrors(window.lotext)
+markPlatform()
 const model = new AppModel(bridge)
 
 const sidebarNode = document.getElementById('sidebar')

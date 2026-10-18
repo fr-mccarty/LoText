@@ -22,6 +22,7 @@ import { FileTree } from './tree.js'
 import { OpenFile } from './open-file.js'
 import { Alerts } from './alerts.js'
 import { quote } from './dom.js'
+import { words } from './platform.js'
 
 export class AppModel {
   constructor (bridge) {
@@ -878,7 +879,7 @@ export class AppModel {
     if (this.isRemoteFolder) {
       return {
         title: `Delete ${quote(name)} from the server?`,
-        message: 'There is no Trash on a server, so this cannot be undone.',
+        message: `There is no ${words.trash} on a server, so this cannot be undone.`,
         buttons: buttons('Delete'),
       }
     }
@@ -890,9 +891,9 @@ export class AppModel {
       }
     }
     return {
-      title: `Move ${quote(name)} to the Trash?`,
-      message: 'You can put it back from the Trash.',
-      buttons: buttons('Move to Trash'),
+      title: `Move ${quote(name)} to the ${words.trash}?`,
+      message: `You can put it back from the ${words.trash}.`,
+      buttons: buttons(`Move to ${words.trash}`),
     }
   }
 

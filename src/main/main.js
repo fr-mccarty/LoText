@@ -16,6 +16,7 @@ import * as Windows from './window.js'
 import * as Cloud from './cloud.js'
 import { registerHandlers } from './ipc.js'
 import { buildMenu, updateMenuState } from './menu.js'
+import { followThemeOutsideMac } from './chrome.js'
 import { enqueue, deliver, claimsWithin } from './open-queue.js'
 import { filesFromArgv } from './argv-files.js'
 import { runCommandLine, isCommandLineJob } from './cli.js'
@@ -82,6 +83,7 @@ function main () {
     // comes forward.
     Cloud.start()
 
+    followThemeOutsideMac()
     nativeTheme.on('updated', () => {
       for (const browser of BrowserWindow.getAllWindows()) {
         browser.webContents.send('theme:changed', nativeTheme.shouldUseDarkColors)

@@ -14,6 +14,7 @@ import { parseBlocks, BOLD, ITALIC, CODE } from '../../shared/markdown/blocks.js
 import { taskBoxes } from '../editor/task-boxes.js'
 import { enhancedTasks, moveItems } from '../editor/enhanced-view.js'
 import { element, clear } from '../dom.js'
+import { keys } from '../platform.js'
 
 export const HELP_TOPICS = {
   helpTasks: { title: 'Enhanced Tasks', build: enhancedTasksHelp },
@@ -59,14 +60,14 @@ const section = (title, ...children) =>
   element('section', { class: 'help-section' }, [element('h2', { text: title }), ...children])
 
 const para = (...parts) => element('p', {}, parts.map((part) =>
-  typeof part === 'string' ? document.createTextNode(part) : part))
+  typeof part === 'string' ? document.createTextNode(keys(part)) : part))
 
 const code = (text) => element('code', { text })
 
 const source = (text) => element('pre', { class: 'help-source', text })
 
 const list = (...items) => element('ul', {}, items.map((item) =>
-  element('li', {}, [].concat(item).map((part) => typeof part === 'string' ? document.createTextNode(part) : part))))
+  element('li', {}, [].concat(item).map((part) => typeof part === 'string' ? document.createTextNode(keys(part)) : part))))
 
 // MARK: - Try it
 

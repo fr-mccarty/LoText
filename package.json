@@ -18,6 +18,7 @@
     "test:watch": "vitest",
     "dmg": "bash scripts/make-dmg.sh",
     "release": "bash scripts/release.sh",
+    "windows": "bash scripts/make-windows.sh",
     "web:build": "node build.mjs --web",
     "ios:build": "node build.mjs --mobile && npx cap sync ios && sed -i '' 's#node_modules\\.nosync/#node_modules/#' ios/App/CapApp-SPM/Package.swift",
     "ios:sim": "bash scripts/ios-sim.sh run",
@@ -28,6 +29,7 @@
     "@capacitor/cli": "^8.5.2",
     "electron": "^33.0.0",
     "esbuild": "^0.24.0",
+    "resedit": "^3.1.0",
     "vitest": "^3.2.7"
   },
   "dependencies": {

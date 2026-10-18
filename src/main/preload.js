@@ -26,6 +26,9 @@ function on (channel, listener) {
 }
 
 contextBridge.exposeInMainWorld('lotext', {
+  // `darwin` or `win32`; the iOS bridge says `ios`. For wording and the window's frame only.
+  platform: process.platform,
+
   // The folder
   openFolder: () => call('folder:open'),
   adoptFolder: (folder) => call('folder:adopt', folder),

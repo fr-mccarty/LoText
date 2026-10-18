@@ -6,6 +6,7 @@
 
 import path from 'node:path'
 import { BrowserWindow } from 'electron'
+import { chromeOptions } from './chrome.js'
 
 let panel = null
 
@@ -21,10 +22,8 @@ export function openSettingsWindow () {
     minWidth: 520,
     minHeight: 480,
     title: 'Editor',
-    titleBarStyle: 'hiddenInset',
+    ...chromeOptions('window'),
     show: false,
-    backgroundColor: '#00000000',
-    vibrancy: 'window',
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,

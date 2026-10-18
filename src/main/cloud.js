@@ -26,6 +26,8 @@ let watchTimer = null
 
 const folder = {
   async available () {
+    // iCloud for Windows shows iCloud Drive, but not an app's own container under it.
+    if (process.platform !== 'darwin') return false
     try {
       if (!(await fs.stat(CONTAINER)).isDirectory()) return false
     } catch {
@@ -36,6 +38,9 @@ const folder = {
     return true
   },
   unavailableMessage () {
+    if (process.platform !== 'darwin') {
+      return 'iCloud sync works between Macs, iPhones and iPads. It is not available on Windows.'
+    }
     return 'Waiting for iCloud. Turn this on in LoText on an iPhone or iPad signed in to the same '
       + 'Apple Account; its iCloud folder then reaches this Mac. iCloud Drive must be on here too.'
   },

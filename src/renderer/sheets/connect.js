@@ -19,6 +19,7 @@
 // the address as text and belongs under the field it would otherwise be typed into.
 
 import { element, clear, icon } from '../dom.js'
+import { words } from '../platform.js'
 
 export class ConnectSheet {
   constructor (model) {
@@ -55,7 +56,7 @@ export class ConnectSheet {
           class: 'key-explain',
           text: this.model.bridge.platform === 'ios'
             ? 'LoText on this device logs in with a key of its own. Put this line in the server’s ~/.ssh/authorized_keys before the first connection.'
-            : 'LoText logs in with this Mac’s SSH keys in ~/.ssh. For a server that has none of them, put this line in its ~/.ssh/authorized_keys.',
+            : `LoText logs in with ${words.thisComputer}’s SSH keys in ~/.ssh. For a server that has none of them, put this line in its ~/.ssh/authorized_keys.`,
         }),
         this.keyNode,
         element('button', {

@@ -34,3 +34,6 @@ ios/App/Pods/
 
 # macOS
 .DS_Store
+
+# Android Studio
+.idea/

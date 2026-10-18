@@ -9,6 +9,7 @@ import { BrowserWindow, app } from 'electron'
 import { LocalStore } from './store/local-store.js'
 import { RemoteStore } from './store/remote-store.js'
 import * as Session from './session.js'
+import { chromeOptions } from './chrome.js'
 import { identity as remoteIdentity, displayName as remoteName, target } from '../shared/store/remote-location.js'
 
 const windows = new Map()
@@ -99,13 +100,10 @@ export function createWindow ({ restore = null, show = true } = {}) {
     // no rule, no hairline, no separator. The title bar is a strip of the window rather than a
     // bar sitting on top of one — and the traffic lights stay visible, always, because a
     // window control you have to find by hovering is one you cannot see to aim at.
-    titleBarStyle: 'hiddenInset',
+    ...chromeOptions('sidebar'),
     trafficLightPosition: { x: 13, y: 16 },
     // No tabs of any kind. A second folder is a second *window*.
     tabbingIdentifier: undefined,
-    backgroundColor: '#00000000',
-    vibrancy: 'sidebar',
-    visualEffectState: 'followWindow',
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,

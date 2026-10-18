@@ -19,6 +19,7 @@ import { openability } from '../../shared/binary-types.js'
 import { element, clear, icon, quote } from '../dom.js'
 import { showContextMenu } from '../context-menu.js'
 import { scrollStep } from './drag-scroll.js'
+import { keys, words, isWindows } from '../platform.js'
 
 export class Sidebar {
   constructor (root, model) {
@@ -71,11 +72,11 @@ export class Sidebar {
       return node
     }
     return element('div', { class: 'sidebar-actions' }, [
-      button('folder', 'Open Folder (⌘O)', () => this.model.openFolder(), false),
-      button('newFile', 'New File (⌘N)', () => this.model.newFile(null), true),
-      button('newFolder', 'New Folder (⇧⌘N)', () => this.model.newFolder(null), true),
+      button('folder', keys('Open Folder (⌘O)'), () => this.model.openFolder(), false),
+      button('newFile', keys('New File (⌘N)'), () => this.model.newFile(null), true),
+      button('newFolder', keys('New Folder (⇧⌘N)'), () => this.model.newFolder(null), true),
       element('div', { class: 'spacer' }),
-      button('refresh', 'Refresh (⌘R)', () => this.model.refreshFolder(), true),
+      button('refresh', keys('Refresh (⌘R)'), () => this.model.refreshFolder(), true),
     ])
   }
 
@@ -267,7 +268,7 @@ export class Sidebar {
 
     if (event.key === 'Backspace' || event.key === 'Delete') {
       event.preventDefault()
-      this.model.deleteSelected({ confirming: !event.metaKey })
+      this.model.deleteSelected({ confirming: !(isWindows ? event.ctrlKey : event.metaKey) })
       return
     }
     if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
@@ -408,7 +409,7 @@ export class Sidebar {
     // worse than one that is not there.
     if (this.model.folder?.capabilities?.localPath) {
       items.push({
-        label: 'Open in Finder',
+        label: `Open in ${words.fileManager}`,
         action: () => this.model.bridge.reveal(node.path, node.kind === 'folder'),
       })
       items.push({

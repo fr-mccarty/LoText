@@ -14,9 +14,9 @@ import { BOLD, ITALIC, CODE } from '../markdown/blocks.js'
  */
 export const FONT_CHOICES = {
   // Monospaced — the editor's whole list, and the default on paper.
-  systemMono: { label: 'System Monospaced', mono: true, css: 'ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace' },
-  sfMono: { label: 'SF Mono', mono: true, css: '"SF Mono", ui-monospace, Menlo, monospace' },
-  menlo: { label: 'Menlo', mono: true, css: 'Menlo, ui-monospace, monospace' },
+  systemMono: { label: 'System Monospaced', mono: true, css: 'ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace' },
+  sfMono: { label: 'SF Mono', mono: true, css: '"SF Mono", ui-monospace, Menlo, Consolas, monospace' },
+  menlo: { label: 'Menlo', mono: true, css: 'Menlo, ui-monospace, Consolas, monospace' },
   courier: { label: 'Courier New', mono: true, css: '"Courier New", Courier, monospace' },
 
   // Proportional — printing only, for anything meant to read like a document.

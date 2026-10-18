@@ -16,6 +16,11 @@ import { app } from 'electron'
  * app's data directory rather than somewhere tidier because a Unix socket path may not exceed
  * 104 characters and that path has already spent a good deal of it.
  */
+/** Beside ssh itself: `/usr/bin` on the Mac, Windows' own OpenSSH folder there. */
+const SSH_KEYGEN = process.platform === 'win32'
+  ? path.join(process.env.SystemRoot ?? 'C:\\Windows', 'System32', 'OpenSSH', 'ssh-keygen.exe')
+  : '/usr/bin/ssh-keygen'
+
 export function directory () {
   return path.join(app.getPath('userData'), 'ssh')
 }
@@ -75,7 +80,7 @@ export async function ensure () {
 
   const comment = `LoText on ${os.hostname()}`
   await new Promise((resolve, reject) => {
-    execFile('/usr/bin/ssh-keygen', [
+    execFile(SSH_KEYGEN, [
       '-t', 'ed25519',
       '-f', privateKey(),
       '-N', '',

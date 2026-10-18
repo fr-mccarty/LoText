@@ -11,7 +11,16 @@ import { StoreError } from '../../shared/store/errors.js'
 import { target, identity } from '../../shared/store/remote-location.js'
 import * as Keys from './ssh-keys.js'
 
-const SSH = '/usr/bin/ssh'
+const isWindows = process.platform === 'win32'
+
+/**
+ * Windows 10 and 11 carry OpenSSH as an optional feature, installed by default, at the same place
+ * on every machine. Its ssh cannot multiplex — ControlMaster needs Unix sockets — so there every
+ * command opens its own connection, which is slower through a tree but otherwise the same.
+ */
+export const SSH = isWindows
+  ? path.join(process.env.SystemRoot ?? 'C:\\Windows', 'System32', 'OpenSSH', 'ssh.exe')
+  : '/usr/bin/ssh'
 
 export const sshTransport = {
   prepare: () => Keys.ensure(),
@@ -56,6 +65,7 @@ export const sshTransport = {
   },
 
   close (location) {
+    if (isWindows) return                    // nothing was kept open to close
     const child = spawn(SSH, [...options(location), '-O', 'exit', target(location)], { stdio: 'ignore' })
     child.on('error', () => {})
   },
@@ -84,17 +94,29 @@ function options (location) {
     '-o', 'StrictHostKeyChecking=accept-new',
     // Quoted: LoText's paths sit under `Application Support`, and an `-o` value is read like
     // a config line, so an unquoted space ends it.
-    '-o', `UserKnownHostsFile=~/.ssh/known_hosts "${Keys.knownHosts()}"`,
+    '-o', `UserKnownHostsFile=~/.ssh/known_hosts "${forSsh(Keys.knownHosts())}"`,
     '-o', 'ConnectTimeout=10',
     '-o', 'LogLevel=ERROR',
-    // The multiplexing. `auto` means the first command opens the master and the rest join
-    // it; `ControlPersist` keeps it warm through a few minutes of idleness.
-    '-o', 'ControlMaster=auto',
-    '-o', `ControlPath="${socketPath(location)}"`,
-    '-o', 'ControlPersist=180',
   ]
+  // The multiplexing. `auto` means the first command opens the master and the rest join
+  // it; `ControlPersist` keeps it warm through a few minutes of idleness.
+  if (!isWindows) {
+    args.push(
+      '-o', 'ControlMaster=auto',
+      '-o', `ControlPath="${socketPath(location)}"`,
+      '-o', 'ControlPersist=180',
+    )
+  }
   if (location.port) args.push('-p', String(location.port))
   return args
+}
+
+/**
+ * A path as an `-o` value: ssh reads it like a config line, where a backslash can escape what
+ * follows it, and Windows' OpenSSH takes forward slashes as readily as its own.
+ */
+function forSsh (file) {
+  return isWindows ? file.replaceAll('\\', '/') : file
 }
 
 /**

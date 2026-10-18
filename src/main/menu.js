@@ -24,8 +24,9 @@
 // on focus is how this key once did nothing at all: a disabled menu item does not hand its key
 // equivalent back, it swallows it, so the text view never saw ⌘⌫ either.
 
-import { Menu, app } from 'electron'
+import { Menu, app, dialog } from 'electron'
 import * as Windows from './window.js'
+import { isMac } from './chrome.js'
 import * as Session from './session.js'
 import * as Settings from './settings.js'
 import { openSettingsWindow, settingsWindow } from './settings-window.js'
@@ -59,9 +60,12 @@ export function buildMenu () {
   Menu.setApplicationMenu(Menu.buildFromTemplate(template()))
 }
 
+// Windows has no application menu: what the Mac keeps under LoText goes to the foot of File —
+// Settings and the settings file, then Exit — and About to the foot of Help, where Windows
+// apps put them. The Mac-only roles (Services, Hide, Bring All to Front) are left out there.
 function template () {
   return [
-    appMenu(),
+    ...(isMac ? [appMenu()] : []),
     fileMenu(),
     editMenu(),
     formatMenu(),
@@ -71,17 +75,23 @@ function template () {
   ]
 }
 
+function settingsItems () {
+  return [
+    { label: 'Settings…', accelerator: 'CmdOrCtrl+,', click: () => openSettingsWindow() },
+    // The same two buttons as the Settings File group at the foot of either tab, here as well
+    // so that moving settings to another Mac does not start with a hunt through the panel.
+    { label: 'Export Settings…', click: () => SettingsFile.exportSettingsFromMenu(settingsWindow() ?? Windows.frontOrAny()?.browser) },
+    { label: 'Import Settings…', click: () => SettingsFile.importSettingsFromMenu(settingsWindow() ?? Windows.frontOrAny()?.browser) },
+  ]
+}
+
 function appMenu () {
   return {
     label: app.name,
     submenu: [
       { role: 'about' },
       { type: 'separator' },
-      { label: 'Settings…', accelerator: 'Command+,', click: () => openSettingsWindow() },
-      // The same two buttons as the Settings File group at the foot of either tab, here as well
-      // so that moving settings to another Mac does not start with a hunt through the panel.
-      { label: 'Export Settings…', click: () => SettingsFile.exportSettingsFromMenu(settingsWindow() ?? Windows.frontOrAny()?.browser) },
-      { label: 'Import Settings…', click: () => SettingsFile.importSettingsFromMenu(settingsWindow() ?? Windows.frontOrAny()?.browser) },
+      ...settingsItems(),
       { type: 'separator' },
       { role: 'services' },
       { type: 'separator' },
@@ -101,33 +111,39 @@ function fileMenu () {
       // An empty window, for a second folder. It opens with no folder rather than a copy of
       // this one: two windows on the same folder would be two trees and two buffers over one
       // set of files.
-      { label: 'New Window', accelerator: 'Alt+Command+N', click: () => Windows.createWindow() },
+      { label: 'New Window', accelerator: 'Alt+CmdOrCtrl+N', click: () => Windows.createWindow() },
       { type: 'separator' },
-      { label: 'New File', accelerator: 'Command+N', enabled: state.hasFolder, click: () => send('newFile') },
-      { label: 'New Folder', accelerator: 'Shift+Command+N', enabled: state.hasFolder, click: () => send('newFolder') },
+      { label: 'New File', accelerator: 'CmdOrCtrl+N', enabled: state.hasFolder, click: () => send('newFile') },
+      { label: 'New Folder', accelerator: 'Shift+CmdOrCtrl+N', enabled: state.hasFolder, click: () => send('newFolder') },
       // The platform's own ⌘D was not available: ⌘D is Select Next Instance, which is reached
       // far more often than this is. ⇧⌘D is the other key that means duplicate, and it was free.
-      { label: 'Duplicate', accelerator: 'Shift+Command+D', enabled: state.canDuplicate, click: () => send('duplicate') },
+      { label: 'Duplicate', accelerator: 'Shift+CmdOrCtrl+D', enabled: state.canDuplicate, click: () => send('duplicate') },
       { type: 'separator' },
-      { label: 'Open Folder…', accelerator: 'Command+O', click: () => send('openFolder') },
+      { label: 'Open Folder…', accelerator: 'CmdOrCtrl+O', click: () => send('openFolder') },
       // A folder on another machine, opened over SSH and edited in place. ⇧⌘K is the key the
       // Finder gives to the same idea, which is the only reason it is this one.
-      { label: 'Connect to Server…', accelerator: 'Shift+Command+K', click: () => send('connectToServer') },
+      { label: 'Connect to Server…', accelerator: 'Shift+CmdOrCtrl+K', click: () => send('connectToServer') },
       recentFoldersMenu(),
       // Back to what was just being worked on: the files changed most recently on disk. ⇧⌘O
       // beside ⌘O for the reason ⇧⌘N sits beside ⌘N: the same verb over a narrower set.
-      { label: 'Recently Edited…', accelerator: 'Shift+Command+O', click: () => send('goToLastFile') },
+      { label: 'Recently Edited…', accelerator: 'Shift+CmdOrCtrl+O', click: () => send('goToLastFile') },
       // Quick-open. ⇧⌘P rather than ⌘P: a text editor whose ⌘P does not print is a text editor
       // that surprises somebody holding a finished page.
-      { label: 'Find File…', accelerator: 'Shift+Command+P', enabled: state.hasFolder, click: () => send('findFile') },
+      { label: 'Find File…', accelerator: 'Shift+CmdOrCtrl+P', enabled: state.hasFolder, click: () => send('findFile') },
       { type: 'separator' },
       // Declared above the window's own Close so ⌘W closes the file, not the window.
-      { label: 'Close File', accelerator: 'Command+W', enabled: state.hasOpenFile, click: () => send('closeFile') },
-      { label: 'Close Window', accelerator: 'Shift+Command+W', click: () => Windows.frontOrAny()?.browser.close() },
+      { label: 'Close File', accelerator: 'CmdOrCtrl+W', enabled: state.hasOpenFile, click: () => send('closeFile') },
+      { label: 'Close Window', accelerator: 'Shift+CmdOrCtrl+W', click: () => Windows.frontOrAny()?.browser.close() },
       { type: 'separator' },
-      { label: 'Save', accelerator: 'Command+S', enabled: state.hasOpenFile, click: () => send('save') },
+      { label: 'Save', accelerator: 'CmdOrCtrl+S', enabled: state.hasOpenFile, click: () => send('save') },
       { type: 'separator' },
-      { label: 'Print…', accelerator: 'Command+P', enabled: state.canPrint, click: () => send('print') },
+      { label: 'Print…', accelerator: 'CmdOrCtrl+P', enabled: state.canPrint, click: () => send('print') },
+      ...(isMac ? [] : [
+        { type: 'separator' },
+        ...settingsItems(),
+        { type: 'separator' },
+        { role: 'quit', label: 'Exit' },
+      ]),
     ],
   }
 }
@@ -172,11 +188,11 @@ function editMenu () {
         // The title follows where the keyboard is, so the menu never offers to delete a file
         // and then deletes half a line instead.
         label: state.isEditingText ? 'Delete to Beginning of Line' : 'Delete Immediately',
-        accelerator: 'Command+Backspace',
+        accelerator: 'CmdOrCtrl+Backspace',
         click: () => send('deleteImmediately'),
       },
       { type: 'separator' },
-      { label: 'Select Next Instance', accelerator: 'Command+D', enabled: state.hasOpenFile, click: () => send('selectNextInstance') },
+      { label: 'Select Next Instance', accelerator: 'CmdOrCtrl+D', enabled: state.hasOpenFile, click: () => send('selectNextInstance') },
       { type: 'separator' },
       // Listed here so the menu stays the one place every shortcut can be read off, but the key
       // itself is the editor's. A ⌘ shortcut reaches the menu before the page; ⌥↑ does not —
@@ -185,8 +201,8 @@ function editMenu () {
       { label: 'Move Line Up', accelerator: 'Alt+Up', registerAccelerator: false, enabled: state.hasOpenFile, click: () => send('moveLineUp') },
       { label: 'Move Line Down', accelerator: 'Alt+Down', registerAccelerator: false, enabled: state.hasOpenFile, click: () => send('moveLineDown') },
       { type: 'separator' },
-      { label: 'Hide Lines', accelerator: 'Command+[', enabled: state.hasOpenFile, click: () => send('hideLines') },
-      { label: 'Show Lines', accelerator: 'Command+]', enabled: state.hasOpenFile, click: () => send('showLines') },
+      { label: 'Hide Lines', accelerator: 'CmdOrCtrl+[', enabled: state.hasOpenFile, click: () => send('hideLines') },
+      { label: 'Show Lines', accelerator: 'CmdOrCtrl+]', enabled: state.hasOpenFile, click: () => send('showLines') },
       { type: 'separator' },
       {
         // Find, over the open file. Every item is one call into the editor's own find panel,
@@ -194,11 +210,11 @@ function editMenu () {
         // because there is then no buffer to look through.
         label: 'Find',
         submenu: [
-          { label: 'Find…', accelerator: 'Command+F', enabled: state.hasOpenFile, click: () => send('find') },
-          { label: 'Find and Replace…', accelerator: 'Alt+Command+F', enabled: state.hasOpenFile, click: () => send('findAndReplace') },
-          { label: 'Find Next', accelerator: 'Command+G', enabled: state.hasOpenFile, click: () => send('findNext') },
-          { label: 'Find Previous', accelerator: 'Shift+Command+G', enabled: state.hasOpenFile, click: () => send('findPrevious') },
-          { label: 'Use Selection for Find', accelerator: 'Command+E', enabled: state.hasOpenFile, click: () => send('useSelectionForFind') },
+          { label: 'Find…', accelerator: 'CmdOrCtrl+F', enabled: state.hasOpenFile, click: () => send('find') },
+          { label: 'Find and Replace…', accelerator: 'Alt+CmdOrCtrl+F', enabled: state.hasOpenFile, click: () => send('findAndReplace') },
+          { label: 'Find Next', accelerator: 'CmdOrCtrl+G', enabled: state.hasOpenFile, click: () => send('findNext') },
+          { label: 'Find Previous', accelerator: 'Shift+CmdOrCtrl+G', enabled: state.hasOpenFile, click: () => send('findPrevious') },
+          { label: 'Use Selection for Find', accelerator: 'CmdOrCtrl+E', enabled: state.hasOpenFile, click: () => send('useSelectionForFind') },
         ],
       },
     ],
@@ -213,8 +229,8 @@ function formatMenu () {
   return {
     label: 'Format',
     submenu: [
-      { label: 'Bold', accelerator: 'Command+B', enabled: state.hasOpenFile, click: () => send('bold') },
-      { label: 'Italic', accelerator: 'Command+I', enabled: state.hasOpenFile, click: () => send('italic') },
+      { label: 'Bold', accelerator: 'CmdOrCtrl+B', enabled: state.hasOpenFile, click: () => send('bold') },
+      { label: 'Italic', accelerator: 'CmdOrCtrl+I', enabled: state.hasOpenFile, click: () => send('italic') },
     ],
   }
 }
@@ -223,19 +239,19 @@ function viewMenu () {
   return {
     label: 'View',
     submenu: [
-      { label: 'Toggle Sidebar', accelerator: 'Shift+Command+B', click: () => send('toggleSidebar') },
+      { label: 'Toggle Sidebar', accelerator: 'Shift+CmdOrCtrl+B', click: () => send('toggleSidebar') },
       // Asking, for the folders nothing can tell us about. A local folder has a watcher and
       // will rarely need this; a folder on a server has nothing watching it at all, and this
       // is the whole of what replaces the watcher there.
-      { label: 'Refresh', accelerator: 'Command+R', enabled: state.hasFolder, click: () => send('refresh') },
+      { label: 'Refresh', accelerator: 'CmdOrCtrl+R', enabled: state.hasFolder, click: () => send('refresh') },
       { type: 'separator' },
       // Editor size only — the print size is untouched. Bound to `=` so it fires as ⌘= as well
       // as ⌘⇧=; a literal `+` binding is a shortcut that never fires on a US keyboard, so the
       // shifted spelling is a hidden twin rather than a second menu item.
-      { label: 'Bigger', accelerator: 'Command+=', click: bigger },
-      { label: 'Bigger', accelerator: 'Shift+Command+=', visible: false, click: bigger },
-      { label: 'Smaller', accelerator: 'Command+-', click: smaller },
-      { label: 'Actual Size', accelerator: 'Command+0', click: actualSize },
+      { label: 'Bigger', accelerator: 'CmdOrCtrl+=', click: bigger },
+      { label: 'Bigger', accelerator: 'Shift+CmdOrCtrl+=', visible: false, click: bigger },
+      { label: 'Smaller', accelerator: 'CmdOrCtrl+-', click: smaller },
+      { label: 'Actual Size', accelerator: 'CmdOrCtrl+0', click: actualSize },
       { type: 'separator' },
       { role: 'togglefullscreen' },
       { role: 'toggleDevTools', visible: process.argv.includes('--dev') },
@@ -251,13 +267,24 @@ function actualSize () { Settings.resetFontSize() }
 function windowMenu () {
   return {
     label: 'Window',
-    submenu: [
-      { role: 'minimize' },
-      { role: 'zoom' },
-      { type: 'separator' },
-      { role: 'front' },
-    ],
+    submenu: isMac
+      ? [
+          { role: 'minimize' },
+          { role: 'zoom' },
+          { type: 'separator' },
+          { role: 'front' },
+        ]
+      : [
+          { role: 'minimize' },
+          { label: 'Maximize', click: () => toggleMaximized(Windows.frontOrAny()?.browser) },
+        ],
   }
+}
+
+function toggleMaximized (browser) {
+  if (!browser) return
+  if (browser.isMaximized()) browser.unmaximize()
+  else browser.maximize()
 }
 
 function helpMenu () {
@@ -268,6 +295,24 @@ function helpMenu () {
       { label: 'Enhanced Tasks', click: () => send('helpTasks') },
       { label: 'Disclosure Arrows', click: () => send('helpDisclosures') },
       { label: 'Markdown Formatting', click: () => send('helpMarkdown') },
+      ...(isMac ? [] : [
+        { type: 'separator' },
+        { label: `About ${app.name}`, click: showAbout },
+      ]),
     ],
   }
+}
+
+/** Windows has no standard About panel; this says what the Mac's does. */
+function showAbout () {
+  const parent = Windows.frontOrAny()?.browser
+  const options = {
+    type: 'info',
+    title: `About ${app.name}`,
+    message: `${app.name} ${app.getVersion()}`,
+    detail: 'A folder-based plain-text editor.\n© Lolek Productions, Inc.',
+    buttons: ['OK'],
+  }
+  if (parent) dialog.showMessageBox(parent, options)
+  else dialog.showMessageBox(options)
 }

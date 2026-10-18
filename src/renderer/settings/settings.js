@@ -20,8 +20,10 @@ import {
 } from '../../shared/settings-shape.js'
 import { restoringErrors } from '../bridge-errors.js'
 import { FONT_CHOICES, EDITOR_FONT_CHOICES, PRINT_FONT_CHOICES } from '../../shared/print/fonts.js'
+import { keys, words, markPlatform } from '../platform.js'
 
 const bridge = restoringErrors(window.lotext)
+markPlatform()
 const tabsNode = document.getElementById('tabs')
 const titleNode = document.getElementById('window-title')
 const panelNode = document.getElementById('panel')
@@ -355,7 +357,7 @@ function dayCapSection () {
   ], element('span', {
     text: `Cut and Send to DayCap, in the editor\u2019s ${onPhone ? '\u22ef' : 'right-click'} menu, `
       + 'saves the selected text as a new .md file in this folder. The folder belongs to this '
-      + `${onPhone ? 'device' : 'Mac'}: it is not synced or exported, and Restore Defaults leaves `
+      + `${onPhone ? 'device' : words.computer}: it is not synced or exported, and Restore Defaults leaves `
       + 'it as it is.',
   }))
 }
@@ -489,7 +491,7 @@ function presetSection (preset) {
     // iOS has no command line, and its Print… is in a menu rather than on ⌘P.
     text: bridge.platform === 'ios'
       ? 'Every setting below belongs to the selected preset. Print… and Share PDF… use it.'
-      : 'Every setting below belongs to the selected preset. ⌘P uses it, and so does '
+      : keys('Every setting below belongs to the selected preset. ⌘P uses it, and so does ')
         + 'lotext --pdf unless --preset names another.',
   }))
 }

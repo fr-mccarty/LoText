@@ -684,7 +684,7 @@ body.row-dragging .row.selected:hover { background: var(--selection-inactive); }
 .help-body ul { margin: 6px 0; padding-left: 20px; }
 .help-body li { margin: 3px 0; }
 .help-body code, .help-source, .help-try .cm-content {
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   font-size: 12px;
 }
 /* Inline code keeps its spaces and never breaks: `[[ ]] ==>` split over two lines reads wrong. */
@@ -713,7 +713,7 @@ body.row-dragging .row.selected:hover { background: var(--selection-inactive); }
   border-radius: 6px;
   background: #fff;
   color: #111;
-  font-family: -apple-system, 'Helvetica Neue', sans-serif;
+  font-family: -apple-system, 'Helvetica Neue', 'Segoe UI', sans-serif;
   font-size: 12px;
   box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.12);
 }
@@ -834,7 +834,7 @@ body.row-dragging .row.selected:hover { background: var(--selection-inactive); }
   border: 1px solid var(--sheet-border);
   border-radius: 6px;
   background: var(--selection);
-  font: 11px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace;
+  font: 11px/1.4 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   word-break: break-all;
   user-select: text;
 }
@@ -873,3 +873,10 @@ body.row-dragging .row.selected:hover { background: var(--selection-inactive); }
 .menu-separator { height: 1px; margin: 4px 6px; background: var(--separator); }
 
 .icon { flex: 0 0 auto; }
+
+/* ── Windows ──────────────────────────────────────────────────────────────── */
+/* An ordinary frame there, with its own title bar and the menu under it: no traffic lights to
+   leave room for, and nothing to drag the window by but the title bar itself. The band shrinks
+   to a little air above the sidebar's buttons and the text. */
+body.platform-win32 { --title-bar-height: 8px; }
+body.platform-win32 * { -webkit-app-region: no-drag !important; }

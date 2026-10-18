@@ -377,3 +377,8 @@ button.plain.destructive:disabled { color: var(--text); }
   border-radius: 3px;
   padding: 2px;
 }
+
+/* Windows titles the panel in its own title bar, so the drawn one would say it twice. */
+body.platform-win32 #window-title { display: none; }
+body.platform-win32 #tabs { padding-top: 10px; }
+body.platform-win32 * { -webkit-app-region: no-drag !important; }

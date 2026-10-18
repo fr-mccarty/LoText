@@ -16,6 +16,8 @@ npm run dmg        # ad-hoc signed .app + .dmg → the export folder, scripts/ex
                    # (runs on this Mac only)
 npm run release    # Developer ID signed + notarized .dmg → the export folder — the user runs it at the Mac
                    # release then asks whether to publish it (scripts/publish-to-website.sh)
+npm run windows    # Windows installer + portable zip → the export folder, built on the Mac
+                   # (-- arm64 for Windows on Arm); needs `brew install makensis`
 electron . --list-presets
 electron . --pdf notes.md --out notes.pdf [--preset NAME] [--paper a4]
 
@@ -114,6 +116,13 @@ A rebuild does not reload the running app — restart `electron .`. ⌘R is Refr
   `spctl --assess` / `stapler validate`, which work from here. The iOS app is archived and
   uploaded by the user in Xcode (`packaging/app-store/ios.md`). Simulator builds need no
   keychain, but must be built outside `~/Documents` (see `discoveries/running-lotext-on-ios.md`).
+- **Windows is the Mac app with a different frame** (`src/main/chrome.js`): an ordinary title
+  bar and menu bar, opaque backgrounds, Settings and Exit at the foot of File, About in Help.
+  `CmdOrCtrl` accelerators; the renderer spells shortcuts and names (Recycle Bin, File Explorer)
+  through `src/renderer/platform.js` — write ⌘ in strings and pass them through `keys()`.
+  SSH is Windows' own `System32\OpenSSH\ssh.exe`, without multiplexing; iCloud sync is off.
+  `scripts/make-windows.sh` builds it with no Wine: resedit brands the exe, Homebrew's makensis
+  builds `packaging/windows/installer.nsi`. **Unsigned**, so SmartScreen warns on first run.
 - **One instance at a time.** The app holds a single-instance lock; running the GUI and a CLI
   command together makes one of them quit.
 
