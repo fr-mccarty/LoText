@@ -15,7 +15,6 @@ npm test           # vitest run — tests live in test/
 npm run dmg        # ad-hoc signed .app + .dmg → the export folder, scripts/export-folder.sh
                    # (runs on this Mac only)
 npm run release    # Developer ID signed + notarized .dmg → the export folder — the user runs it at the Mac
-                   # both ask whether to copy it to the Desktop; -- --desktop / --no-desktop to say
                    # release then asks whether to publish it (scripts/publish-to-website.sh)
 electron . --list-presets
 electron . --pdf notes.md --out notes.pdf [--preset NAME] [--paper a4]

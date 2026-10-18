@@ -5,18 +5,12 @@
 #   scripts/make-dmg.sh                      → LoText-<version>.dmg in the export folder
 #                                              (scripts/export-folder.sh)
 #   scripts/make-dmg.sh /path/to/out.dmg     → there instead
-#   scripts/make-dmg.sh --desktop            … and a copy on the Desktop
-#   scripts/make-dmg.sh --no-desktop         … and no copy, without asking
 #   scripts/make-dmg.sh --publish            … and publish it on lolekproductions.org
 #   scripts/make-dmg.sh --no-publish         … and do not, without asking
 #
-# With neither flag, a run in a terminal asks whether to copy the image to the Desktop, and a run
-# with no terminal to answer in (an agent, a script) makes no copy. The copy replaces one of the
-# same name there.
-#
 # Publishing is scripts/publish-to-website.sh, and is offered only for a notarized image: an
-# ad-hoc one would be refused by every Mac that downloaded it. It is asked the same way, after
-# the Desktop.
+# ad-hoc one would be refused by every Mac that downloaded it. With neither flag, a run in a
+# terminal asks, and a run with no terminal to answer in (an agent, a script) does not publish.
 #
 # Signing is chosen by the environment:
 #
@@ -43,12 +37,9 @@ source "$ROOT/scripts/export-folder.sh"
 APP_NAME=$(node -p "require('./package.json').productName")
 VERSION=$(node -p "require('./package.json').version")
 OUT=""
-COPY_TO_DESKTOP=ask
 PUBLISH=ask
 for arg in "$@"; do
   case "$arg" in
-    --desktop) COPY_TO_DESKTOP=yes ;;
-    --no-desktop) COPY_TO_DESKTOP=no ;;
     --publish) PUBLISH=yes ;;
     --no-publish) PUBLISH=no ;;
     -*) echo "Unknown option: $arg" >&2; exit 1 ;;
@@ -223,18 +214,6 @@ hdiutil detach "$MOUNT" -force -quiet
 rmdir "$MOUNT" 2>/dev/null || true
 
 echo "✓ $OUT ($(du -h "$OUT" | cut -f1))"
-
-if [ "$COPY_TO_DESKTOP" = ask ]; then
-  COPY_TO_DESKTOP=no
-  if [ -t 0 ]; then
-    read -r -p "Copy it to the Desktop? [y/N] " ANSWER
-    case "$ANSWER" in [yY]*) COPY_TO_DESKTOP=yes ;; esac
-  fi
-fi
-if [ "$COPY_TO_DESKTOP" = yes ]; then
-  cp -f "$OUT" "$HOME/Desktop/"
-  echo "✓ Copied to $HOME/Desktop/$(basename "$OUT")"
-fi
 
 [ -n "$NOTARY_PROFILE" ] || exit 0
 if [ "$PUBLISH" = ask ]; then

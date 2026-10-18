@@ -36,10 +36,6 @@ new image never has the same name as the one already on the site.
   running that script prints it. It is outside this project, in iCloud Drive, so the images are
   on every Mac while the project itself stays out of iCloud. Older versions stay there beside it. To write it somewhere else, pass a
   path: `npm run release -- ~/somewhere/LoText.dmg`.
-- **A copy on the Desktop** is made only if you want one. When the export finishes, the script
-  asks `Copy it to the Desktop? [y/N]`; the answer is no unless you type `y`. To decide in
-  advance, run `npm run release -- --desktop` or `npm run release -- --no-desktop`. A run with no
-  terminal to ask in, such as an agent's, makes no copy.
 - **The published image** is the copy in `~/peru/storage/lolekproductions-org-downloads/`
   (step 2 below).
 
@@ -85,7 +81,7 @@ with a Peru deploy.
 
 ### Publishing from the release
 
-`npm run release` asks, after the Desktop question:
+`npm run release` asks, once the image is exported:
 
 ```
 Publish it on lolekproductions.org? [y/N]
