@@ -27,6 +27,10 @@ npm run ios:build  # esbuild --mobile → dist-mobile/, then cap sync into ios/
 npm run ios:open   # the same, then open Xcode — archiving and uploading happen there
 scripts/ios-sim.sh run [pad]     # build, install, launch in the simulator
 scripts/ios-sim.sh eval 'js'     # drive it; also answer N, shot out.png, docs
+npm run android:build            # esbuild --mobile → dist-mobile/, cap sync android, a debug APK
+npm run android:run              # the same, installed and launched on the running emulator
+npm run android:open             # the same, then open Android Studio
+scripts/android.sh shot out.png  # the emulator's screen
 ```
 
 A rebuild does not reload the running app — restart `electron .`. ⌘R is Refresh, not reload.
@@ -83,6 +87,15 @@ A rebuild does not reload the running app — restart `electron .`. ⌘R is Refr
   `bridge.platform === 'ios'` for wording only. iOS leaves out, on purpose: New Window, the CLI, Open in Finder, dragging rows (Move To… instead), and the folder watcher
   (the app re-checks on coming forward). Native code is one plugin, `ios/App/App/LoTextNative*.swift`
   and `FolderStore.swift`; a new Swift file must be added to `project.pbxproj`.
+- **Android is the iOS app's web half on a Java LoTextNative**
+  (`android/app/src/main/java/com/lolekproductions/lotext/LoTextNativePlugin.java` and
+  `FolderStore.java`), answering the same methods with the same shapes. `bridge.platform` is
+  `android` there; `src/mobile/` asks it only to leave out what Android has no native half for
+  yet — Connect to Server, iCloud sync, Send to DayCap — and the renderer only for wording.
+  A picked folder is a document tree (no paths, only document ids), the app's own folder plain
+  files in the app's storage; deleting is for good, and the question says so. Back is the page's
+  (`goBack` in `src/mobile/ui.js`). Gradle 8 needs Java 21, not Android Studio's 25:
+  `scripts/android.sh` sets it. See `discoveries/running-lotext-on-android.md`.
 - **A folder on a server is one store with two transports** (`src/shared/store/remote-store.js`).
   The Mac runs `/usr/bin/ssh` and logs in with the Mac's own `~/.ssh` keys, LoText's own key
   last (`src/main/store/ssh-transport.js`); iOS runs SwiftNIO SSH in the app with a key of the
@@ -157,6 +170,8 @@ A rebuild does not reload the running app — restart `electron .`. ⌘R is Refr
     a time), how it was measured, and why there is no cache.
   - `running-lotext-on-ios.md` — the simulator harness (`scripts/ios-sim.sh`), answering native
     alerts from a terminal, and the codesign-under-Documents trap.
+  - `running-lotext-on-android.md` — Java 21 for Gradle, the emulator from a terminal, finding
+    what to tap, and the long-press that opened two menus.
 - `docs/` — how-to documents for people. `publishing-the-mac-download.md`: exporting the
   signed disk image, where the images are kept, and replacing the download on lolekproductions.org.
 - `packaging/app-store/` — the App Store listings: `metadata.md` (Mac), `ios.md` (iPhone/iPad,

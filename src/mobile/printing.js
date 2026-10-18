@@ -8,7 +8,15 @@
 // comes out at the paper's own size.
 
 import { PAPER_SIZES } from '../shared/settings-shape.js'
+import { Capacitor } from '@capacitor/core'
 import { Native } from './native.js'
+
+/**
+ * iOS turns each page's rectangle into a PDF page itself, at one point per pixel. Android hands
+ * the document to its print dialog, which pages it by the @page rule the Mac uses as well — so
+ * there the page size stays and the zoom does not.
+ */
+const PAGED_BY_THE_SYSTEM = Capacitor.getPlatform() === 'android'
 
 /** CSS points are 4/3 of a pixel; zooming the page to ¾ makes one point exactly one pixel. */
 const ONE_POINT_PER_PIXEL = 'html { zoom: 0.75; }'
@@ -59,10 +67,11 @@ async function drawPages (job, size) {
     const doc = frame.contentDocument
     // Not the Mac's @page size (#page-size): the native side sets the paper itself, and the
     // zoom below would make a size in points disagree with it.
-    const styles = [...doc.querySelectorAll('style:not(#page-size)')].map((node) => node.textContent).join('\n')
+    const styles = [...doc.querySelectorAll(PAGED_BY_THE_SYSTEM ? 'style' : 'style:not(#page-size)')]
+      .map((node) => node.textContent).join('\n')
     const pages = doc.getElementById('pages').outerHTML
     const html = '<!doctype html><html><head><meta charset="utf-8">' +
-      `<style>${styles}\n${ONE_POINT_PER_PIXEL}</style></head><body>${pages}</body></html>`
+      `<style>${styles}\n${PAGED_BY_THE_SYSTEM ? '' : ONE_POINT_PER_PIXEL}</style></head><body>${pages}</body></html>`
     return { html, pageCount }
   } finally {
     frame.remove()

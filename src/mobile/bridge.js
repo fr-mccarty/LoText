@@ -1,5 +1,5 @@
-// The iOS bridge: what src/main/preload.js and src/main/ipc.js are on the Mac, as one object the
-// model is handed as `window.lotext`. Every method the Mac's bridge has is here, with the same
+// The iOS and Android bridge: what src/main/preload.js and src/main/ipc.js are on the Mac, as one
+// object the model is handed as `window.lotext`. Every method the Mac's bridge has is here, with the same
 // answers, so the model does not know which platform it is on. Where iOS has no equivalent —
 // windows, the menu bar — the method is a quiet no-op or refuses in a sentence.
 //
@@ -24,6 +24,15 @@ import * as prefs from './prefs.js'
 import * as Recovery from './recovery.js'
 import { printDocument } from './printing.js'
 import { cloudFolder, watchCloud } from './cloud.js'
+import { Capacitor } from '@capacitor/core'
+
+/**
+ * `ios` or `android`. Android runs the same web half on its own LoTextNative
+ * (android/app/src/main/java/…/LoTextNativePlugin.java), which does not have Connect to Server,
+ * iCloud sync or Send to DayCap yet — so those are left out of what this bridge offers there.
+ */
+const PLATFORM = Capacitor.getPlatform() === 'android' ? 'android' : 'ios'
+const ANDROID = PLATFORM === 'android'
 
 /** The app's own folder — Documents, which Files shows as On My iPhone ▸ LoText. */
 export const APP_FOLDER = 'app'
@@ -158,9 +167,11 @@ export function createBridge () {
       entry.id !== APP_FOLDER && entry.id !== store?.identity)
     const choices = [
       { title: 'Choose Folder…', run: pickFolder },
-      { title: `On My ${deviceName()} ▸ LoText`, run: () => openFolderByID(APP_FOLDER) },
+      { title: ANDROID ? 'On This Device ▸ LoText' : `On My ${deviceName()} ▸ LoText`, run: () => openFolderByID(APP_FOLDER) },
       // The sheet is the model's, as ⇧⌘K's is on the Mac; this only asks for it.
-      { title: 'Connect to Server…', run: () => { emit('menu:command', { command: 'connectToServer' }); return null } },
+      ...(ANDROID ? [] : [
+        { title: 'Connect to Server…', run: () => { emit('menu:command', { command: 'connectToServer' }); return null } },
+      ]),
       ...titled(recents).map(({ entry, title }) => ({ title, run: () => openFolderByID(entry.id) })),
     ]
     const index = await chooseFrom(choices, { title: 'Open Folder' })
@@ -248,7 +259,7 @@ export function createBridge () {
   // MARK: - The bridge
 
   const bridge = {
-    platform: 'ios',
+    platform: PLATFORM,
 
     // The folder
     openFolder,
@@ -394,7 +405,7 @@ export function createBridge () {
 
     // Cut and Send to DayCap. The folder is this device's own, a bookmark the native side keeps,
     // so what the settings panel shows is its name alone.
-    sendsToDayCap: true,
+    sendsToDayCap: !ANDROID,
     dayCapFolder: async () => (await Native.dayCapFolder()).name ?? null,
     chooseDayCapFolder: async () => (await Native.pickDayCapFolder()).name ?? null,
     sendToDayCap: (text) => sendToDayCap(dayCapNative, text),
@@ -461,6 +472,12 @@ export function createBridge () {
       settings: settings.printSnapshot(preset),
       paper: preset.paper ?? 'letter',
     }, { share })
+  }
+
+  if (ANDROID) {
+    delete bridge.cloudStatus
+    delete bridge.setCloudSync
+    delete bridge.onCloudStatus
   }
 
   // Everything but the listeners waits for the preferences to be read, so nothing is answered

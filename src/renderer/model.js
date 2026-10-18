@@ -883,6 +883,13 @@ export class AppModel {
         buttons: buttons('Delete'),
       }
     }
+    if (this.bridge.platform === 'android') {
+      return {
+        title: `Delete ${quote(name)}?`,
+        message: 'A folder on Android keeps no Trash, so this cannot be undone.',
+        buttons: buttons('Delete'),
+      }
+    }
     if (this.bridge.platform === 'ios') {
       return {
         title: `Delete ${quote(name)}?`,

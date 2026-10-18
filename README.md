@@ -97,6 +97,18 @@ electron . --list-presets
 
 `npm run pdf` is the same thing with the build in front of it.
 
+## Building for Android
+
+```sh
+brew install openjdk@21          # once: Gradle 8 cannot run on Android Studio's own Java 25
+npm run android:run              # a debug build, installed on the running emulator or phone
+npm run android:open             # the project in Android Studio
+```
+
+The same web half as the iPhone app, on its own native plugin in `android/`. Not on Android yet:
+Connect to Server, iCloud sync and Send to DayCap. A Play Store build needs an upload key first
+(`scripts/android.sh release` makes the bundle).
+
 ## Building for Windows
 
 ```sh

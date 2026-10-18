@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">LoText</string>
+    <string name="title_activity_main">LoText</string>
+    <string name="package_name">com.lolekproductions.lotext</string>
+    <string name="custom_url_scheme">com.lolekproductions.lotext</string>
+</resources>

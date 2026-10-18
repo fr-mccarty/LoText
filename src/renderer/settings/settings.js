@@ -489,7 +489,7 @@ function presetSection (preset) {
     ]),
   ], element('span', {
     // iOS has no command line, and its Print… is in a menu rather than on ⌘P.
-    text: bridge.platform === 'ios'
+    text: bridge.platform === 'ios' || bridge.platform === 'android'
       ? 'Every setting below belongs to the selected preset. Print… and Share PDF… use it.'
       : keys('Every setting below belongs to the selected preset. ⌘P uses it, and so does ')
         + 'lotext --pdf unless --preset names another.',

@@ -268,7 +268,7 @@ export class Sidebar {
 
     if (event.key === 'Backspace' || event.key === 'Delete') {
       event.preventDefault()
-      this.model.deleteSelected({ confirming: !(isWindows ? event.ctrlKey : event.metaKey) })
+      this.model.deleteSelected({ confirming: !(isWindows() ? event.ctrlKey : event.metaKey) })
       return
     }
     if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {

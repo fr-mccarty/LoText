@@ -31,7 +31,15 @@ describe('keys', () => {
   })
 
   it('names the Recycle Bin and File Explorer on Windows', async () => {
-    expect((await load('win32')).words).toMatchObject({ trash: 'Recycle Bin', fileManager: 'File Explorer' })
-    expect((await load('darwin')).words).toMatchObject({ trash: 'Trash', fileManager: 'Finder' })
+    const { words } = await load('win32')
+    expect([words.trash, words.fileManager]).toEqual(['Recycle Bin', 'File Explorer'])
+    globalThis.window = { lotext: { platform: 'darwin' } }
+    expect([words.trash, words.fileManager]).toEqual(['Trash', 'Finder'])
+  })
+
+  it('spells shortcuts out for a keyboard on Android, and asks the bridge when called', async () => {
+    const { keys } = await load('ios')
+    globalThis.window = { lotext: { platform: 'android' } }
+    expect(keys('Find (⌘F)')).toBe('Find (Ctrl+F)')
   })
 })

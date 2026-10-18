@@ -23,6 +23,9 @@
     "ios:build": "node build.mjs --mobile && npx cap sync ios && sed -i '' 's#node_modules\\.nosync/#node_modules/#' ios/App/CapApp-SPM/Package.swift",
     "ios:sim": "bash scripts/ios-sim.sh run",
     "ios:open": "npm run ios:build && npx cap open ios",
+    "android:build": "bash scripts/android.sh build",
+    "android:run": "bash scripts/android.sh run",
+    "android:open": "bash scripts/android.sh build && npx cap open android",
     "dependencies": "node scripts/keep-node-modules-out-of-icloud.mjs"
   },
   "devDependencies": {
@@ -33,6 +36,7 @@
     "vitest": "^3.2.7"
   },
   "dependencies": {
+    "@capacitor/android": "^8.5.3",
     "@capacitor/core": "^8.5.2",
     "@capacitor/ios": "^8.5.2",
     "@capacitor/keyboard": "^8.0.5",

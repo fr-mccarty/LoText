@@ -320,6 +320,17 @@ export class MobileShell {
     list.addEventListener('click', (event) => {
       if (Date.now() < swallowClicksUntil) { event.stopPropagation(); event.preventDefault() }
     }, true)
+
+    // Android's web view also fires `contextmenu` for a finger held down, which iOS's does not:
+    // in the sidebar that was a second row menu over the one above, and in the text the Mac's
+    // menu over the system's own. A press by a finger is answered here and by the system only.
+    // Its default is left alone, so the system still selects the word under it. A mouse's
+    // right-click is not a touch, and still reaches the Mac's menus.
+    let lastTouch = 0
+    document.addEventListener('touchstart', () => { lastTouch = Date.now() }, { capture: true, passive: true })
+    document.addEventListener('contextmenu', (event) => {
+      if (event.pointerType === 'touch' || Date.now() - lastTouch < 1500) event.stopPropagation()
+    }, true)
   }
 
   /**
@@ -483,12 +494,22 @@ export class MobileShell {
 
   // MARK: - Coming and going
 
+  /** Settings, then a sheet, then out of a file to the list; with none of those, out of the app. */
+  goBack () {
+    if (!this.settingsHost.hidden) return this.closeSettings()
+    if (this.model.sheet) return this.model.closeSheet()
+    if (this.isCompact && this.showingDetail) return this.showList()
+    return Native.leave()
+  }
+
   /**
    * Going to the background is the Mac's focus loss — one of the three times a file saves —
    * and coming back is the Mac's coming forward, which is also when a change nothing reported
    * gets noticed: there is no watcher on iOS.
    */
   watchLifecycle () {
+    // Android's Back (iOS has none): the way the screen came, one step at a time.
+    Native.addListener('backButton', () => this.goBack())
     Native.addListener('appState', ({ active }) => {
       if (active === this.appActive) return
       this.appActive = active
