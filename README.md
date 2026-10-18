@@ -97,13 +97,22 @@ electron . --list-presets
 
 `npm run pdf` is the same thing with the build in front of it.
 
+## Building for Windows
+
+```sh
+brew install makensis            # once
+npm run windows                  # => LoText-<version>-Setup.exe and LoText-<version>-win-x64.zip in the export folder
+npm run windows -- arm64         # the same for Windows on Arm
+```
+
+Built on the Mac, unsigned: Windows SmartScreen warns on first launch until it is signed with a
+Windows code-signing certificate.
+
 ## Building a .dmg
 
 ```sh
-npm run dmg                      # => the export folder (scripts/export-folder.sh), then asks about the Desktop
+npm run dmg                      # => the export folder (scripts/export-folder.sh)
 npm run dmg -- /path/out.dmg     # somewhere else
-npm run dmg -- --desktop         # also copy it to the Desktop, without asking
-npm run dmg -- --no-desktop      # no Desktop copy, without asking
 ```
 
 `npm run release` also asks whether to publish the notarized image on lolekproductions.org
