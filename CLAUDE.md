@@ -145,10 +145,11 @@ A rebuild does not reload the running app — restart `electron .`. ⌘R is Refr
   when the behaviour changes. `tab-key.md`: Tab inserts spaces, 2 or 4.
   `mobile.md`: the iPhone/iPad app — layout, touch, what is left out.
   `enhanced-tasks.md`: `[[ ]] ==> (()) title` tasks, how LoText draws and edits them; the rules
-  are the toolbox's `/Volumes/jam-dev-tools/jam-spec/enhanced-task/` and `enhanced-selection/`.
+  are jam-spec's [`jam-spec/enhanced-task/`](https://github.com/fr-mccarty/jam-spec/tree/main/enhanced-task/) and
+  [`enhanced-selection/`](https://github.com/fr-mccarty/jam-spec/tree/main/enhanced-selection/).
   `disclosures.md`: disclosure arrows — the first `-->` / `--v` (or `==>` / `==v` off a task
-  line) anywhere on a line folds the lines deeper under it; the rule is the toolbox's
-  `/Volumes/jam-dev-tools/jam-spec/disclosure-arrow/`.
+  line) anywhere on a line folds the lines deeper under it; the rule is jam-spec's
+  [`jam-spec/disclosure-arrow/`](https://github.com/fr-mccarty/jam-spec/tree/main/disclosure-arrow/).
   `task-boxes.md`: a `[ ]` / `[x]` at a line's head is a clickable box in any file.
   `icloud-sync.md`: optional iCloud sync of settings and reading positions.
   `send-to-daycap.md`: Cut and Send to DayCap — a selection saved as a new file in DayCap's folder.

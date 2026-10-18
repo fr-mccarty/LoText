@@ -1,7 +1,7 @@
 # Spec: disclosure arrows
 
 What a disclosure arrow is — `-->` collapsed and `--v` expanded, hiding the lines indented under
-it — is the toolbox's disclosure-arrow spec, `/Volumes/jam-dev-tools/jam-spec/disclosure-arrow/README.md`.
+it — is jam-spec's disclosure-arrow spec, [`jam-spec/disclosure-arrow/README.md`](https://github.com/fr-mccarty/jam-spec/blob/main/disclosure-arrow/README.md).
 The double arrow, `==>` / `==v`, is a disclosure arrow too, except on an enhanced task's line,
 where it is the task's own (`specs/enhanced-tasks.md`). There is nothing like either in Lolext.
 This file holds only how LoText reads, draws and edits disclosure arrows.

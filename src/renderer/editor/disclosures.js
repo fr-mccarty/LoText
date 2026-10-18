@@ -1,8 +1,8 @@
 // Disclosure arrows anywhere on a line: the first `-->` or `==>` (collapsed), `--v` or `==v`
 // (expanded) on a line opens and closes the lines indented deeper under it. As with enhanced
 // tasks, the state is the text, so these are pure functions over arrays of lines, tested without an editor.
-// `enhanced-view.js` is the CodeMirror side, for these and the task arrows alike. The rule is the
-// toolbox's disclosure-arrow spec; `specs/disclosures.md` holds what is LoText's own.
+// `enhanced-view.js` is the CodeMirror side, for these and the task arrows alike. The rule is
+// jam-spec's disclosure-arrow spec; `specs/disclosures.md` holds what is LoText's own.
 //
 // Line numbers are 0-based. An edit is { line, column, char }: one character to replace.
 

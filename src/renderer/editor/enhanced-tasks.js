@@ -1,7 +1,7 @@
 // Enhanced tasks: a `[[ ]] ==> (()) title` line and the lines indented under it.
 // Everything is plain text, and whether a task is open is written in the text itself (`==>`
 // collapsed, `==v` expanded), so the parts here are pure functions over arrays of lines, tested
-// without an editor. `enhanced-view.js` is the CodeMirror side. The rules are the toolbox's
+// without an editor. `enhanced-view.js` is the CodeMirror side. The rules are jam-spec's
 // enhanced-task and enhanced-selection specs; `specs/enhanced-tasks.md` holds what is LoText's own.
 //
 // Line numbers are 0-based. An edit is { line, column, char }: one character to replace.

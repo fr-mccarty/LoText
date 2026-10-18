@@ -1,9 +1,9 @@
 # Spec: enhanced tasks
 
 What an enhanced task is — the `[[ ]] ==> (()) title` line, what collapsing hides, checking,
-feedback — is the toolbox's enhanced-task spec, `/Volumes/jam-dev-tools/jam-spec/enhanced-task/README.md`.
+feedback — is jam-spec's enhanced-task spec, [`jam-spec/enhanced-task/README.md`](https://github.com/fr-mccarty/jam-spec/blob/main/enhanced-task/README.md).
 The choices under a task are its enhanced-selection spec,
-`/Volumes/jam-dev-tools/jam-spec/enhanced-selection/README.md`. There is nothing like either in
+[`jam-spec/enhanced-selection/README.md`](https://github.com/fr-mccarty/jam-spec/blob/main/enhanced-selection/README.md). There is nothing like either in
 Lolext. This file holds only how LoText reads, draws and edits them.
 
 ## Reading the text

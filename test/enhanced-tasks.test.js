@@ -3,7 +3,7 @@ import {
   parseTasks, parseTaskLine, parseChoice, taskAt, hiddenLines, arrowFlip, checkEdits, emptyChoiceEdit,
 } from '../src/renderer/editor/enhanced-tasks.js'
 
-// The examples from the toolbox's enhanced-task and enhanced-selection specs.
+// The examples from jam-spec's enhanced-task and enhanced-selection specs.
 const DESCRIPTION = '  This is the description. It could have labels, or be a paragraph.'
 const EXPANDED = [
   '[[ ]] ==v (()) This is an enhanced task',
