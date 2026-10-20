@@ -11,7 +11,8 @@ What it uploads:
   `scripts/android.sh release` on the M5 MacBook Pro (the export folder is
   `scripts/export-folder.sh`). Bundles are build output and never committed.
 - The listing text and icon: `fastlane/metadata/android/en-US/`.
-- The feature graphic and screenshots, once made: `~/Documents/LoText-exports/play-store-graphics/`.
+- The feature graphic and phone screenshots: `fastlane/metadata/android/en-US/images/`
+  (`featureGraphic.png`, `phoneScreenshots/`).
 
 ## The prompt
 
@@ -36,9 +37,8 @@ Do, in order:
    from changelogs/1.txt. Add me (fr.mccarty@gmail.com) as a tester via a new email list.
    Save it, then stop and show me the review screen before rolling it out.
 3. Main store listing: paste title, short and full description from the fastlane files,
-   upload images/icon.png as the app icon. Feature graphic and phone screenshots:
-   if they exist in ~/Documents/LoText-exports/play-store-graphics/, upload them;
-   otherwise leave those fields and tell me.
+   upload images/icon.png as the app icon, images/featureGraphic.png as the feature
+   graphic, and the five images/phoneScreenshots/*.png as phone screenshots, in file-name order.
 4. Store settings: category App ▸ Productivity, tags per listing.md, contact email
    fr.mccarty@gmail.com, website https://lolekproductions.org/LoText.
 5. Policy ▸ App content:

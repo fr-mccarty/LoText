@@ -62,13 +62,27 @@ fastlane internal    # android/app/build/outputs/bundle/release/app-release.aab 
 
 First release of LoText on Android.
 
-## Graphics still needed
+## Graphics
 
-- [ ] **App icon:** 512 × 512 PNG, 32-bit, up to 1 MB (from `assets/icon-ios-1024.png`).
-- [ ] **Feature graphic:** 1024 × 500 PNG or JPEG — required.
-- [ ] **Phone screenshots:** 2–8, 16:9 or 9:16, each side 320–3840 px (`scripts/android.sh shot`
-      gives 1080 × 2400 from the Medium Phone AVD).
+All in `fastlane/metadata/android/en-US/images/`, where `fastlane listing` looks for them.
+
+- [x] **App icon:** `icon.png`, 512 × 512 (from `assets/icon-ios-1024.png`).
+- [x] **Feature graphic:** `featureGraphic.png`, 1024 × 500. Its source is `feature-graphic.html`
+      here: render it with headless Chrome at 1024 × 500 —
+      `"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" --headless=new
+      --hide-scrollbars --force-device-scale-factor=1 --window-size=1024,500
+      --allow-file-access-from-files --screenshot=featureGraphic.png file://$PWD/feature-graphic.html`.
+- [x] **Phone screenshots:** `phoneScreenshots/1_files.png` … `5_find_file.png`, 1080 × 2400 from
+      the Medium Phone API 37 AVD (`scripts/android.sh shot`), 2026-10-20. The notes in them are
+      `screenshot-notes/`, copied into the app's own folder (`adb push`, then `run-as
+      com.lolekproductions.lotext cp -r … files/Documents/`). The status bar is Android's demo mode:
+      `adb shell settings put global sysui_demo_allowed 1`, then `am broadcast -a
+      com.android.systemui.demo -e command clock -e hhmm 0941` (and `battery`, `network`,
+      `notifications -e visible false`; `-e command exit` to leave).
 - [ ] **Tablet screenshots** (7" and 10"): optional, but needed to be featured on tablets.
+
+No dark-mode screenshot: in dark mode the status bar's clock and icons stay dark on the app's
+black background.
 
 ## The upload key
 

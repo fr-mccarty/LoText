@@ -1,0 +1,10 @@
+Groceries
+
+[x] Coffee beans
+[x] Oat milk
+[ ] Sourdough bread
+[ ] Lemons
+[ ] Parmesan
+[ ] Basil
+[ ] Olive oil
+[ ] Eggs
