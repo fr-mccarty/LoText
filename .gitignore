@@ -31,6 +31,9 @@ ios/App/Pods/
 *.key
 *.mobileprovision
 *.provisionprofile
+*.jks
+*.keystore
+android/keystore.properties
 
 # macOS
 .DS_Store

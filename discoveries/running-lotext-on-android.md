@@ -15,6 +15,14 @@ Android Studio bundles Java 25, so both the command line and Studio failed. Home
 has `org.gradle.java.home=/opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home` in
 `~/.gradle/gradle.properties` (or set Settings ▸ Build Tools ▸ Gradle ▸ Gradle JDK once).
 
+### Setting up the M5 MacBook Pro (2026-10-20)
+
+Android releases are built on the M5 MacBook Pro ("Josh's MacBook Pro"), which also holds the
+Play upload key (`packaging/play-store/listing.md`). From a fresh clone it needed only
+`brew install openjdk@21 fastlane` and `npm install`; the first `scripts/android.sh build`
+downloaded SDK Platform 36 and Build-Tools 35 itself. It has no `~/.gradle/gradle.properties`,
+so Android Studio's Gradle JDK must be set to Java 21 in its Settings before building there.
+
 ## The emulator from a terminal
 
 ```sh

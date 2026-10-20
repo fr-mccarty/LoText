@@ -65,9 +65,51 @@ First release of LoText on Android.
       gives 1080 × 2400 from the Medium Phone AVD).
 - [ ] **Tablet screenshots** (7" and 10"): optional, but needed to be featured on tablets.
 
+## The upload key
+
+Play App Signing holds the key users' devices see; this upload key only proves a bundle came from
+us, and Play Console can reset it if it is lost.
+
+**Where it is:** made 2026-10-20 on the **M5 MacBook Pro** ("Josh's MacBook Pro",
+`Joshs-MacBook-Pro`, macOS 27.0.1), the Mac Android releases are built on. Not on JAM-MBP---2021,
+the M1 Pro where the Android app was first written.
+
+- The key: `~/.config/lotext/upload.jks`, alias `upload`, valid until 2054. Certificate
+  `CN=Josh McCarty, O=Lolek Productions, L=Murray, ST=Kentucky, C=US`, SHA-256
+  `91:25:E5:51:A3:BF:68:EC:3E:A7:40:A4:4A:ED:48:D6:53:B8:2E:B8:6A:FE:7C:BA:A9:49:4A:CB:8B:58:9E:5F`
+  — Play Console ▸ App signing shows the same upload certificate fingerprint.
+- Its password: in `android/keystore.properties` on that Mac only (gitignored), and in the
+  password manager.
+- Building on another Mac means copying both files there; nothing else needs the key.
+- Lost key or password: Play Console ▸ Test and release ▸ App integrity ▸ App signing ▸ request an
+  upload key reset. Apps already installed are unaffected.
+
+It was made once, outside the repo, with Android Studio's own keytool (`/usr/bin/keytool` needs a
+system Java, which this Mac does not have):
+
+```sh
+mkdir -p ~/.config/lotext
+"/Applications/Android Studio.app/Contents/jbr/Contents/Home/bin/keytool" -genkeypair -v \
+  -keystore ~/.config/lotext/upload.jks -alias upload -keyalg RSA -keysize 2048 -validity 10000
+chmod 600 ~/.config/lotext/upload.jks
+```
+
+`android/app/build.gradle` signs the release bundle with it when `android/keystore.properties`
+(gitignored) exists:
+
+```properties
+storeFile=/Users/jmccarty/.config/lotext/upload.jks
+storePassword=…
+keyAlias=upload
+keyPassword=…
+```
+
+Without that file `scripts/android.sh release` still builds, unsigned, and says so.
+
 ## Before the first upload
 
-- [ ] Upload key, then `scripts/android.sh release` for the .aab.
+- [x] Upload key (above) — 2026-10-20, on the M5 MacBook Pro.
+- [x] `scripts/android.sh release` for the .aab — signed, 2026-10-20.
 - [ ] Raise `versionCode` in `android/app/build.gradle` on every upload; `versionName` is "1.0" now.
 - [ ] New personal developer accounts must run a closed test with at least 12 testers for 14 days
       before production access is granted.

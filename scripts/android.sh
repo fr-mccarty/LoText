@@ -55,7 +55,11 @@ case "${1:-build}" in
     VERSION=$(node -p "require('./package.json').version")
     mkdir -p "$EXPORTS"
     cp android/app/build/outputs/bundle/release/app-release.aab "$EXPORTS/LoText-$VERSION-android.aab"
-    echo "✓ $EXPORTS/LoText-$VERSION-android.aab (unsigned until a signing key is set up)"
+    if [ -f android/keystore.properties ]; then
+      echo "✓ $EXPORTS/LoText-$VERSION-android.aab, signed with the upload key"
+    else
+      echo "✓ $EXPORTS/LoText-$VERSION-android.aab — UNSIGNED: no android/keystore.properties" >&2
+    fi
     ;;
   *)
     echo "usage: android.sh build | run | shot out.png | release" >&2
