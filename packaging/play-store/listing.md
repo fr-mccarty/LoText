@@ -81,8 +81,8 @@ All in `fastlane/metadata/android/en-US/images/`, where `fastlane listing` looks
       `notifications -e visible false`; `-e command exit` to leave).
 - [ ] **Tablet screenshots** (7" and 10"): optional, but needed to be featured on tablets.
 
-No dark-mode screenshot: in dark mode the status bar's clock and icons stay dark on the app's
-black background.
+No dark-mode screenshot yet. (Switching to dark mode with LoText open used to leave the status
+bar's icons dark on the black page; `MainActivity.onConfigurationChanged` fixes that.)
 
 ## The upload key
 
