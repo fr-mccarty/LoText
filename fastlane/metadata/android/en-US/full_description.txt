@@ -1,0 +1,29 @@
+LoText is a plain-text editor built around a simple idea: you work in one folder, and one file is open at a time.
+
+There are no tabs, no preview pane, no split view. You open a folder, the files appear in the list, and you write. The text is plain text that any other app can read.
+
+FOLDER BASED
+• Work in LoText's own folder, or choose any folder the system picker can reach on your device.
+• Create, rename, duplicate, move and delete files and folders right in the file list.
+• Find File jumps to any file by name; Recently Edited brings back what you just worked on.
+• Recent folders reopen with a tap.
+
+MADE FOR TOUCH
+• A bar above the keyboard with Tab, Shift-Tab, task boxes, bold, italic, undo and redo.
+• Tasks, collapsible sections and indented lists, all in plain text.
+• Long-press any file or folder for its menu.
+• Side by side on a tablet; one pane at a time on a phone.
+
+PRINTING THAT LOOKS FINISHED
+• Markdown headings, paragraphs, tables and emphasis print as a properly set page.
+• Print presets hold your margins, letterhead, headers, footers and page numbers.
+• Print to any printer Android knows, or save the page as a PDF.
+
+SAFE WITH YOUR TEXT
+• Saves when you leave a file or the app, and checks first that nothing else changed it.
+• Unsaved changes are kept safe if the app closes unexpectedly.
+
+MORE THAN TEXT
+• LoText also shows images, plays audio and video, and shows the text of documents (.docx, .odt, .rtf, .xlsx, .pptx) without opening them in the editor.
+
+No account, no subscription, no ads, no tracking. Just your text.

@@ -176,7 +176,7 @@ A rebuild does not reload the running app — restart `electron .`. ⌘R is Refr
 - `docs/` — how-to documents for people. `publishing-the-mac-download.md`: exporting the
   signed disk image, where the images are kept, and replacing the download on lolekproductions.org.
 - `packaging/app-store/` — the App Store listings: `metadata.md` (Mac), `ios.md` (iPhone/iPad,
-  and the archive-and-upload steps).
+  and the archive-and-upload steps). `packaging/play-store/listing.md` is the Google Play one.
 - App state: `~/Library/Application Support/LoText/lotext.json`. Delete the directory to test a
   first launch. On iOS the same file is in the app container's `Library/Application Support/
   LoText/`; `xcrun simctl uninstall` gives a first launch.

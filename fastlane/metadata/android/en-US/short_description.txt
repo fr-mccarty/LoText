@@ -1,0 +1,1 @@
+A quiet plain-text editor. Open a folder, pick a file, write.

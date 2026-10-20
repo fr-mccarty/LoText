@@ -1,0 +1,28 @@
+# Google Play from the command line. The text and images are fastlane/metadata/android/; what
+# Play Console asks for besides them (data safety, content rating) is packaging/play-store/listing.md.
+default_platform(:android)
+
+platform :android do
+  desc "Check the service account key reaches Play Console"
+  lane :check do
+    validate_play_store_json_key
+  end
+
+  desc "Upload the store listing text and images, with no build"
+  lane :listing do
+    upload_to_play_store(
+      skip_upload_apk: true,
+      skip_upload_aab: true,
+      skip_upload_changelogs: true
+    )
+  end
+
+  desc "Upload the release bundle to the internal testing track, as a draft"
+  lane :internal do
+    upload_to_play_store(
+      track: "internal",
+      release_status: "draft",
+      aab: "android/app/build/outputs/bundle/release/app-release.aab"
+    )
+  end
+end

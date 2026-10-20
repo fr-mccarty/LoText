@@ -1,0 +1,4 @@
+# The Google Play service account's JSON key. Never commit it: it lives outside the repo, and
+# PLAY_KEY can point somewhere else (packaging/play-store/listing.md).
+json_key_file(ENV["PLAY_KEY"] || File.expand_path("~/.config/lotext/play-store-key.json"))
+package_name("com.lolekproductions.lotext")

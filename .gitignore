@@ -37,3 +37,7 @@ ios/App/Pods/
 
 # Android Studio
 .idea/
+
+# fastlane's own output
+fastlane/report.xml
+fastlane/README.md
