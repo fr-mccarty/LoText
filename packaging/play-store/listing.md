@@ -10,6 +10,11 @@ The name, short description (80), full description (4000), icon and release note
 `fastlane/metadata/android/en-US/`: `title.txt`, `short_description.txt`, `full_description.txt`,
 `images/icon.png`, `changelogs/<versionCode>.txt`. Edit them there; `fastlane listing` sends them.
 
+## Filling in Play Console
+
+`console-prompt.md` is the prompt for a Claude session with a browser to enter all of this in
+Play Console, and says where the signed bundle is.
+
 ## Uploading with fastlane
 
 Once, by hand — the API cannot do these:
@@ -36,8 +41,8 @@ fastlane internal    # android/app/build/outputs/bundle/release/app-release.aab 
 - **Category:** App ▸ Productivity
 - **Tags:** Text editor, Notes, Productivity (pick from Play's list; up to 5)
 - **Contact email:** fr.mccarty@gmail.com
-- **Website:** _optional — lolekproductions.org_
-- **Privacy policy URL:** _the same one as the App Store listing — fill in_
+- **Website:** https://lolekproductions.org/LoText
+- **Privacy policy URL:** https://lolekproductions.org/LoText/privacy
 
 ## App content (Policy ▸ App content)
 
