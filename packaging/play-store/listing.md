@@ -39,7 +39,7 @@ fastlane internal    # android/app/build/outputs/bundle/release/app-release.aab 
 ## App details
 
 - **Category:** App ▸ Productivity
-- **Tags:** Text editor, Notes, Productivity (pick from Play's list; up to 5)
+- **Tags:** Notebook, Productivity (Play's list has no Text editor or Notes tag; up to 5)
 - **Contact email:** fr.mccarty@gmail.com
 - **Website:** https://lolekproductions.org/LoText
 - **Privacy policy URL:** https://lolekproductions.org/LoText/privacy
@@ -132,3 +132,27 @@ Without that file `scripts/android.sh release` still builds, unsigned, and says 
 - [ ] Raise `versionCode` in `android/app/build.gradle` on every upload; `versionName` is "1.0" now.
 - [ ] New personal developer accounts must run a closed test with at least 12 testers for 14 days
       before production access is granted.
+      LoText is on the Lolek-Productions **organization** account (ID 9165725171449302136), so this
+      should not apply.
+
+## Play Console — first setup (2026-10-20)
+
+- [x] Create app: LoText, en-US, App, Free; package `com.lolekproductions.lotext`. Automatic
+      protection left on (Play's default).
+- [x] Internal testing: release "1.0 (1)" (versionCode 1), signed by Google Play, notes from
+      `changelogs/1.txt`; tester list "LoText internal testers" (fr.mccarty@gmail.com). Rolled out
+      to internal testers 2026-10-20; opt-in link
+      https://play.google.com/apps/internaltest/4701649758841144069
+- [x] Default store listing: title, short and full description, icon, feature graphic, five phone
+      screenshots in file-name order; AI asset declaration "Don't label assets".
+- [x] Store settings: category Productivity, tags, contact email, website. External marketing left
+      on (Play's default).
+- [x] App content: privacy policy, ads, sign-in details, content rating (IARC "All Other App
+      Types", every answer No → Everyone / PEGI 3 / ClassInd All ages), target audience 18+ (the
+      optional "restrict minors" box left unticked), data safety (no data collected or shared),
+      advertising ID (No — the release manifest has no AD_ID permission), government, financial,
+      health. Play asked no News question.
+- [ ] Publishing overview: the store listing and declarations are "Not yet sent for review".
+      Sending them is what replaces the testers' temporary name
+      "com.lolekproductions.lotext (unreviewed)" with LoText.
+- [ ] Closed testing, then production.
