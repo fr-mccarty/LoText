@@ -167,8 +167,12 @@ check_the_site () {
   local status
   status=$(curl -s -r 0-15 -o /dev/null -w "%{http_code}" "$SITE/$NAME?fresh=$(date +%s)" || true)
   [ "$status" = 206 ] || fail "$SITE/$NAME answered $status, not 206."
-  curl -s "$SITE/LoText?fresh=$(date +%s)" | grep -qF "Download $NAME" ||
-    fail "$SITE/LoText does not offer $NAME, even past the cache."
+  local tries=0
+  until [[ "$(curl -s "$SITE/LoText?fresh=$(date +%s)")" == *"Download $NAME"* ]]; do
+    tries=$((tries + 1))
+    [ "$tries" -lt 10 ] || fail "$SITE/LoText does not offer $NAME, even past the cache."
+    sleep 3
+  done
 }
 
 if [ "$LIVE_VERSION" = "$VERSION" ] && [ -n "$(remote_sum "$NAME")" ] && [ "$(remote_sum "$NAME")" != "$LOCAL_SUM" ]; then
