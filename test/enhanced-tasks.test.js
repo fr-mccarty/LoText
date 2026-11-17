@@ -6,13 +6,13 @@ import {
 // The examples from jam-spec's enhanced-task and enhanced-selection specs.
 const DESCRIPTION = '  This is the description. It could have labels, or be a paragraph.'
 const EXPANDED = [
-  '[[ ]] ==v (()) This is an enhanced task',
+  '[ ] ==v ( ) This is an enhanced task',
   DESCRIPTION,
   '  Email id: 5678987656789',
   '  [ ] send an email',
   '  [ ] send a text',
 ]
-const COLLAPSED = ['[[ ]] ==> (()) This is an enhanced task', ...EXPANDED.slice(1)]
+const COLLAPSED = ['[ ] ==> ( ) This is an enhanced task', ...EXPANDED.slice(1)]
 
 const only = (lines) => {
   const tasks = parseTasks(lines)
@@ -27,22 +27,22 @@ const apply = (lines, edits) => {
 
 describe('the task line', () => {
   it('reads the box, the arrow, the feedback slot and the title', () => {
-    expect(parseTaskLine('[[ ]] ==> (()) This is an enhanced task')).toEqual({
-      checked: false, open: false, arrowColumn: 6, feedback: '', title: 'This is an enhanced task',
+    expect(parseTaskLine('[ ] ==> ( ) This is an enhanced task')).toEqual({
+      checked: false, open: false, arrowColumn: 4, feedback: '', title: 'This is an enhanced task',
     })
-    expect(parseTaskLine('[[x]] ==v ((And type something to your agent.)) Call Ann')).toEqual({
-      checked: true, open: true, arrowColumn: 6, feedback: 'And type something to your agent.', title: 'Call Ann',
+    expect(parseTaskLine('[x] ==v (And type something to your agent.) Call Ann')).toEqual({
+      checked: true, open: true, arrowColumn: 4, feedback: 'And type something to your agent.', title: 'Call Ann',
     })
-    expect(parseTaskLine('[[X]] ==> (())')).toMatchObject({ checked: true, title: '' })
+    expect(parseTaskLine('[X] ==> ( )')).toMatchObject({ checked: true, title: '' })
   })
 
   it('is not a plain box, a disclosure arrow, or an indented line', () => {
     expect(parseTaskLine('[ ] do something')).toBeNull()
     expect(parseTaskLine('[ ] --> do something')).toBeNull()
-    expect(parseTaskLine('[[ ]] --> (()) single arrow')).toBeNull()
-    expect(parseTaskLine('[[ ]] ==> no feedback slot')).toBeNull()
-    expect(parseTaskLine('  [[ ]] ==> (()) indented')).toBeNull()
-    expect(parseTaskLine('[[ ]]==> (()) no space')).toBeNull()
+    expect(parseTaskLine('[ ] --> ( ) single arrow')).toBeNull()
+    expect(parseTaskLine('[ ] ==> no feedback slot')).toBeNull()
+    expect(parseTaskLine('  [ ] ==> ( ) indented')).toBeNull()
+    expect(parseTaskLine('[ ]==> ( ) no space')).toBeNull()
   })
 })
 
@@ -69,13 +69,13 @@ describe('what a task owns', () => {
 
   it('owns the lines indented under it, as a disclosure arrow does', () => {
     const lines = [
-      '[[ ]] ==> (()) first',
+      '[ ] ==> ( ) first',
       '  description',
       '',
       '    deeper',
       'a line at the edge',
       '  indented, but under the edge line',
-      '[[x]] ==v (()) second',
+      '[x] ==v ( ) second',
       '  its description',
       '',
       '',
@@ -91,13 +91,13 @@ describe('what a task owns', () => {
   })
 
   it('owns nothing when the next line is a task line, or there is none', () => {
-    const tasks = parseTasks(['[[ ]] ==> (()) a', '[[ ]] ==> (()) b'])
+    const tasks = parseTasks(['[ ] ==> ( ) a', '[ ] ==> ( ) b'])
     expect(tasks.map((task) => [task.body, task.lastLine])).toEqual([[null, 0], [null, 1]])
     expect(hiddenLines(tasks[0])).toEqual([])
   })
 
   it('leaves lines above the first task alone', () => {
-    const tasks = parseTasks(['notes', '[ ] milk', '[[ ]] ==> (()) T', '  d'])
+    const tasks = parseTasks(['notes', '[ ] milk', '[ ] ==> ( ) T', '  d'])
     expect(tasks).toHaveLength(1)
     expect(taskAt(tasks, 1)).toBeNull()
   })
@@ -113,19 +113,19 @@ describe('what is hidden', () => {
   })
 
   it('a collapsed task hides its indented lines and no further', () => {
-    const tasks = parseTasks(['[[ ]] ==> (()) a', '  one', 'two', '[[ ]] ==v (()) b', '  three'])
+    const tasks = parseTasks(['[ ] ==> ( ) a', '  one', 'two', '[ ] ==v ( ) b', '  three'])
     expect(tasks.map(hiddenLines)).toEqual([[{ first: 1, last: 1 }], []])
   })
 })
 
 describe('clicking and checking', () => {
   it('a click flips the third character of the arrow', () => {
-    expect(arrowFlip(only(COLLAPSED))).toEqual({ line: 0, column: 8, char: 'v' })
+    expect(arrowFlip(only(COLLAPSED))).toEqual({ line: 0, column: 6, char: 'v' })
     expect(apply(EXPANDED, [arrowFlip(only(EXPANDED))])[0]).toBe(COLLAPSED[0])
   })
 
   it('checking an expanded task collapses it', () => {
-    expect(checkEdits(only(EXPANDED))).toEqual([{ line: 0, column: 8, char: '>' }])
+    expect(checkEdits(only(EXPANDED))).toEqual([{ line: 0, column: 6, char: '>' }])
   })
 
   it('checking a collapsed task has nothing to collapse', () => {
@@ -141,7 +141,7 @@ describe('typing into an empty choice', () => {
 
   it('leaves an empty, checked, or outside choice alone', () => {
     expect(emptyChoiceEdit([...EXPANDED, '  [ ] '], 5)).toBeNull()
-    expect(emptyChoiceEdit(['[[ ]] ==v (()) T', '  [x] a'], 1)).toBeNull()
+    expect(emptyChoiceEdit(['[ ] ==v ( ) T', '  [x] a'], 1)).toBeNull()
     expect(emptyChoiceEdit(['[ ] plain', '  [ ] a'], 1)).toBeNull()
   })
 })

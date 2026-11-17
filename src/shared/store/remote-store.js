@@ -30,7 +30,7 @@ import * as FilePath from '../file-path.js'
 import { conflict, notFound, nameTaken, StoreError, folderUnavailable } from './errors.js'
 import { SOURCE, STATUS, parseEntry, parseStamp, quoted } from './remote-script.js'
 import { displayName, identity } from './remote-location.js'
-import { compareNodes, copyName, numberedName, splitName, isHidden } from './names.js'
+import { compareNodes, copyName, numberedName, splitName, isListed } from './names.js'
 
 /** Paths per `stamps` round trip, well inside any server's limit on a command line's length. */
 const STAMP_BATCH = 200
@@ -117,7 +117,7 @@ export class RemoteStore {
       const entry = parseEntry(line)
       if (!entry) continue
       const name = entry.name.slice(entry.name.lastIndexOf('/') + 1)
-      if (isHidden(name)) continue
+      if (!isListed(name)) continue
       nodes.push({
         path: FilePath.appending(relative, name),
         kind: entry.isFolder ? 'folder' : 'file',

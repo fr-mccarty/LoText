@@ -8,16 +8,27 @@
 // ↓ move the highlight, clamped at both ends rather than wrapping, without the hands leaving
 // the letters; ↩ opens; Esc closes and changes nothing. The sheet goes away the moment a file
 // is chosen and does not wait for the open to finish.
+//
+// The same sheet picks a wiki link's file (`specs/wiki-links.md`): narrowed to the folder the open
+// file is in and the folders under it, listing paths from there, and handing the choice back
+// instead of opening it.
 
 import { element, clear, icon } from '../dom.js'
 import { makeCandidate, makeQuery, matches } from '../fuzzy.js'
+import * as FilePath from '../../shared/file-path.js'
 
 /** Quick-open is a keyboard tool — nobody scrolls to the four hundredth match. */
 const ROW_LIMIT = 200
 
 export class FindFileSheet {
-  constructor (model) {
+  /**
+   * `under`: only the files beneath this folder, listed by their path from it. `onChoose`: what
+   * a choice does, given the file's full path; opening it, unless said otherwise.
+   */
+  constructor (model, { under = null, onChoose = null } = {}) {
     this.model = model
+    this.under = under
+    this.onChoose = onChoose
     this.candidates = []
     this.results = []
     this.highlighted = 0
@@ -32,7 +43,7 @@ export class FindFileSheet {
     this.field = element('input', {
       class: 'sheet-field',
       type: 'text',
-      placeholder: 'Find a file',
+      placeholder: this.onChoose ? 'Link to a file' : 'Find a file',
       spellcheck: 'false',
       oninput: () => { this.query = this.field.value; this.rank() },
       onkeydown: (event) => this.onKeyDown(event),
@@ -41,7 +52,7 @@ export class FindFileSheet {
     this.statusNode = element('div', { class: 'sheet-status' })
 
     this.node = element('div', { class: 'sheet find-file' }, [
-      element('div', { class: 'sheet-eyebrow', text: 'Find File' }),
+      element('div', { class: 'sheet-eyebrow', text: this.eyebrow() }),
       element('div', { class: 'sheet-field-row' }, [icon('search', 15), this.field]),
       element('div', { class: 'sheet-divider' }),
       this.listNode,
@@ -74,8 +85,11 @@ export class FindFileSheet {
     this.offDone?.()
     this.offBatch = this.model.bridge.onSearchBatch((batch) => {
       if (batch.token !== token) return
-      for (const path of batch.files) this.candidates.push(makeCandidate(path))
-      this.total = batch.total
+      for (const path of batch.files) {
+        const candidate = this.candidateFor(path)
+        if (candidate) this.candidates.push(candidate)
+      }
+      this.total = this.candidates.length
       this.isTruncated = batch.truncated
       this.rank()
     })
@@ -85,6 +99,22 @@ export class FindFileSheet {
       this.render()
     })
     this.model.bridge.startWalk(token).catch(() => { this.isWalking = false; this.render() })
+  }
+
+  eyebrow () {
+    if (!this.onChoose) return 'Find File'
+    return FilePath.isRoot(this.under ?? '') ? 'Link to File' : `Link to File in ${FilePath.name(this.under)}`
+  }
+
+  /**
+   * A walked file as a row, or null for one outside the folder the sheet is narrowed to. A
+   * narrowed row is matched and shown by its path from that folder; `full` is what is chosen.
+   */
+  candidateFor (path) {
+    if (this.under === null || FilePath.isRoot(this.under)) return { ...makeCandidate(path), full: path }
+    if (!FilePath.isDescendant(path, this.under)) return null
+    const relative = FilePath.components(path).slice(FilePath.components(this.under).length).join('/')
+    return { ...makeCandidate(relative), full: path }
   }
 
   dispose () {
@@ -124,8 +154,9 @@ export class FindFileSheet {
   openHighlighted () {
     const candidate = this.results[this.highlighted]
     if (!candidate) return
+    if (this.onChoose) { this.onChoose(candidate.full); return }
     this.model.closeSheet()
-    this.model.openPath(candidate.path)
+    this.model.openPath(candidate.full)
   }
 
   render () {

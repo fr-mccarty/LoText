@@ -303,8 +303,10 @@ function viewTab () {
     group(null, [
       toggle('Show invisibles (spaces and tabs)', view.showInvisibles,
         (value) => apply(bridge.setView({ showInvisibles: value }))),
+      toggle('Show hidden files (names starting with a dot)', view.showHiddenFiles,
+        (value) => apply(bridge.setView({ showHiddenFiles: value }))),
     ], element('span', {
-      text: 'These settings change the editor only, and the font list is monospaced because '
+      text: 'These settings change the editor and the sidebar only, and the font list is monospaced because '
         + 'every line here is laid out on one grid. Paper and PDF output, including its own '
         + 'fonts, is on the Printing tab.',
     })),

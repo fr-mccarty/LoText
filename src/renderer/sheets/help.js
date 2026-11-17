@@ -101,20 +101,20 @@ const strong = (text) => element('strong', { text })
 
 // MARK: - Enhanced tasks
 
-const TASK_EXAMPLE = `[[ ]] ==v (()) This is an enhanced task
+const TASK_EXAMPLE = `[ ] ==v ( ) This is an enhanced task
   This is the description. It could have labels, or be a paragraph.
   Email id: 5678987656789
   [ ] send an email
   [ ] send a text
   [ ] 
-[[ ]] ==> (()) The next task
+[ ] ==> ( ) The next task
   Its description, hidden until its arrow is clicked.
 `
 
-const TASK_MOVE_EXAMPLE = `[[ ]] ==> (()) call the tribunal
+const TASK_MOVE_EXAMPLE = `[ ] ==> ( ) call the tribunal
   Ask about the hearing date.
   [ ] ring the clerk
-[[x]] ==> (()) send the bundle
+[x] ==> ( ) send the bundle
   [x] post it
   [ ] email it
 `
@@ -122,7 +122,7 @@ const TASK_MOVE_EXAMPLE = `[[ ]] ==> (()) call the tribunal
 const BOX_EXAMPLE = `- [ ] buy stamps
 - [x] post the bundle
 1. [ ] ring the clerk
-[ ] do something
+ring the clerk [ ], then post it [ ]
 `
 
 function enhancedTasksHelp (onDispose) {
@@ -138,15 +138,15 @@ function enhancedTasksHelp (onDispose) {
       tryIt(TASK_EXAMPLE, onDispose)),
 
     section('The parts',
-      source(`[[ ]] ==v (()) This is an enhanced task  ← the task line, always shown
-  This is the description.              ← everything indented under it
-  Email id: 5678987656789               ← reference data
-  [ ] send an email                     ← the choices, the actions it proposes
+      source(`[ ] ==v ( ) This is an enhanced task  ← the task line, always shown
+  This is the description.            ← everything indented under it
+  Email id: 5678987656789             ← reference data
+  [ ] send an email                   ← the choices, the actions it proposes
   [ ] send a text`),
       list(
-        ['The ', strong('box'), ', ', code('[[ ]]'), ', is checked as ', code('[[x]]'), '.'],
+        ['The ', strong('box'), ', ', code('[ ]'), ', is checked as ', code('[x]'), '.'],
         ['The ', strong('arrow'), ', ', code('==>'), ' or ', code('==v'), ', shows the task collapsed or expanded.'],
-        ['The ', strong('feedback slot'), ', ', code('(())'), ', is where you write to the agent: ', code('((ring first))'), '.'],
+        ['The ', strong('feedback slot'), ', ', code('( )'), ', is where you write to the agent: ', code('(ring first)'), '.'],
         ['The ', strong('choices'), ' are ', code('  [ ]'), ' lines under the task, indented two spaces. The agent carries out the ones you check.'],
         ['A task owns the lines indented under it, as a disclosure arrow does: the first line back at the left edge, or two empty lines in a row, ends it. A single empty line with an indented line after it belongs to the task.'],
       )),
@@ -187,12 +187,12 @@ function enhancedTasksHelp (onDispose) {
       )),
 
     section('Plain boxes',
-      para('A ', code('[ ]'), ' or ', code('[x]'), ' at the head of a line is a box in any file, task or not:'),
+      para('A ', code('[ ]'), ' or ', code('[x]'), ' anywhere on a line is a box in any file, task or not — at its start, in the middle or at its end:'),
       tryIt(BOX_EXAMPLE, onDispose),
       list(
-        ['The head of a line is after its indent and an optional list marker: ', code('-'), ', ', code('*'), ', ', code('+'), ', ', code('1.'), ' or ', code('1)'), '. Elsewhere, as in ', code('a[x]'), ' or ', code('const a = []'), ', brackets are plain text.'],
-        'A click flips the box. The caret stays put.',
-        ['Typing ', code('[]'), ' there gives ', code('[ ]'), '.'],
+        ['A box stands apart from the words around it: a space, the line’s edge or punctuation on each side. Glued to a word or a bracket, as in ', code('a[x]'), ' or a ', code('[[link]]'), ', brackets are plain text.'],
+        'A click flips the box. The caret stays put. A line may have several; each flips on its own.',
+        ['Typing ', code('[]'), ' at the head of a line — after its indent and an optional list marker, ', code('-'), ', ', code('*'), ', ', code('+'), ', ', code('1.'), ' or ', code('1)'), ' — gives ', code('[ ]'), '.'],
         ['A plain ', code('[ ] do something'), ' is not an enhanced task: nothing hides, and checking it changes only the box.'],
       )),
 
@@ -219,7 +219,7 @@ const DISCLOSURE_MOVE_EXAMPLE = `Fields --v
 next line
 `
 
-const DISCLOSURE_TASK_EXAMPLE = `[[ ]] ==v (()) do something agent
+const DISCLOSURE_TASK_EXAMPLE = `[ ] ==v ( ) do something agent
   This is the description.
   Email id: 5678987656789
   Thread --v

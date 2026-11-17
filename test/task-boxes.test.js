@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { boxOn, boxOffset, flipped, closesBox } from '../src/renderer/editor/task-boxes.js'
+import { boxOn, boxesOn, boxOffset, flipped, closesBox } from '../src/renderer/editor/task-boxes.js'
 
 describe('finding a box', () => {
   it('finds one at the head of a line, bare or after a list marker', () => {
@@ -9,10 +9,26 @@ describe('finding a box', () => {
     expect(boxOffset('12. [ ] milk')).toBe(4)
   })
 
-  it('leaves brackets elsewhere on a line alone', () => {
+  it('finds one in the middle of a line and at its end', () => {
+    expect(boxOffset('see [ ] here')).toBe(4)
+    expect(boxOffset('call Ann [x]')).toBe(9)
+    expect(boxOffset('ring (or [ ]), then')).toBe(9)
+  })
+
+  it('finds every box on a line', () => {
+    expect(boxesOn('[ ] milk [x] eggs [ ]')).toEqual([
+      { offset: 0, markColumn: 1, checked: false },
+      { offset: 9, markColumn: 10, checked: true },
+      { offset: 18, markColumn: 19, checked: false },
+    ])
+  })
+
+  it('leaves brackets glued to a word or a bracket alone', () => {
     expect(boxOffset('a[x]')).toBe(-1)
-    expect(boxOffset('see [ ] here')).toBe(-1)
+    expect(boxOffset('[x]a')).toBe(-1)
+    expect(boxOffset('see [[x]] link')).toBe(-1)
     expect(boxOffset('[y] no')).toBe(-1)
+    expect(boxOffset('const a = []')).toBe(-1)
   })
 
   it('takes no round boxes', () => {
@@ -27,9 +43,9 @@ describe('finding a box', () => {
     expect(boxOn('- [X] a')).toEqual({ offset: 2, markColumn: 3, checked: true })
   })
 
-  it('finds an enhanced task’s double box, its mark two in', () => {
-    expect(boxOn('[[ ]] ==> (()) title')).toEqual({ offset: 0, markColumn: 2, checked: false })
-    expect(boxOn('[[x]] ==v (()) title')).toEqual({ offset: 0, markColumn: 2, checked: true })
+  it('finds an enhanced task’s box, its mark one in', () => {
+    expect(boxOn('[ ] ==> ( ) title')).toEqual({ offset: 0, markColumn: 1, checked: false })
+    expect(boxOn('[x] ==v ( ) title')).toEqual({ offset: 0, markColumn: 1, checked: true })
     expect(boxOn('[[ ] half')).toBeNull()
   })
 })

@@ -244,6 +244,14 @@ function viewMenu () {
       // will rarely need this; a folder on a server has nothing watching it at all, and this
       // is the whole of what replaces the watcher there.
       { label: 'Refresh', accelerator: 'CmdOrCtrl+R', enabled: state.hasFolder, click: () => send('refresh') },
+      // Finder's own key for it. Off by default; one setting for every window.
+      {
+        label: 'Show Hidden Files',
+        type: 'checkbox',
+        accelerator: 'Shift+CmdOrCtrl+.',
+        checked: Settings.view().showHiddenFiles,
+        click: () => Settings.setView({ showHiddenFiles: !Settings.view().showHiddenFiles }),
+      },
       { type: 'separator' },
       // Editor size only — the print size is untouched. Bound to `=` so it fires as ⌘= as well
       // as ⌘⇧=; a literal `+` binding is a shortcut that never fires on a US keyboard, so the

@@ -73,6 +73,21 @@ A rebuild does not reload the running app — restart `electron .`. ⌘R is Refr
     nothing, and CodeMirror's own Return turned tabs into spaces.
   - Sidebar rows offer Copy Absolute Path, the item's full path on the clipboard, wherever the
     folder has a path on this Mac (not over SSH, not on iOS).
+  - Several sidebar rows can be selected: ⌘-click (Ctrl-click on Windows) adds or removes one,
+    ⇧-click and ⇧↑ / ⇧↓ take a range, Esc goes back to one. ⌫ / ⌘⌫ delete them all (one
+    question, by count), dragging one moves them all, and the row menu over them offers Delete
+    N Items (and Move N Items To… on iOS). `selectedPath` stays the main row; setting it alone
+    makes it the only one.
+  - View ▸ Show Hidden Files (⇧⌘., and a toggle in Settings), off by default. One switch for
+    every store (`setHiddenFilesShown` / `isListed` in `src/shared/store/names.js`), set in
+    `src/main/main.js` and `src/mobile/bridge.js` from the view settings; `.icloud` placeholders
+    are never listed.
+  - A task box is any `[ ]` / `[x]` standing apart from its words, anywhere on a line
+    (`specs/task-boxes.md`), not only at the head.
+  - Enhanced tasks are written `[ ] ==> ( ) title`, single brackets, not jam-spec's `[[ ]]` /
+    `(( ))`: `[[` is a wiki link (`specs/wiki-links.md`) — typing it opens the file picker
+    narrowed to the open file's folder, and ⌘-click on `[[path]]` opens that file — a plain
+    tap does on a touch screen.
   - Reopening a file puts back its selection and top line. Optional iCloud sync carries settings,
     presets and those positions between Mac and iPhone/iPad through files in the iOS app's iCloud
     container, not Lolext's key-value store (`specs/icloud-sync.md`).
@@ -144,13 +159,15 @@ A rebuild does not reload the running app — restart `electron .`. ⌘R is Refr
 - `specs/` — how a feature is meant to behave, written before it was built. Keep it in step
   when the behaviour changes. `tab-key.md`: Tab inserts spaces, 2 or 4.
   `mobile.md`: the iPhone/iPad app — layout, touch, what is left out.
-  `enhanced-tasks.md`: `[[ ]] ==> (()) title` tasks, how LoText draws and edits them; the rules
+  `enhanced-tasks.md`: `[ ] ==> ( ) title` tasks (single brackets, unlike jam-spec), how LoText draws and edits them; the rules
   are jam-spec's [`jam-spec/enhanced-task/`](https://github.com/fr-mccarty/jam-spec/tree/main/enhanced-task/) and
   [`enhanced-selection/`](https://github.com/fr-mccarty/jam-spec/tree/main/enhanced-selection/).
   `disclosures.md`: disclosure arrows — the first `-->` / `--v` (or `==>` / `==v` off a task
   line) anywhere on a line folds the lines deeper under it; the rule is jam-spec's
   [`jam-spec/disclosure-arrow/`](https://github.com/fr-mccarty/jam-spec/tree/main/disclosure-arrow/).
-  `task-boxes.md`: a `[ ]` / `[x]` at a line's head is a clickable box in any file.
+  `task-boxes.md`: a `[ ]` / `[x]` anywhere on a line, standing apart from its words, is a
+  clickable box in any file.
+  `wiki-links.md`: `[[` picks a file under the open file's folder; ⌘-click a `[[link]]` opens it.
   `icloud-sync.md`: optional iCloud sync of settings and reading positions.
   `send-to-daycap.md`: Cut and Send to DayCap — a selection saved as a new file in DayCap's folder.
   Help ▸ Enhanced Tasks and Help ▸ Disclosure Arrows (`src/renderer/sheets/help.js`) are the

@@ -7,12 +7,12 @@ const at = (first, last = first) => ({ first, last })
 const move = (lines, ranges, direction) => moveBlocks(lines, ranges, direction)
 
 const CLOSED_TASK = [
-  '[[ ]] ==> (()) call Ann',
+  '[ ] ==> ( ) call Ann',
   '  About the lease.',
   '  Email id: 5678',
   '  [ ] send an email',
 ]
-const OPEN_TASK = ['[[x]] ==v (()) done', '  The description.', '  [x] a row', '  [ ] ']
+const OPEN_TASK = ['[x] ==v ( ) done', '  The description.', '  [x] a row', '  [ ] ']
 
 describe('a task', () => {
   it('moves whole, the lines indented under it with it', () => {
@@ -27,7 +27,7 @@ describe('a task', () => {
     const lines = ['above', ...OPEN_TASK]
     expect(move(lines, [at(1)], UP).lines).toEqual([...OPEN_TASK, 'above'])
     // A visible line of an open task on its own is a plain line.
-    expect(move(lines, [at(2)], UP).lines).toEqual(['above', '  The description.', '[[x]] ==v (()) done', '  [x] a row', '  [ ] '])
+    expect(move(lines, [at(2)], UP).lines).toEqual(['above', '  The description.', '[x] ==v ( ) done', '  [x] a row', '  [ ] '])
   })
 
   it('the last task has nothing below it to step over', () => {
@@ -59,9 +59,9 @@ describe('a disclosure', () => {
   })
 
   it('nested inside a task moves with its body', () => {
-    const lines = ['[[ ]] ==v (()) t', '  desc', '  Email', '  Thread -->', '    id: abc', '  [ ] row']
+    const lines = ['[ ] ==v ( ) t', '  desc', '  Email', '  Thread -->', '    id: abc', '  [ ] row']
     expect(move(lines, [at(3)], UP).lines)
-      .toEqual(['[[ ]] ==v (()) t', '  desc', '  Thread -->', '    id: abc', '  Email', '  [ ] row'])
+      .toEqual(['[ ] ==v ( ) t', '  desc', '  Thread -->', '    id: abc', '  Email', '  [ ] row'])
   })
 })
 
@@ -81,20 +81,20 @@ describe('a plain line', () => {
   })
 
   it('steps over a collapsed task whole', () => {
-    const lines = ['plain', ...CLOSED_TASK, '[[ ]] ==v (()) next']
+    const lines = ['plain', ...CLOSED_TASK, '[ ] ==v ( ) next']
     const down = move(lines, [at(0)], DOWN)
-    expect(down).toEqual({ lines: [...CLOSED_TASK, 'plain', '[[ ]] ==v (()) next'], shifts: [4] })
+    expect(down).toEqual({ lines: [...CLOSED_TASK, 'plain', '[ ] ==v ( ) next'], shifts: [4] })
   })
 
   it('steps into an expanded task a line at a time', () => {
-    const lines = ['plain', '[[ ]] ==v (()) t', '  about', '  [ ] row']
-    expect(move(lines, [at(0)], DOWN).lines).toEqual(['[[ ]] ==v (()) t', 'plain', '  about', '  [ ] row'])
+    const lines = ['plain', '[ ] ==v ( ) t', '  about', '  [ ] row']
+    expect(move(lines, [at(0)], DOWN).lines).toEqual(['[ ] ==v ( ) t', 'plain', '  about', '  [ ] row'])
   })
 })
 
 describe('neighbours', () => {
   it('an item jumps a whole neighbouring task', () => {
-    const task = ['[[ ]] ==v (()) other', '  desc', '  [ ] row']
+    const task = ['[ ] ==v ( ) other', '  desc', '  [ ] row']
     const lines = [...task, ...CLOSED_TASK]
     expect(move(lines, [at(3)], UP).lines).toEqual([...CLOSED_TASK, ...task])
     expect(move(lines, [at(0)], DOWN).lines).toEqual([...CLOSED_TASK, ...task])

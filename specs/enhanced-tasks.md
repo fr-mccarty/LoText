@@ -1,15 +1,20 @@
 # Spec: enhanced tasks
 
-What an enhanced task is — the `[[ ]] ==> (()) title` line, what collapsing hides, checking,
+What an enhanced task is — the `[ ] ==> ( ) title` line, what collapsing hides, checking,
 feedback — is jam-spec's enhanced-task spec, [`jam-spec/enhanced-task/README.md`](https://github.com/fr-mccarty/jam-spec/blob/main/enhanced-task/README.md).
 The choices under a task are its enhanced-selection spec,
 [`jam-spec/enhanced-selection/README.md`](https://github.com/fr-mccarty/jam-spec/blob/main/enhanced-selection/README.md). There is nothing like either in
 Lolext. This file holds only how LoText reads, draws and edits them.
 
+**Departure from jam-spec:** jam-spec writes the box and the feedback slot doubled, `[[ ]]` and
+`(( ))`. LoText writes them single, `[ ]` and `( )`, as the user asked: `[[` belongs to wiki links
+(`specs/wiki-links.md`). A file with the doubled form is plain text to LoText.
+
 ## Reading the text
 
-- A task line is exactly `[[`, a mark, `]] `, the arrow, a space, `((`, the feedback, `))`, and
-  then optionally a space and the title, starting in column 0. The mark is a space, `x` or `X`;
+- A task line is exactly `[`, a mark, `] `, the arrow, a space, `(`, the feedback, `)`, and
+  then optionally a space and the title, starting in column 0. The empty slot is written `( )`;
+  the feedback is read trimmed, and may not hold a `)` of its own. The mark is a space, `x` or `X`;
   the app writes `x`. Other spacing is plain text, not a task line.
 - **What a task owns** is the lines indented deeper straight under it, by the same rule as a
   disclosure arrow's body (`specs/disclosures.md`): the first line back at column 0 ends it, and so
@@ -29,7 +34,7 @@ Lolext. This file holds only how LoText reads, draws and edits them.
 - **The arrow** flips `==>` ↔ `==v` (its third character). The caret does not move unless it is
   in what the click hides, when it goes to the end of the task line. ⌘Z undoes it. A `==>` whose
   lines Find or an edit has shown (Hiding) is not flipped: the click hides them again.
-- **The task's box**, `[[ ]]`, flips its mark. Checking it also writes `==>` in the same edit, so
+- **The task's box**, `[ ]`, flips its mark. Checking it also writes `==>` in the same edit, so
   one ⌘Z brings both back. Unchecking changes no arrow. Nested disclosure arrows keep their state.
 - **A choice's box** flips, as any box does (`specs/task-boxes.md`).
 
@@ -82,7 +87,7 @@ purpose, so enhanced tasks are an editor feature only.
   in `indented-body.js`, shared with disclosures and Hide Lines.
 - `src/renderer/editor/enhanced-view.js` — the CodeMirror side: the arrows, hiding, clicks and
   the typing filters, shared with `specs/disclosures.md`. Tested in `test/typed-task.test.js`.
-- `src/renderer/editor/task-boxes.js` — the `[[ ]]` box is drawn and clicked as a plain box is.
+- `src/renderer/editor/task-boxes.js` — the task's `[ ]` is drawn and clicked as a plain box is.
 - `src/renderer/editor/move-items.js` — what ⌥↑ / ⌥↓ move and what they step over. Tested in
   `test/move-items.test.js`.
 - `src/renderer/sheets/help.js` — Help ▸ Enhanced Tasks, the user-facing version of this spec.

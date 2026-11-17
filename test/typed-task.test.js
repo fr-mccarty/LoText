@@ -26,36 +26,36 @@ function hiddenLineNumbers (state) {
 
 describe('a task typed in the editor', () => {
   it('arrives expanded: a typed `==>` is written `==v`, caret after it', () => {
-    const state = type('[[ ]] ', '==> (())')
-    expect(state.doc.toString()).toBe('[[ ]] ==v (())')
+    const state = type('[ ] ', '==> ( )')
+    expect(state.doc.toString()).toBe('[ ] ==v ( )')
   })
 
   it('leaves a collapsed arrow already in the file as it is', () => {
-    const state = type('[[ ]] ==> (()) call', ' Ann')
-    expect(state.doc.toString()).toBe('[[ ]] ==> (()) call Ann')
+    const state = type('[ ] ==> ( ) call', ' Ann')
+    expect(state.doc.toString()).toBe('[ ] ==> ( ) call Ann')
   })
 })
 
 describe('checking the task', () => {
-  const doc = '[[ ]] ==v (()) T\n  description\n  [ ] a\nat the edge\n[[ ]] ==v (()) next\n  more'
+  const doc = '[ ] ==v ( ) T\n  description\n  [ ] a\nat the edge\n[ ] ==v ( ) next\n  more'
 
   it('collapses it in the same edit, hiding the lines indented under it', () => {
-    const state = replace(doc, 2, 'x')
-    expect(state.doc.line(1).text).toBe('[[x]] ==> (()) T')
-    expect(state.doc.line(5).text).toBe('[[ ]] ==v (()) next')
+    const state = replace(doc, 1, 'x')
+    expect(state.doc.line(1).text).toBe('[x] ==> ( ) T')
+    expect(state.doc.line(5).text).toBe('[ ] ==v ( ) next')
     expect(hiddenLineNumbers(state)).toEqual([[[2, 3]], []])
   })
 
   it('unchecking changes no arrow', () => {
-    const state = replace('[[x]] ==> (()) T\n  d', 2, ' ')
-    expect(state.doc.toString()).toBe('[[ ]] ==> (()) T\n  d')
+    const state = replace('[x] ==> ( ) T\n  d', 1, ' ')
+    expect(state.doc.toString()).toBe('[ ] ==> ( ) T\n  d')
   })
 })
 
 describe('the choices', () => {
   it('typing into an empty choice checks it', () => {
-    const doc = '[[ ]] ==v (()) T\n  [ ] '
-    expect(type(doc, 'send it').doc.toString()).toBe('[[ ]] ==v (()) T\n  [x] send it')
+    const doc = '[ ] ==v ( ) T\n  [ ] '
+    expect(type(doc, 'send it').doc.toString()).toBe('[ ] ==v ( ) T\n  [x] send it')
   })
 
   it('an empty box outside a task stays empty', () => {

@@ -155,7 +155,8 @@ export class MobileShell {
     }
 
     this.sidebar.presentMenu = (event, items) => this.presentMenu(event, items)
-    this.sidebar.extraRowItems = (node) => [{ label: 'Move To…', action: () => this.moveTo(node) }]
+    this.sidebar.extraRowItems = (node) => [{ label: 'Move To…', action: () => this.moveTo([node.path]) }]
+    this.sidebar.extraRowItemsForMany = (paths) => [{ label: `Move ${paths.length} Items To…`, action: () => this.moveTo(paths) }]
   }
 
   buildDetailBar () {
@@ -338,7 +339,7 @@ export class MobileShell {
    * offered that the row can go to; the list is walked afresh, since the tree only knows the
    * folders that have been twirled open.
    */
-  async moveTo (node) {
+  async moveTo (paths) {
     const model = this.model
     const folders = [FilePath.ROOT]
     let frontier = [FilePath.ROOT]
@@ -354,16 +355,20 @@ export class MobileShell {
       }
       frontier = next
     }
-    const destinations = folders.filter((folder) => model.canMove(node.path, folder))
+    // A folder none of them is inside of, and some of them are not already in.
+    const destinations = folders.filter((folder) =>
+      paths.some((path) => model.canMove(path, folder)) &&
+      !paths.some((path) => folder === path || FilePath.isDescendant(folder, path)))
+    const what = paths.length === 1 ? quote(FilePath.name(paths[0])) : `${paths.length} items`
     if (!destinations.length) {
-      await model.alerts.error(`There is nowhere to move ${quote(node.name)}.`,
-        'It is already in the only folder it could go to.')
+      await model.alerts.error(`There is nowhere to move ${what}.`,
+        paths.length === 1 ? 'It is already in the only folder it could go to.' : 'They are already in the only folder they could go to.')
       return
     }
     await this.run(destinations.map((folder) => ({
       title: FilePath.isRoot(folder) ? model.folder.name : `${model.folder.name} / ${FilePath.components(folder).join(' / ')}`,
-      run: () => model.move(node.path, folder),
-    })), { title: `Move ${quote(node.name)} to…`, at: null })
+      run: () => model.moveMany(paths, folder),
+    })), { title: `Move ${what} to…`, at: null })
   }
 
   // MARK: - The keyboard bar

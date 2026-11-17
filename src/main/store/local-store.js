@@ -16,7 +16,7 @@ import { shell } from 'electron'
 import * as FilePath from '../../shared/file-path.js'
 import { makeStamp, stampsMatch } from '../../shared/file-stamp.js'
 import { conflict, notFound, nameTaken, folderUnavailable, StoreError } from '../../shared/store/errors.js'
-import { isHidden, numberedName, copyName, splitName, compareNodes } from '../../shared/store/names.js'
+import { isListed, numberedName, copyName, splitName, compareNodes } from '../../shared/store/names.js'
 
 /** ~300ms, so a burst of writes from a sync engine is one refresh rather than twenty. */
 const WATCH_DEBOUNCE = 300
@@ -114,7 +114,7 @@ export class LocalStore {
 
     const nodes = []
     for (const entry of entries) {
-      if (isHidden(entry.name)) continue
+      if (!isListed(entry.name)) continue
       const childPath = FilePath.appending(relative, entry.name)
       const isLink = entry.isSymbolicLink()
       let isFolder = entry.isDirectory()

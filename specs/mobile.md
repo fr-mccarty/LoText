@@ -73,6 +73,8 @@ File.
 
 - **Tap** a file to open it; tap a folder to twirl it. Long-press a row for its menu (the Mac's
   right-click menu, minus Open in Finder, plus Move To…). The menus are the system's action sheets.
+- **Tap** a `[[link]]` in the text to open the file it names (`specs/wiki-links.md`); the Mac's
+  ⌘-click, for a finger.
 - **The keyboard bar** sits above the on-screen keyboard while the editor has it: Tab, ⇧Tab,
   a task box, Bold, Italic, Undo, Redo, and a button to put the keyboard away. Tab is what makes
   tasks, disclosures and indentation work, and the on-screen keyboard has none.

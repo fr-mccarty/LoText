@@ -29,6 +29,8 @@ const detail = new DetailPane(detailNode, model)
 model.editor = new Editor(detail.editorHost, {
   onChange: () => model.bufferDidChange(),
   onSelectionChange: () => model.noteKeyboardLocation(),
+  onRequestLink: (at) => model.requestLink(at),
+  onFollowLink: (target) => model.followLink(target),
 })
 attachEditorMenu(model.editor, model, bridge)
 
@@ -80,6 +82,9 @@ function renderSheet () {
 
 function makeSheet (name) {
   if (name === 'findFile') return new FindFileSheet(model)
+  if (name === 'linkFile') {
+    return new FindFileSheet(model, { under: model.linkFolder, onChoose: (path) => model.chooseLink(path) })
+  }
   if (name === 'recentFiles') return new RecentFilesSheet(model)
   if (HELP_TOPICS[name]) return new HelpSheet(model, name)
   return new ConnectSheet(model)

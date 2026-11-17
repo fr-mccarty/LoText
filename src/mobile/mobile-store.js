@@ -9,7 +9,7 @@
 import * as FilePath from '../shared/file-path.js'
 import { makeStamp } from '../shared/file-stamp.js'
 import { conflict, notFound, nameTaken, folderUnavailable, StoreError } from '../shared/store/errors.js'
-import { numberedName, copyName, splitName, compareNodes, isHidden } from '../shared/store/names.js'
+import { numberedName, copyName, splitName, compareNodes, isListed } from '../shared/store/names.js'
 import { Native, fromBase64, toBase64 } from './native.js'
 
 /** The native side's error codes, turned into the vocabulary every store speaks. */
@@ -61,11 +61,11 @@ export class MobileStore {
 
   // MARK: - Listing
 
-  /** One level, folders first, hidden names left out — as on the Mac. */
+  /** One level, folders first, hidden names left out unless shown — as on the Mac. */
   async children (relative) {
     const { entries } = await ask('list', { path: relative })
     return entries
-      .filter((entry) => !isHidden(entry.name))
+      .filter((entry) => isListed(entry.name))
       .map((entry) => ({
         path: FilePath.appending(relative, entry.name),
         kind: entry.isFolder ? 'folder' : 'file',

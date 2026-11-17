@@ -28,14 +28,14 @@ const state0Line = (doc, line) => doc.split('\n').slice(0, line).reduce((at, tex
 describe('⌘X on a collapsed item', () => {
   it('cuts a collapsed enhanced task whole, with the lines indented under it', async () => {
     const { left, clipboard } = await cut([
-      '[[ ]] ==> (()) first',
+      '[ ] ==> ( ) first',
       '  its description',
       '  [ ] a choice',
-      '[[ ]] ==v (()) second',
+      '[ ] ==v ( ) second',
       '  kept',
     ], [0, 3])
-    expect(clipboard).toBe('[[ ]] ==> (()) first\n  its description\n  [ ] a choice\n')
-    expect(left).toEqual(['[[ ]] ==v (()) second', '  kept'])
+    expect(clipboard).toBe('[ ] ==> ( ) first\n  its description\n  [ ] a choice\n')
+    expect(left).toEqual(['[ ] ==v ( ) second', '  kept'])
   })
 
   it('cuts a collapsed disclosure with its whole body, nested arrows and all', async () => {
@@ -71,7 +71,7 @@ describe('⌘X on a collapsed item', () => {
 
   it('leaves the next collapsed item collapsed, so a second ⌘X cuts it whole too', async () => {
     let state = EditorState.create({
-      doc: ['before', 'Groceries -->', '  milk', '[[ ]] ==> (()) Call the plumber', '  about the sink', '[[ ]] ==v (()) next'].join('\n'),
+      doc: ['before', 'Groceries -->', '  milk', '[ ] ==> ( ) Call the plumber', '  about the sink', '[ ] ==v ( ) next'].join('\n'),
       extensions: enhancedTasks,
       selection: { anchor: 9 },
     })
@@ -81,8 +81,8 @@ describe('⌘X on a collapsed item', () => {
     view.dispatch({ selection: { anchor: state.doc.line(2).from + 2 } })
     cutWholeLines(view)
     await new Promise((resolve) => setTimeout(resolve))
-    expect(clipboard).toBe('[[ ]] ==> (()) Call the plumber\n  about the sink\n')
-    expect(state.doc.toString()).toBe('before\n[[ ]] ==v (()) next')
+    expect(clipboard).toBe('[ ] ==> ( ) Call the plumber\n  about the sink\n')
+    expect(state.doc.toString()).toBe('before\n[ ] ==v ( ) next')
   })
 
   it('leaves an ordinary line’s cut as it was', async () => {

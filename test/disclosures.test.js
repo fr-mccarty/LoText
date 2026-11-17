@@ -157,7 +157,7 @@ describe('where a body ends', () => {
 
 describe('with enhanced tasks', () => {
   const TASK = [
-    '[[ ]] ==v (()) do something agent',
+    '[ ] ==v ( ) do something agent',
     '  This is the description.',
     '  Email id: 5678987656789',
     '  Thread --v',
@@ -178,7 +178,7 @@ describe('with enhanced tasks', () => {
   })
 
   it('the task line is never a disclosure, and ends a body above it', () => {
-    const lines = ['notes -->', '  under', '[[ ]] ==v (()) title -->', '  about']
+    const lines = ['notes -->', '  under', '[ ] ==v ( ) title -->', '  about']
     expect(reservedLines(lines)).toEqual(new Set([2]))
     expect(shape(parse(lines))).toEqual([[0, [1, 1], []]])
   })
@@ -190,23 +190,23 @@ describe('with enhanced tasks', () => {
 
 describe('typed arrows open', () => {
   it('reads the arrows a line could have, by text alone', () => {
-    expect(arrowsOnLine('[[ ]] ==> (()) title -->')).toEqual([{ column: 6, open: false }])
+    expect(arrowsOnLine('[ ] ==> ( ) title -->')).toEqual([{ column: 4, open: false }])
     expect(arrowsOnLine('a --> b --v')).toEqual([{ column: 2, open: false }])
     expect(arrowsOnLine('  Thread --v')).toEqual([{ column: 9, open: true }])
     expect(arrowsOnLine('Thread')).toEqual([])
   })
 
   it('lists the live arrows, the task’s and the disclosures’, but not a title’s end', () => {
-    const lines = ['[[ ]] ==> (()) T -->', '  about -->', '    id', 'x <!-- y -->', 'z -->']
+    const lines = ['[ ] ==> ( ) T -->', '  about -->', '    id', 'x <!-- y -->', 'z -->']
     const key = (arrow) => `${arrow.line}:${arrow.column}`
-    expect(liveArrows(lines).map(key).sort()).toEqual(['0:6', '1:8', '4:2'])
+    expect(liveArrows(lines).map(key).sort()).toEqual(['0:4', '1:8', '4:2'])
   })
 
   it('opens the closed arrows that were not there before, and only those', () => {
-    const lines = ['a -->', 'b -->', 'c --v', '[[ ]] ==> (())']
+    const lines = ['a -->', 'b -->', 'c --v', '[ ] ==> ( )']
     const existed = (arrow) => arrow.line === 0
     expect(openingEdits(liveArrows(lines), existed)).toEqual(expect.arrayContaining([
-      { line: 1, column: 4, char: 'v' }, { line: 3, column: 8, char: 'v' },
+      { line: 1, column: 4, char: 'v' }, { line: 3, column: 6, char: 'v' },
     ]))
     expect(openingEdits(liveArrows(lines), existed)).toHaveLength(2)
   })
@@ -220,12 +220,12 @@ describe('where an arrow can sit', () => {
       'text-->',
       'x -->',
       '[ ] milk -->',
-      '[[ ]] ==> (()) task title -->',
+      '[ ] ==> ( ) task title -->',
       '  desc',
       'notes ==v for Monday',
     ]
     const found = parseDisclosures(lines, { skip: reservedLines(lines) }).map((d) => d.line)
     expect(found).toEqual([0, 1, 3, 4, 7])
-    expect(parseTasks(lines).map((task) => [task.line, task.arrowColumn])).toEqual([[5, 6]])
+    expect(parseTasks(lines).map((task) => [task.line, task.arrowColumn])).toEqual([[5, 4]])
   })
 })

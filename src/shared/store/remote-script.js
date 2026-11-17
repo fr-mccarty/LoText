@@ -56,8 +56,14 @@ hello)
   ;;
 list)
   cd -- "$1" 2>/dev/null || exit 3
-  set -- *
-  if [ "$#" -eq 1 ] && [ "$1" = '*' ] && [ ! -e '*' ] && [ ! -L '*' ]; then exit 0; fi
+  # Dot names too: whether they show is View > Show Hidden Files, decided by the app. A pattern
+  # that matched nothing stays as itself and is dropped by the test.
+  set -- * .[!.]* ..?*
+  for lx_name do
+    shift
+    if [ -e "$lx_name" ] || [ -L "$lx_name" ]; then set -- "$@" "$lx_name"; fi
+  done
+  if [ "$#" -eq 0 ]; then exit 0; fi
   lx_many "$@" 2>/dev/null
   exit 0
   ;;

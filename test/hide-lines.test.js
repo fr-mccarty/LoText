@@ -52,9 +52,9 @@ describe('Hide Lines with a caret', () => {
   })
 
   it('closes an enhanced task around the caret', () => {
-    const view = editorOver(['[[ ]] ==v (()) call Ann', '  her number', '[[ ]] ==v (()) next'], [1, 3])
+    const view = editorOver(['[ ] ==v ( ) call Ann', '  her number', '[ ] ==v ( ) next'], [1, 3])
     hideLines(view)
-    expect(textOf(view)[0]).toBe('[[ ]] ==> (()) call Ann')
+    expect(textOf(view)[0]).toBe('[ ] ==> ( ) call Ann')
   })
 
   it('is undone by one ⌘Z', () => {

@@ -21,6 +21,7 @@ import {
 } from '@codemirror/search'
 import { invisibles } from './invisibles.js'
 import { taskBoxes } from './task-boxes.js'
+import { wikiLinks, insertLink } from './wiki-links.js'
 import { hangingIndent } from './hanging-indent.js'
 import { findBar, showFindBar } from './find-bar.js'
 import { enhancedTasks, moveItems, hideLines, showLines, restoreSelection } from './enhanced-view.js'
@@ -41,9 +42,14 @@ export class Editor {
    * file gets its own buffer, cursor, scroll position and undo history, and the outgoing one's
    * are gone. That is the price of having no tabs, and it is paid deliberately.
    */
-  constructor (parent, { onChange, onSelectionChange }) {
+  constructor (parent, { onChange, onSelectionChange, onRequestLink, onFollowLink }) {
     this.onChange = onChange
     this.onSelectionChange = onSelectionChange
+    // Made once, so every file's state shares the one set of link handlers.
+    this.wikiLinks = wikiLinks({
+      onRequestLink: (_view, at) => onRequestLink?.(at),
+      onFollowLink: (target) => onFollowLink?.(target),
+    })
     this.isProgrammatic = false
     this.settings = null
 
@@ -70,6 +76,7 @@ export class Editor {
         appearance.of(this.appearanceTheme()),
         invisiblesCompartment.of(this.settings?.showInvisibles ? invisibles : []),
         taskBoxes,
+        this.wikiLinks,
         enhancedTasks,
         // The app's own keys live in the **menu**, so that the menu is the one place every
         // shortcut this app adds can be read off. What is bound here is only what the menu
@@ -340,6 +347,9 @@ export class Editor {
     }
     if (changes.length) this.view.dispatch({ changes, userEvent: 'input.task', scrollIntoView: true })
   }
+
+  /** Writes a chosen wiki link in after the `[[` typed at `at`, and closes it. */
+  insertLink (at, text) { return insertLink(this.view, at, text) }
 
   /** Puts the on-screen keyboard away by taking the keyboard out of the buffer. */
   blur () { this.view.contentDOM.blur() }

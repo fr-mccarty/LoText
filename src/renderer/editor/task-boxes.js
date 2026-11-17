@@ -1,31 +1,35 @@
-// Task boxes: `[ ]` / `[x]` at the head of a line — after its indent and an optional list
-// marker — can be clicked, and a click flips the one character between the brackets. An enhanced
-// task's `[[ ]]` / `[[x]]` is a box the same way. Typing `[]` in that same place lands as `[ ]`.
+// Task boxes: a `[ ]` / `[x]` anywhere on a line — at its head, in the middle or at the end —
+// can be clicked, and a click flips the one character between the brackets. An enhanced task's
+// `[ ]` is a box like any other. Typing `[]` at the head of a line lands as `[ ]`.
 //
 // The characters stay what they are: the box is the text, marked so it takes a click and looks
-// like it will. Only the head of a line counts, so `a[x]` in code and `[]` in `const a = []`
-// are left alone.
+// like it will. A box stands apart from the words around it — a space, the line's edge, or
+// punctuation on either side — so `a[x]` in code and the `[x]` inside a `[[x]]` link are left
+// alone.
 
 import { Decoration, EditorView, ViewPlugin, MatchDecorator } from '@codemirror/view'
 
-/** What may stand before a box on its line: indent, then `-`, `*`, `+`, `1.` or `1)`. */
+/** What may stand before a box typed at the head of a line: indent, then `-`, `*`, `+`, `1.` or `1)`. */
 const LEAD = /^[ \t]*(?:(?:[-*+]|\d+[.)])[ \t]+)?$/
 
-const BOX_AT_HEAD = /^([ \t]*(?:(?:[-*+]|\d+[.)])[ \t]+)?)(\[\[([ xX])\]\]|\[([ xX])\])/
+/** A box: not glued to a word or a bracket on either side. */
+const BOX = /(?<=^|[\s(])\[([ xX])\](?=$|[\s.,;:!?)])/g
 
 /**
- * Where the box on a line starts, where its mark (the character between the brackets) is, and
- * whether it is checked; or null.
+ * Every box on a line, left to right: where it starts, where its mark (the character between
+ * the brackets) is, and whether it is checked.
  */
-export function boxOn (text) {
-  const match = BOX_AT_HEAD.exec(text)
-  if (!match) return null
-  const mark = match[3] ?? match[4]
-  const offset = match[1].length
-  return { offset, markColumn: offset + (match[3] ? 2 : 1), checked: mark !== ' ' }
+export function boxesOn (text) {
+  return [...text.matchAll(BOX)].map((match) =>
+    ({ offset: match.index, markColumn: match.index + 1, checked: match[1] !== ' ' }))
 }
 
-/** Where the box on `line` starts, or -1 if the line has none. */
+/** The first box on a line, or null. */
+export function boxOn (text) {
+  return boxesOn(text)[0] ?? null
+}
+
+/** Where the first box on `line` starts, or -1 if the line has none. */
 export function boxOffset (line) {
   return boxOn(line)?.offset ?? -1
 }
@@ -43,11 +47,8 @@ export function closesBox (before) {
 const boxMark = Decoration.mark({ class: 'lo-task-box' })
 
 const matcher = new MatchDecorator({
-  regexp: /^[ \t]*(?:(?:[-*+]|\d+[.)])[ \t]+)?(\[\[[ xX]\]\]|\[[ xX]\])/gm,
-  decorate: (add, from, to, match) => {
-    const start = to - match[1].length
-    add(start, to, boxMark)
-  },
+  regexp: BOX,
+  decorate: (add, from, to) => add(from, to, boxMark),
 })
 
 const marks = ViewPlugin.fromClass(class {
@@ -67,8 +68,11 @@ const clicks = EditorView.domEventHandlers({
     const target = event.target instanceof Element ? event.target.closest('.lo-task-box') : null
     if (!target) return false
     const doc = view.state.doc
-    const line = doc.lineAt(view.posAtDOM(target))
-    const box = boxOn(line.text)
+    const pos = view.posAtDOM(target)
+    const line = doc.lineAt(pos)
+    // The box the click landed in, of however many the line has.
+    const box = boxesOn(line.text).find((candidate) =>
+      line.from + candidate.offset <= pos && pos < line.from + candidate.offset + 3)
     if (!box) return false
     const at = line.from + box.markColumn
     view.dispatch({

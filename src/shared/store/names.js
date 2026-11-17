@@ -5,11 +5,32 @@
 import * as FilePath from '../file-path.js'
 
 /**
- * Hidden files are omitted, which covers `.DS_Store`, `.git`, and most of what a sync engine
- * leaves behind — including the `.icloud` placeholder a dataless file is listed under.
+ * A name starting with `.` is hidden: `.DS_Store`, `.git`, and most of what a sync engine leaves
+ * behind — including the `.icloud` placeholder a dataless file is listed under.
  */
 export function isHidden (name) {
   return name.startsWith('.')
+}
+
+/**
+ * Whether listings show hidden names: View ▸ Show Hidden Files, off by default. It is one switch
+ * for the whole app, so it lives here, set by whoever holds the settings (`src/main/main.js`,
+ * `src/mobile/bridge.js`), and every store, the walk and Recently Edited follow it.
+ */
+let hiddenShown = false
+
+export function setHiddenFilesShown (shown) {
+  hiddenShown = Boolean(shown)
+}
+
+/**
+ * Whether a listing includes `name`. A hidden name is listed only while hidden files are shown,
+ * and an `.icloud` placeholder never is: it stands for a file listed under its own name.
+ */
+export function isListed (name) {
+  if (!isHidden(name)) return true
+  if (name === '.' || name === '..') return false
+  return hiddenShown && !/^\..+\.icloud$/.test(name)
 }
 
 /** `notes.md` → `{ stem: 'notes', extension: '.md' }`; a dotfile has no extension. */

@@ -13,6 +13,7 @@ import { recentlyEdited } from '../shared/store/recent.js'
 import { StoreError, notFound } from '../shared/store/errors.js'
 import { extract } from '../shared/viewers/document-text.js'
 import { createSettings } from '../shared/settings-store.js'
+import { setHiddenFilesShown } from '../shared/store/names.js'
 import { createCloudSync, positionKey } from '../shared/sync/cloud-sync.js'
 import { sendToDayCap } from './daycap.js'
 import { MobileStore } from './mobile-store.js'
@@ -488,7 +489,11 @@ export function createBridge () {
     bridge[key] = async (...args) => { await ready; return value(...args) }
   }
 
+  // View ▸ Show Hidden Files: every listing follows the setting, and follows a change to it.
+  settings.onChange((state) => setHiddenFilesShown(state.view.showHiddenFiles))
+
   ready.then(() => {
+    setHiddenFilesShown(settings.view().showHiddenFiles)
     watchCloud(cloud)
     cloud.refresh()
     const session = prefs.get(SESSION_KEY, null)

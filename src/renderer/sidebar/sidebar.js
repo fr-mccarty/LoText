@@ -11,6 +11,11 @@
 // file's row also carries its unsaved-changes dot: with no tab bar, there is nowhere else left
 // to put it.
 //
+// **Several rows** can be selected, as in Finder: ⌘-click adds a row or takes it away, ⇧-click
+// and ⇧↑ / ⇧↓ take every row from the last one clicked. Neither opens anything. ⌫ deletes them
+// all, dragging any one of them moves them all, and the right-click menu on one of them offers
+// what can be done to all of them at once.
+//
 // The strip at the top is *stacked above* the list rather than laid over it, so nothing can
 // scroll behind the folder's name and there is one surface from the sidebar's edge to the split.
 
@@ -154,7 +159,7 @@ export class Sidebar {
     // Folders are never dimmed, whatever they contain. A previewable file is not dimmed either:
     // the editor cannot take it, but a viewer can show it, so it is an ordinary row.
     const isDimmed = !isFolder && kind === 'opaque'
-    const isSelected = model.selectedPath === node.path
+    const isSelected = model.isSelected(node.path)
     const openHere = model.openFile?.path === node.path ? model.openFile : null
     const isExpanded = model.tree.expanded.has(node.path)
     const isRenaming = model.tree.renamingPath === node.path
@@ -189,8 +194,12 @@ export class Sidebar {
       }
     }
 
-    if (!isDimmed && !isRenaming) {
-      row.addEventListener('click', () => this.activate(node))
+    if (!isRenaming) {
+      row.addEventListener('click', (event) => {
+        // A dimmed row cannot open, but it can still be one of several selected.
+        if (this.extendSelection(event, node)) return
+        if (!isDimmed) this.activate(node)
+      })
     }
     row.addEventListener('contextmenu', (event) => this.showRowMenu(event, node))
 
@@ -258,6 +267,19 @@ export class Sidebar {
   }
 
   /**
+   * ⌘-click (Ctrl-click on Windows) adds the row to the selection or takes it away; ⇧-click
+   * takes every row from the last one clicked. Neither opens anything. False for a plain click.
+   */
+  extendSelection (event, node) {
+    const toggles = isWindows() ? event.ctrlKey : event.metaKey
+    if (!toggles && !event.shiftKey) return false
+    this.listNode.focus()
+    if (event.shiftKey) this.model.selectRangeTo(node.path)
+    else this.model.toggleSelected(node.path)
+    return true
+  }
+
+  /**
    * Plain ⌫, and only while the sidebar holds the keyboard. It is not a menu item and must
    * never become one: a menu shortcut fires wherever the focus is, and ⌫ in the menu would
    * swallow every backspace typed into the editor.
@@ -266,6 +288,13 @@ export class Sidebar {
     const rows = this.model.tree.visibleRows()
     const index = rows.findIndex((row) => row.node.path === this.model.selectedPath)
 
+    if (event.key === 'Escape' && this.model.selectedPaths.length > 1) {
+      // Back to the one row the selection was last started from.
+      event.preventDefault()
+      this.model.selectedPath = this.model.selectedPath
+      this.model.notify('tree')
+      return
+    }
     if (event.key === 'Backspace' || event.key === 'Delete') {
       event.preventDefault()
       this.model.deleteSelected({ confirming: !(isWindows() ? event.ctrlKey : event.metaKey) })
@@ -275,7 +304,10 @@ export class Sidebar {
       event.preventDefault()
       const step = event.key === 'ArrowDown' ? 1 : -1
       const next = rows[Math.min(Math.max(0, index + step), rows.length - 1)]
-      if (next) { this.model.selectedPath = next.node.path; this.model.notify('tree') }
+      if (!next) return
+      // ⇧ grows the selection from where it was started, as in Finder.
+      if (event.shiftKey) this.model.selectRangeTo(next.node.path)
+      else { this.model.selectedPath = next.node.path; this.model.notify('tree') }
       return
     }
     if (event.key === 'Enter') {
@@ -302,14 +334,17 @@ export class Sidebar {
    * A press becomes a drag only once it has travelled a few pixels, so a click is still a click.
    */
   beginPress (event, node) {
-    if (event.button !== 0 || event.ctrlKey) return
-    const drag = { path: node.path, name: node.name, x: event.clientX, y: event.clientY, ghost: null, target: null }
+    if (event.button !== 0 || (event.ctrlKey && !isWindows())) return
+    // A row among several selected takes them all along.
+    const together = this.model.isSelected(node.path) ? this.model.selectedTopmost() : []
+    const paths = together.length > 1 ? together : [node.path]
+    const drag = { paths, name: node.name, x: event.clientX, y: event.clientY, ghost: null, target: null }
     const onMove = (move) => {
       if (!drag.ghost) {
         if (Math.hypot(move.clientX - drag.x, move.clientY - drag.y) < 4) return
         drag.ghost = element('div', { class: 'drag-ghost' }, [
-          icon(node.kind === 'folder' ? 'folder' : 'doc', 13),
-          element('span', { text: node.name }),
+          icon(paths.length === 1 && node.kind === 'folder' ? 'folder' : 'doc', 13),
+          element('span', { text: paths.length === 1 ? node.name : `${paths.length} items` }),
         ])
         document.body.append(drag.ghost)
         document.body.classList.add('row-dragging')
@@ -331,7 +366,7 @@ export class Sidebar {
       const swallow = (click) => { click.stopPropagation(); click.preventDefault() }
       document.addEventListener('click', swallow, { capture: true, once: true })
       setTimeout(() => document.removeEventListener('click', swallow, true), 0)
-      if (target) this.model.move(drag.path, target.dataset.dropPath)
+      if (target) this.model.moveMany(drag.paths, target.dataset.dropPath)
     }
     const onKey = (key) => {
       if (key.key !== 'Escape') return
@@ -368,7 +403,11 @@ export class Sidebar {
   dropTargetAt (x, y) {
     const target = document.elementFromPoint(x, y)?.closest('[data-drop-path]')
     if (!target || !this.root.contains(target)) return null
-    return this.model.canMove(this.drag?.path, target.dataset.dropPath) ? target : null
+    const paths = this.drag?.paths ?? []
+    // Somewhere at least one of them can go; those already there stay put.
+    const fits = paths.some((path) => this.model.canMove(path, target.dataset.dropPath)) &&
+      !paths.some((path) => target.dataset.dropPath === path || FilePath.isDescendant(target.dataset.dropPath, path))
+    return fits ? target : null
   }
 
   markDropTarget (target) {
@@ -395,6 +434,14 @@ export class Sidebar {
   showRowMenu (event, node) {
     event.preventDefault()
     event.stopPropagation()
+    const several = this.model.isSelected(node.path) ? this.model.selectedTopmost() : []
+    if (several.length > 1) {
+      this.presentMenu(event, [
+        ...this.extraRowItemsForMany(several),
+        { label: `Delete ${several.length} Items`, destructive: true, action: () => this.model.requestDeleteMany(several) },
+      ])
+      return
+    }
     this.model.selectedPath = node.path
     this.model.notify('tree')
     // Right-clicking a folder creates inside it; right-clicking a file creates beside it.
@@ -440,6 +487,11 @@ export class Sidebar {
 
   /** Items a platform adds to every row's menu — on iOS, Move To…, for a finger that cannot drag. */
   extraRowItems () {
+    return []
+  }
+
+  /** The same, for several selected rows at once: on iOS, Move N Items To…. */
+  extraRowItemsForMany () {
     return []
   }
 

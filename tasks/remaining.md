@@ -30,6 +30,22 @@ nobody has clicked it yet.
 - [ ] Task boxes (`specs/task-boxes.md`): click `[ ]` / `[x]` at a line's head to flip it; `[]`
       typed there becomes `[ ]`. *Scripted.*
 
+## Added 2026-11-17 — never clicked
+- [ ] View ▸ Show Hidden Files (⇧⌘.) and the Settings toggle: dot files appear and go, twirled
+      folders stay open; ⇧⌘P and ⇧⌘O follow it; a server folder too. Off on a first launch.
+- [ ] Boxes anywhere: `ring [ ] then [x]` — each box flips on its own; `a[x]` and `[[x]]` stay text.
+- [ ] Enhanced tasks as `[ ] ==> ( ) title`: arrow, checking collapses, choices, ⌥↑/⌥↓, ⌘X.
+- [ ] Type `[[` in a file in a subfolder: the picker lists only that folder and below, by path
+      from there; ↩ writes `[[sub/file.md]]`, caret after; Esc leaves `[[`; one ⌘Z undoes.
+- [ ] Hold ⌘ over a `[[link]]`: underline and pointer. ⌘-click opens it; a missing one alerts.
+- [ ] Sidebar ⌘-click / ⇧-click / ⇧↓ select several; ⌫ asks once and trashes them all; drag
+      moves them all; right-click offers Delete N Items; Esc goes back to one.
+- [ ] iPhone and Android: tap a `[[link]]` — it opens; long-press on one still selects, a drag
+      over one still scrolls.
+- [ ] iOS / iPad: Move N Items To… with several selected (trackpad ⌘-click); Settings toggle.
+- [ ] Website editor: run `scripts/update-website-editor.sh` so the site has the new boxes and
+      single-bracket tasks, then commit and deploy Peru.
+
 ## Sidebar
 - [ ] New File ⌘N, New Folder ⇧⌘N, Duplicate ⇧⌘D, Rename (extension not pre-selected), Delete.
 - [ ] Drag a file into a folder, out of one (onto the folder's name or empty space), Esc to cancel. *Scripted.* Drop from Finder is not implemented.

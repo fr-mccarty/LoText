@@ -21,6 +21,7 @@ import { enqueue, deliver, claimsWithin } from './open-queue.js'
 import { filesFromArgv } from './argv-files.js'
 import { runCommandLine, isCommandLineJob } from './cli.js'
 import { statSync } from 'node:fs'
+import { setHiddenFilesShown } from '../shared/store/names.js'
 
 app.setName('LoText')
 
@@ -61,6 +62,8 @@ function main () {
       return
     }
 
+    // View ▸ Show Hidden Files decides what every listing shows, before any window lists one.
+    setHiddenFilesShown(Settings.view().showHiddenFiles)
     registerHandlers()
     registerRendererEvents()
     buildMenu()
@@ -74,6 +77,9 @@ function main () {
     // The settings panel and every open window follow a changed setting without being
     // reopened, which is what makes ⌘+ feel like it belongs to the text.
     Settings.onChange((state) => {
+      // Ahead of the windows hearing of it, so the listing they ask for next follows it.
+      setHiddenFilesShown(state.view.showHiddenFiles)
+      buildMenu()
       for (const browser of BrowserWindow.getAllWindows()) {
         browser.webContents.send('settings:changed', state)
       }

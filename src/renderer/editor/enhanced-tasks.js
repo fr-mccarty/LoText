@@ -1,4 +1,4 @@
-// Enhanced tasks: a `[[ ]] ==> (()) title` line and the lines indented under it.
+// Enhanced tasks: a `[ ] ==> ( ) title` line and the lines indented under it.
 // Everything is plain text, and whether a task is open is written in the text itself (`==>`
 // collapsed, `==v` expanded), so the parts here are pure functions over arrays of lines, tested
 // without an editor. `enhanced-view.js` is the CodeMirror side. The rules are jam-spec's
@@ -8,19 +8,20 @@
 
 import { bodyUnder } from './indented-body.js'
 
-const TASK = /^\[\[([ xX])\]\] (==>|==v) \(\((.*?)\)\)(?: (.*))?$/
+const TASK = /^\[([ xX])\] (==>|==v) \((.*?)\)(?: (.*))?$/
 const CHOICE = /^ {2}\[([ xX])\](?: (.*))?$/
 
-/** Where the task arrow's first `=` is on a task line: after `[[ ]] `. */
-const TASK_ARROW_COLUMN = 6
+/** Where the task arrow's first `=` is on a task line: after `[ ] `. */
+const TASK_ARROW_COLUMN = 4
 
 /** Where the box's middle character is on a choice: `  [x]`. */
 const CHOICE_BOX_COLUMN = 3
 
 /**
- * A task line's parts, or null: `[[x]] ==v ((ring first)) Call Ann` → { checked: true,
- * open: true, arrowColumn: 6, feedback: 'ring first', title: 'Call Ann' }. The title may be empty
- * while it is typed. A plain `[ ] Call Ann` is not a task line.
+ * A task line's parts, or null: `[x] ==v (ring first) Call Ann` → { checked: true,
+ * open: true, arrowColumn: 4, feedback: 'ring first', title: 'Call Ann' }. The feedback is
+ * trimmed, so the empty slot `( )` reads ''. The title may be empty while it is typed. A plain
+ * `[ ] Call Ann`, with no `==>` and no `( )`, is not a task line.
  */
 export function parseTaskLine (text) {
   const match = TASK.exec(text)
@@ -29,7 +30,7 @@ export function parseTaskLine (text) {
     checked: match[1] !== ' ',
     open: match[2] === '==v',
     arrowColumn: TASK_ARROW_COLUMN,
-    feedback: match[3],
+    feedback: match[3].trim(),
     title: (match[4] ?? '').trim(),
   }
 }

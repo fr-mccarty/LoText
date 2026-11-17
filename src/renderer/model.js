@@ -23,6 +23,7 @@ import { OpenFile } from './open-file.js'
 import { Alerts } from './alerts.js'
 import { quote } from './dom.js'
 import { words } from './platform.js'
+import { linkText, resolveLink, linkBase } from './editor/wiki-links.js'
 
 export class AppModel {
   constructor (bridge) {
@@ -36,6 +37,8 @@ export class AppModel {
     this.previewPath = null
     this.previewState = null
     this.selectedPath = null
+    /** The far end of a ⇧-click range: the row the selection was last started from. */
+    this.selectionAnchor = null
     this.settings = null
     this.sidebarVisible = true
     this.isEditingText = false
@@ -48,7 +51,8 @@ export class AppModel {
     this.recentToken = 0
     this.recentHighlight = 0
 
-    this.sheet = null                         // 'findFile' | 'recentFiles' | 'connect'
+    this.sheet = null                         // 'findFile' | 'linkFile' | 'recentFiles' | 'connect'
+    this.linkRequest = null                   // { at, from } while `[[` waits for a file
     this.listeners = new Set()
     this.editor = null
   }
@@ -117,8 +121,11 @@ export class AppModel {
   async start () {
     this.settings = await this.bridge.readSettings()
     this.bridge.onSettingsChanged((state) => {
+      const hiddenWas = this.settings?.view?.showHiddenFiles
       this.settings = state
       this.notify('settings')
+      // Show Hidden Files: the tree lists again, twirled folders kept.
+      if (this.hasFolder && Boolean(state.view?.showHiddenFiles) !== Boolean(hiddenWas)) this.tree.refresh()
     })
     this.bridge.onFolderChanged(() => this.folderDidChange())
     this.bridge.onMenuCommand(({ command, payload }) => this.runCommand(command, payload))
@@ -940,12 +947,98 @@ export class AppModel {
     this.notify()
   }
 
-  /** ⌫ and ⌘⌫ both land here; only the confirmation differs. */
+  /** ⌫ and ⌘⌫ both land here; only the confirmation differs. Several selected rows go together. */
   async deleteSelected ({ confirming }) {
-    const path = this.selectedPath
-    if (!path || FilePath.isRoot(path)) return
+    const paths = this.selectedTopmost()
+    if (paths.length > 1) {
+      if (confirming) await this.requestDeleteMany(paths)
+      else await this.performDeleteMany(paths)
+      return
+    }
+    const path = paths[0]
+    if (!path) return
     if (confirming) await this.requestDelete(path)
     else await this.performDelete(path)
+  }
+
+  /** Several rows, confirmed once, by count. */
+  async requestDeleteMany (paths) {
+    const question = this.deleteQuestion(`${paths.length} items`)
+    // The single-item wording quotes a name; a count is not one.
+    question.title = question.title.replace(/[“"]([^”"]*)[”"]/, '$1')
+    const choice = await this.alerts.present(question)
+    if (choice === 0) await this.performDeleteMany(paths)
+  }
+
+  async performDeleteMany (paths) {
+    for (const path of paths) await this.performDelete(path)
+    this.selectedPath = null
+    this.notify()
+  }
+
+  // MARK: - Selecting several rows
+
+  /**
+   * The highlighted rows: `selectedPath` and those ⌘-click or ⇧-click added to it. Setting
+   * `selectedPath` alone — a plain click, opening a file — makes it the only one again.
+   */
+  get selectedPath () { return this.primarySelection ?? null }
+
+  set selectedPath (path) {
+    this.primarySelection = path ?? null
+    this.alsoSelected = new Set()
+    this.selectionAnchor = path ?? null
+  }
+
+  /** Every highlighted row, the main one first. */
+  get selectedPaths () {
+    return [this.selectedPath, ...(this.alsoSelected ?? [])].filter((path) => path !== null)
+  }
+
+  isSelected (path) {
+    return path === this.selectedPath || Boolean(this.alsoSelected?.has(path))
+  }
+
+  /** Several rows, the main one `primary`; the anchor of a ⇧-click range stays where it was. */
+  selectPaths (paths, primary) {
+    const anchor = this.selectionAnchor
+    this.primarySelection = primary ?? paths[paths.length - 1] ?? null
+    this.alsoSelected = new Set(paths.filter((path) => path !== this.primarySelection))
+    this.selectionAnchor = anchor ?? this.primarySelection
+    this.notify('tree')
+  }
+
+  /** ⌘-click: the row joins the selection, or leaves it. Nothing opens. */
+  toggleSelected (path) {
+    const paths = this.selectedPaths
+    if (paths.includes(path)) {
+      const rest = paths.filter((other) => other !== path)
+      this.selectPaths(rest, rest[0] ?? null)
+    } else {
+      this.selectPaths([...paths, path], path)
+    }
+    this.selectionAnchor = path
+  }
+
+  /** ⇧-click or ⇧↑ / ⇧↓: every visible row from the anchor to `path`. Nothing opens. */
+  selectRangeTo (path) {
+    const rows = this.tree.visibleRows().map((row) => row.node.path)
+    const anchor = this.selectionAnchor ?? this.selectedPath ?? path
+    const from = rows.indexOf(anchor)
+    const to = rows.indexOf(path)
+    if (from < 0 || to < 0) { this.selectedPath = path; this.notify('tree'); return }
+    const range = rows.slice(Math.min(from, to), Math.max(from, to) + 1)
+    this.selectPaths(range, path)
+    this.selectionAnchor = anchor
+  }
+
+  /**
+   * The selected rows without any that sit inside another selected folder — deleting or moving
+   * the folder takes them along — and never the root.
+   */
+  selectedTopmost () {
+    const paths = this.selectedPaths.filter((path) => !FilePath.isRoot(path))
+    return paths.filter((path) => !paths.some((other) => FilePath.isDescendant(path, other)))
   }
 
   // MARK: - Moving
@@ -959,6 +1052,30 @@ export class AppModel {
     if (!this.hasFolder || !path || FilePath.isRoot(path)) return false
     if (destination === path || FilePath.isDescendant(destination, path)) return false
     return destination !== (FilePath.parent(path) ?? FilePath.ROOT)
+  }
+
+  /** Several rows into one folder, in one go; those that cannot go there are left where they are. */
+  async moveMany (paths, destination) {
+    const movable = paths.filter((path) => this.canMove(path, destination))
+    if (!movable.length) return
+    if (movable.length === 1) return this.move(movable[0], destination)
+    const landed = []
+    for (const path of movable) {
+      try {
+        const newPath = await this.bridge.move(path, destination)
+        this.rewritePaths(path, newPath)
+        landed.push(newPath)
+      } catch (error) {
+        await this.alerts.error(`${quote(FilePath.name(path))} could not be moved.`, error.message)
+      }
+    }
+    await this.tree.refresh()
+    await this.reconcileOpenFile()
+    if (landed.length) {
+      await this.tree.expandChain(landed[0])
+      this.selectPaths(landed, landed[landed.length - 1])
+    }
+    this.notify()
   }
 
   async move (path, destination) {
@@ -1057,7 +1174,49 @@ export class AppModel {
   closeSheet () {
     if (!this.sheet) return
     this.sheet = null
+    this.linkRequest = null
     this.notify('sheet')
+  }
+
+  // MARK: - Wiki links (specs/wiki-links.md)
+
+  /**
+   * `[[` was typed at `at` in the open file: the file picker, narrowed to the folder the file is
+   * in and the folders under it. Esc leaves the `[[` as typed.
+   */
+  requestLink (at) {
+    if (!this.openFile || !this.hasFolder) return
+    this.linkRequest = { at, from: this.openFile.path }
+    this.showSheet('linkFile')
+  }
+
+  /** The folder the pending link is read against, or null with none pending. */
+  get linkFolder () {
+    return this.linkRequest ? linkBase(this.linkRequest.from) : null
+  }
+
+  /** The picker's choice: its path from the file's folder is written in and the link closed. */
+  chooseLink (path) {
+    const request = this.linkRequest
+    this.closeSheet()
+    if (!request || this.openFile?.path !== request.from) return
+    this.editor.insertLink(request.at, linkText(request.from, path))
+  }
+
+  /** ⌘-click on `[[target]]`: opens the file it names, read from the open file's folder. */
+  async followLink (target) {
+    const from = this.openFile?.path
+    if (from === undefined) return
+    const path = resolveLink(from, target)
+    if (FilePath.isRoot(path) || !await this.bridge.exists(path).catch(() => false)) {
+      const folder = linkBase(from)
+      await this.alerts.error(`There is no file ${quote(target)}.`,
+        `A link is read from the folder the file is in${FilePath.isRoot(folder) ? ', the top of this one' : `, ${quote(folder)}`}.`)
+      return
+    }
+    if (await this.openPath(path) === false && openability(FilePath.name(path), false) === 'opaque') {
+      await this.alerts.error(`${quote(FilePath.name(path))} cannot be opened here.`, 'LoText has no way to show a file of this kind.')
+    }
   }
 
   // MARK: - Printing

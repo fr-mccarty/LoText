@@ -17,6 +17,8 @@ export const DEFAULT_VIEW = Object.freeze({
   lineSpacing: 'single',
   showInvisibles: false,
   tabSpaces: 2,
+  /** Names starting with `.` in the sidebar, Find File and Recently Edited. Off: they are left out. */
+  showHiddenFiles: false,
 })
 
 /** What Tab puts into the editor. */
@@ -52,6 +54,7 @@ export function normalizeView (raw) {
     view.lineSpacing = DEFAULT_VIEW.lineSpacing
   }
   view.showInvisibles = Boolean(view.showInvisibles)
+  view.showHiddenFiles = Boolean(view.showHiddenFiles)
   view.tabSpaces = Number(view.tabSpaces) === 4 ? 4 : 2
   return view
 }

@@ -20,7 +20,7 @@ const hiddenLines = (view) => foldedRanges(view.state).map(({ from, to }) =>
   [view.state.doc.lineAt(from).number, view.state.doc.lineAt(to).number - 1])
 
 const DAY = [
-  '[[ ]] ==> (()) Call Ann',
+  '[ ] ==> ( ) Call Ann',
   '  her number',
   '  [ ] ring',
   '  Groceries -->',
@@ -32,10 +32,10 @@ describe('a click on an arrow', () => {
     const view = editorOver(DAY.slice(0, 3))
     expect(hiddenLines(view)).toEqual([[1, 2]])
     clickArrow(view, 0)
-    expect(textOf(view)[0]).toBe('[[ ]] ==v (()) Call Ann')
+    expect(textOf(view)[0]).toBe('[ ] ==v ( ) Call Ann')
     expect(hiddenLines(view)).toEqual([])
     clickArrow(view, 0)
-    expect(textOf(view)[0]).toBe('[[ ]] ==> (()) Call Ann')
+    expect(textOf(view)[0]).toBe('[ ] ==> ( ) Call Ann')
     expect(hiddenLines(view)).toEqual([[1, 2]])
   })
 
@@ -49,7 +49,7 @@ describe('a click on an arrow', () => {
   })
 
   it('moves a caret out of what it hides', () => {
-    const view = editorOver(['[[ ]] ==v (()) Call Ann', '  her number'])
+    const view = editorOver(['[ ] ==v ( ) Call Ann', '  her number'])
     view.dispatch({ selection: EditorSelection.cursor(at(view, 1, 4)) })
     clickArrow(view, 0)
     expect(view.state.selection.main.head).toBe(view.state.doc.line(1).to)
@@ -68,7 +68,7 @@ describe('a caret put back inside hidden lines', () => {
     expect(hiddenLines(view)).toEqual([[1, 4]])
     expect(view.state.selection.main.head).toBe(view.state.doc.line(1).to)
     clickArrow(view, 0)
-    expect(textOf(view)[0]).toBe('[[ ]] ==v (()) Call Ann')
+    expect(textOf(view)[0]).toBe('[ ] ==v ( ) Call Ann')
     expect(hiddenLines(view)).toEqual([[4, 4]])
     clickArrow(view, 0)
     expect(hiddenLines(view)).toEqual([[1, 4]])
@@ -83,9 +83,9 @@ describe('a caret put back inside hidden lines', () => {
   })
 
   it('by a reload from disk that collapsed a task leaves it hidden', () => {
-    const view = editorOver(['[[ ]] ==v (()) Call Ann', '  her number', '  [ ] ring'])
+    const view = editorOver(['[ ] ==v ( ) Call Ann', '  her number', '  [ ] ring'])
     view.dispatch({ selection: EditorSelection.cursor(at(view, 1, 4)) })
-    const text = '[[ ]] ==> (()) Call Ann\n  her number\n  [ ] ring'
+    const text = '[ ] ==> ( ) Call Ann\n  her number\n  [ ] ring'
     restoreSelection(view, {
       changes: { from: 0, to: view.state.doc.length, insert: text },
       selection: { anchor: view.state.selection.main.head },
@@ -111,7 +111,7 @@ describe('a caret put back inside hidden lines', () => {
     expect(hiddenLines(view)).toEqual([[1, 4]])
     expect(view.state.selection.main.head).toBe(view.state.doc.line(1).to)
     clickArrow(view, 0)
-    expect(textOf(view)[0]).toBe('[[ ]] ==v (()) Call Ann')
+    expect(textOf(view)[0]).toBe('[ ] ==v ( ) Call Ann')
     expect(hiddenLines(view)).toEqual([[4, 4]])
   })
 
@@ -125,11 +125,11 @@ describe('a caret put back inside hidden lines', () => {
   })
 })
 
-describe('the [[ ]] box', () => {
+describe('the [ ] box', () => {
   it('checked, collapses its task in the same edit', () => {
-    const view = editorOver(['[[ ]] ==v (()) Call Ann', '  her number'])
-    view.dispatch({ changes: { from: 2, to: 3, insert: 'x' }, userEvent: 'input' })
-    expect(textOf(view)[0]).toBe('[[x]] ==> (()) Call Ann')
+    const view = editorOver(['[ ] ==v ( ) Call Ann', '  her number'])
+    view.dispatch({ changes: { from: 1, to: 2, insert: 'x' }, userEvent: 'input' })
+    expect(textOf(view)[0]).toBe('[x] ==> ( ) Call Ann')
     expect(hiddenLines(view)).toEqual([[1, 1]])
   })
 })

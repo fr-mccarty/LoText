@@ -434,6 +434,11 @@ body.row-dragging .row.selected:hover { background: var(--selection-inactive); }
 /* A task box, `[ ]` or `[x]`, stays its three characters; it only shows that a click flips it. */
 .lo-task-box { cursor: pointer; color: var(--accent); }
 
+/* Wiki links (specs/wiki-links.md): `[[path]]` in the accent colour. With ⌘ held over the editor
+   they underline and take the pointer, since ⌘-click is what follows one. */
+.lo-wiki-link { color: var(--accent); }
+.lo-follow-key .lo-wiki-link { cursor: pointer; text-decoration: underline; }
+
 /* Enhanced tasks (specs/enhanced-tasks.md) and disclosure arrows anywhere on a line
    (specs/disclosures.md). The arrows, `==>` / `==v` and `-->` / `--v`, are text, drawn as small buttons,
    and are the only sign that something is folded: no ellipsis follows them. */
@@ -687,7 +692,7 @@ body.row-dragging .row.selected:hover { background: var(--selection-inactive); }
   font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   font-size: 12px;
 }
-/* Inline code keeps its spaces and never breaks: `[[ ]] ==>` split over two lines reads wrong. */
+/* Inline code keeps its spaces and never breaks: `[ ] ==>` split over two lines reads wrong. */
 .help-body code { padding: 0 3px; border-radius: 3px; background: var(--card); white-space: pre; }
 .help-section { margin-top: 18px; }
 .help-section > h2 { margin: 0 0 6px; font-size: 14px; font-weight: 600; }
