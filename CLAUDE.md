@@ -25,6 +25,7 @@ npm run web:build  # esbuild --web → dist-web/: the editor for lolekproduction
 scripts/update-website-editor.sh # the same, copied into ~/peru's public folder to commit there
 npm run ios:build  # esbuild --mobile → dist-mobile/, then cap sync into ios/
 npm run ios:open   # the same, then open Xcode — archiving and uploading happen there
+scripts/ios-upload.sh            # archive and upload to TestFlight from here (keychain unlocked)
 scripts/ios-sim.sh run [pad]     # build, install, launch in the simulator
 scripts/ios-sim.sh eval 'js'     # drive it; also answer N, shot out.png, docs
 npm run android:build            # esbuild --mobile → dist-mobile/, cap sync android, a debug APK
@@ -138,11 +139,12 @@ A rebuild does not reload the running app — restart `electron .`. ⌘R is Refr
   documents the dialect and draws its examples with the real parser; keep its wording in step.
 - **Print layout is in points**, canvas measures in pixels. Convert with `pixelsToPoints()` in
   `src/shared/print/fonts.js`.
-- **You cannot sign or notarize.** This session is effectively SSH: the keychain is locked and
-  nothing can prompt for a password, so codesign fails with `errSecInternalComponent`. Ask the
-  user to run `npm run release` in Terminal on the Mac; verify the result afterwards with
-  `spctl --assess` / `stapler validate`, which work from here. The iOS app is archived and
-  uploaded by the user in Xcode (`packaging/app-store/ios.md`). Simulator builds need no
+- **Signing needs the keychain unlocked first.** This session is effectively SSH: the keychain
+  starts locked and nothing can prompt for a password, so codesign fails with
+  `errSecInternalComponent`. Ask the user to type `! security unlock-keychain
+  ~/Library/Keychains/login.keychain-db` in the prompt; after that `npm run release` (Mac, signed
+  and notarized) and `scripts/ios-upload.sh` (archive and upload to TestFlight) both work from
+  here. Verify a Mac release with `spctl --assess` / `stapler validate`. Simulator builds need no
   keychain, but must be built outside `~/Documents` (see `discoveries/running-lotext-on-ios.md`).
 - **Windows is the Mac app with a different frame** (`src/main/chrome.js`): an ordinary title
   bar and menu bar, opaque backgrounds, Settings and Exit at the foot of File, About in Help.

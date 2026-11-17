@@ -40,7 +40,10 @@ and in `capacitor.config.json` **before the first upload** — it cannot be chan
 
 1. Bump **Version** (and **Build**, which must rise on every upload) on the App target's
    General tab.
-2. `npm run ios:open` — builds the web half, copies it into the project, opens Xcode.
+2. **From a terminal** (Claude can do this): unlock the keychain
+   (`security unlock-keychain ~/Library/Keychains/login.keychain-db`, typed by you), then
+   `scripts/ios-upload.sh` archives and uploads, and steps 3–4 are done. Otherwise:
+   `npm run ios:open` — builds the web half, copies it into the project, opens Xcode.
 3. *You:* destination **Any iOS Device (arm64)**, then **Product ▸ Archive**.
 4. *You:* Organizer ▸ **Distribute App ▸ App Store Connect ▸ Upload**. Let Xcode manage signing.
 5. *You:* in App Store Connect, add the build to **TestFlight** and install it on a real iPhone
