@@ -7,36 +7,35 @@
 #   scripts/publish-to-website.sh path/to/LoText-1.0.3.dmg  one anywhere else
 #   scripts/publish-to-website.sh LoText-1.0.3.dmg --yes    no questions: for a script
 #
-# `npm run release` offers to run it once a notarized image is made.
+# `npm run release` offers to run it once a notarized image is made. Peru is reached as
+# scripts/peru.sh says: in place on the Mac mini, over ssh to it from anywhere else.
 #
 # In order, stopping at the first thing that fails:
 #
-#   1. Checks the image is notarized, that Peru's checkout is on main, and which version the live
-#      site offers (the page as last deployed, not as committed).
-#   2. Copies the image into Peru's download folder and checks the site serves it.
-#   3. Sets the version and today's date in the LoText page, and commits that one file on main.
-#   4. Deploys Peru. Anything else on main that is not yet live goes with it, so those commits are
-#      listed and a second yes is asked for.
-#   5. Once the deploy has succeeded, takes every other LoText image out of the download folder,
-#      so the site offers the latest version only. One not already kept in the
-#      export folder is moved there.
+#   1. Checks the image is notarized, that Peru's checkout is on main and its LoText page has no
+#      uncommitted changes, and which version the live site offers.
+#   2. Copies the image into the websites' download folder on the Mac mini.
+#   3. Sets the version and today's date in the LoText page, commits that one file on Peru's main
+#      and pushes it.
+#   4. Takes every other LoText image out of the download folder (into the export folder, if it
+#      is not already there), so the site offers the latest version only.
+#   5. Rebuilds the public websites (`pnpm websites:install`). Any other website commits on
+#      Peru's main not yet live go with it, so those are listed and a yes is asked for. The new
+#      build switches in at once, page and image together; until then the live site keeps its
+#      own copy of the old page and image, so nothing breaks in between.
+#   6. Checks the site serves the new image and the page offers it.
 #
-# The site's one-version rule is why the old image stays until step 5: until the deploy, the live
-# page still links to it. A run that stopped partway is finished by running it again: a page
-# already committed is not committed twice, and once the version is live only step 5 is left.
+# A run that stopped partway is finished by running it again.
 
 set -euo pipefail
 
 cd "$(dirname "$0")/.."
 ROOT=$(pwd)
 source "$ROOT/scripts/export-folder.sh"
+source "$ROOT/scripts/peru.sh"
 
-PERU=${LOTEXT_PERU_ROOT:-"$HOME/peru"}
 SITE=${LOTEXT_SITE_ORIGIN:-"https://lolekproductions.org"}
-DOWNLOADS="$PERU/storage/lolekproductions-org-downloads"
-PAGE_PATH="frontend/src/pages/websites/lolekproductions/pages/lotext.tsx"
-PAGE="$PERU/$PAGE_PATH"
-FILE_ROUTE="$SITE/api/public/websites/lolekproductions/published-documents/file?path="
+PAGE_PATH="frontend/web/src/websites/lolekproductions/lolekproductions-website.tsx"
 
 fail () {
   printf '\n✗ %s\n' "$1" >&2
@@ -82,106 +81,108 @@ xcrun stapler validate "$IMAGE" >/dev/null 2>&1 ||
 spctl --assess --type open --context context:primary-signature "$IMAGE" 2>/dev/null ||
   fail "Gatekeeper does not accept $NAME." "Only an image from 'npm run release' can be published."
 
-[ -d "$DOWNLOADS" ] || fail "No download folder at $DOWNLOADS."
-[ -f "$PAGE" ] || fail "No LoText page at $PAGE."
-[ "$(git -C "$PERU" branch --show-current)" = main ] ||
-  fail "Peru's checkout ($PERU) is not on main, and a deploy only takes what is on main."
-[ -z "$(git -C "$PERU" status --porcelain -- "$PAGE_PATH")" ] ||
-  fail "The LoText page has changes nobody has committed:" "$PAGE" \
+peru true || fail "Cannot reach Peru at $PERU_WHERE."
+[ "$(peru 'git branch --show-current')" = main ] ||
+  fail "Peru's checkout ($PERU_WHERE) is not on main."
+[ -z "$(peru "git status --porcelain -- $PAGE_PATH")" ] ||
+  fail "The Lolek Productions page has changes nobody has committed:" "$PERU_WHERE/$PAGE_PATH" \
        "Commit or undo them first, so this commit holds the version change only."
 
-version_in () { sed -nE 's/^ *version: "([^"]*)",$/\1/p'; }
-LIVE_VERSION=$(git -C "$PERU" show "refs/deployed/main:$PAGE_PATH" | version_in)
-COMMITTED_VERSION=$(version_in < "$PAGE")
+version_in () { sed -nE "s/^const lotextDiskImageFileName = 'LoText-([0-9.]+)\.dmg'$/\1/p"; }
+LIVE_VERSION=$(peru "git show $(peru_live_commit):$PAGE_PATH" | version_in)
+COMMITTED_VERSION=$(peru "cat $PAGE_PATH" | version_in)
 [ -n "$LIVE_VERSION" ] && [ -n "$COMMITTED_VERSION" ] ||
-  fail "Could not find the version in LOTEXT_PUBLISHED_RELEASE in $PAGE."
+  fail "Could not find lotextDiskImageFileName in $PERU_WHERE/$PAGE_PATH."
+
+LOCAL_SUM=$(shasum -a 256 "$IMAGE" | cut -d' ' -f1)
+remote_sum () { peru "shasum -a 256 ~/$PERU_DOWNLOADS/$1 2>/dev/null | cut -d' ' -f1"; }
 
 # ── 2. The file ──────────────────────────────────────────────────────────────
-copy_the_image_to_the_site () {
-  echo "▸ Copying $NAME into $DOWNLOADS"
-  cp -f "$IMAGE" "$DOWNLOADS/$NAME"
-  local status
-  status=$(curl -s -r 0-15 -o /dev/null -w "%{http_code}" "$FILE_ROUTE$NAME" || true)
-  if [ "$status" != 206 ]; then
-    rm -f "$DOWNLOADS/$NAME"
-    fail "The site did not serve $NAME (it answered $status), so it has been taken back out." \
-         "Nothing else was changed."
+copy_the_image () {
+  if [ "$(remote_sum "$NAME")" = "$LOCAL_SUM" ]; then
+    echo "▸ $NAME is already in the download folder"
+    return
   fi
-  echo "  the site serves it"
+  echo "▸ Copying $NAME into $PERU_DOWNLOADS"
+  peru_copy "$IMAGE" "$PERU_DOWNLOADS"
+  [ "$(remote_sum "$NAME")" = "$LOCAL_SUM" ] || fail "The copy of $NAME on the Mac mini does not match."
 }
 
 # ── 3. The page ──────────────────────────────────────────────────────────────
 commit_the_page_version () {
   if [ "$COMMITTED_VERSION" = "$VERSION" ]; then
-    COMMIT=$(git -C "$PERU" log -1 --format=%h -- "$PAGE_PATH")
-    echo "▸ The LoText page already offers $VERSION on main ($COMMIT)"
+    echo "▸ The LoText page already offers $VERSION on Peru's main"
     return
   fi
   echo "▸ Setting the LoText page to $VERSION, dated $RELEASE_DATE"
-  VERSION="$VERSION" RELEASE_DATE="$RELEASE_DATE" perl -0pi -e '
-    s/(LOTEXT_PUBLISHED_RELEASE = \{\s*version: ")[^"]*(",\s*releaseDate: ")[^"]*(")/$1$ENV{VERSION}$2$ENV{RELEASE_DATE}$3/
-      or die "LOTEXT_PUBLISHED_RELEASE not found\n";
-  ' "$PAGE"
-  grep -qF "version: \"$VERSION\"" "$PAGE" && grep -qF "releaseDate: \"$RELEASE_DATE\"" "$PAGE" ||
-    fail "The page was not updated as expected: $PAGE"
-  git -C "$PERU" commit -q -m "Lolek Productions: the LoText page offers $VERSION" -- "$PAGE_PATH"
-  COMMIT=$(git -C "$PERU" rev-parse --short HEAD)
-  echo "  committed $COMMIT on main in $PERU"
+  peru "VERSION='$VERSION' RELEASE_DATE='$RELEASE_DATE' perl -0pi -e '
+          s/(lotextDiskImageFileName = \x27LoText-)[0-9.]+(\.dmg\x27)/\$1\$ENV{VERSION}\$2/ or die qq(file name not found\n);
+          s/(Version )[0-9.]+( · )[^<]+(<)/\$1\$ENV{VERSION}\$2\$ENV{RELEASE_DATE}\$3/ or die qq(version line not found\n);
+        ' $PAGE_PATH" || fail "The page could not be updated: $PERU_WHERE/$PAGE_PATH"
+  peru "grep -qF \"LoText-$VERSION.dmg'\" $PAGE_PATH && grep -qF 'Version $VERSION · $RELEASE_DATE<' $PAGE_PATH" ||
+    fail "The page was not updated as expected: $PERU_WHERE/$PAGE_PATH"
+  peru "git commit -q -m 'Lolek Productions: the LoText page offers $VERSION' -- $PAGE_PATH &&
+        git log -1 --format='  committed %h on main'"
+  peru 'git push -q origin main' || echo "  (the push failed; push Peru's main by hand)"
 }
 
-# ── 4. The deploy ────────────────────────────────────────────────────────────
-deploy_peru () {
-  local waiting
-  waiting=$(git -C "$PERU" log --format='  %h %s' "refs/deployed/main..main" | grep -v "^  $COMMIT " || true)
-  if [ -n "$waiting" ]; then
-    echo "▸ These commits are on main and not yet live. The deploy puts them live too:"
-    echo "$waiting"
-    ask "Deploy them along with the page?" ||
-      fail "Not deployed. $NAME is in the download folder and the page change is committed" \
-           "($COMMIT), but the live page still offers $LIVE_VERSION. Deploy Peru when ready — see" \
-           "$PERU/skills/manage-peru/references/deploying.md — then run this again to finish."
-  fi
-  echo "▸ Deploying Peru (this takes several minutes)"
-  (cd "$PERU" && scripts/deploy.sh --target main) ||
-    fail "The deploy failed. $NAME is in the download folder and the old image has been left in" \
-         "place. If the page already changed, the next deploy finishes the job; if not, the site" \
-         "still offers $LIVE_VERSION. Run this again once Peru deploys."
-  git -C "$PERU" merge-base --is-ancestor "$COMMIT" refs/deployed/main ||
-    fail "The deploy reported success but $COMMIT is not live. The old image has been left in place."
-}
-
-# ── 5. One version on the site ───────────────────────────────────────────────
-take_older_images_off_the_site () {
-  echo "▸ Taking older images off the site"
-  mkdir -p "$EXPORTS"
+# ── 4. One version on the site ───────────────────────────────────────────────
+take_older_images_out () {
   local old kept
-  for old in "$DOWNLOADS"/LoText-*.dmg; do
-    [ "$(basename "$old")" = "$NAME" ] && continue
-    kept="$EXPORTS/$(basename "$old")"
-    if [ -f "$kept" ] && cmp -s "$old" "$kept"; then
-      rm "$old"
-      echo "  removed $(basename "$old") (a copy is in $EXPORTS)"
+  for old in $(peru "cd ~/$PERU_DOWNLOADS && ls LoText-*.dmg 2>/dev/null" || true); do
+    [ "$old" = "$NAME" ] && continue
+    kept="$EXPORTS/$old"
+    if [ -f "$kept" ] && [ "$(shasum -a 256 "$kept" | cut -d' ' -f1)" = "$(remote_sum "$old")" ]; then
+      echo "▸ Taking $old out of the download folder (a copy is in the export folder)"
     elif [ ! -e "$kept" ]; then
-      mv "$old" "$kept"
-      echo "  moved $(basename "$old") into $EXPORTS"
+      echo "▸ Moving $old into the export folder"
+      mkdir -p "$EXPORTS"
+      if [ "$PERU_LOCAL" = yes ]; then cp "$HOME/$PERU_DOWNLOADS/$old" "$kept"
+      else scp -q -o BatchMode=yes "$PERU_HOST:$PERU_DOWNLOADS/$old" "$kept"; fi
     else
-      fail "$(basename "$old") differs from the copy in $EXPORTS, so it was left on the site." \
-           "Decide which to keep, then remove it from $DOWNLOADS."
+      fail "$old differs from the copy in $EXPORTS, so it was left in the download folder." \
+           "Decide which to keep, then remove it from $PERU_HOST:~/$PERU_DOWNLOADS."
     fi
+    peru "rm ~/$PERU_DOWNLOADS/$old"
   done
 }
 
-if [ "$LIVE_VERSION" = "$VERSION" ]; then
-  [ -f "$DOWNLOADS/$NAME" ] && cmp -s "$IMAGE" "$DOWNLOADS/$NAME" ||
-    fail "The site already offers $VERSION, from a different image than $NAME." \
-         "Raise the version in package.json and run 'npm run release' to make a new image."
-  echo "  the site already offers $VERSION; only the older images are left to take off"
-else
-  echo "  the site offers $LIVE_VERSION; this publishes $VERSION"
-  copy_the_image_to_the_site
-  commit_the_page_version
-  deploy_peru
-fi
-take_older_images_off_the_site
+# ── 5. The websites ──────────────────────────────────────────────────────────
+publish_the_websites () {
+  local waiting
+  waiting=$(peru_unpublished_website_commits | grep -v "the LoText page offers $VERSION" || true)
+  if [ -n "$waiting" ]; then
+    echo "▸ These website commits on Peru's main are not live yet, and go live with the page:"
+    echo "$waiting"
+    ask "Publish them along with the page?" ||
+      fail "Not published. $NAME is in the download folder and the page change is committed," \
+           "but the live page still offers $LIVE_VERSION. Run this again to finish."
+  fi
+  echo "▸ Rebuilding the public websites (pnpm websites:install)"
+  peru_publish_websites || fail "The site still offers $LIVE_VERSION. Run this again once that is fixed."
+}
 
-echo "✓ lolekproductions.org/LoText offers $VERSION"
+# ── 6. The check ─────────────────────────────────────────────────────────────
+check_the_site () {
+  local status
+  status=$(curl -s -r 0-15 -o /dev/null -w "%{http_code}" "$SITE/$NAME?fresh=$(date +%s)" || true)
+  [ "$status" = 206 ] || fail "$SITE/$NAME answered $status, not 206."
+  curl -s "$SITE/LoText?fresh=$(date +%s)" | grep -qF "Download $NAME" ||
+    fail "$SITE/LoText does not offer $NAME, even past the cache."
+}
+
+if [ "$LIVE_VERSION" = "$VERSION" ] && [ -n "$(remote_sum "$NAME")" ] && [ "$(remote_sum "$NAME")" != "$LOCAL_SUM" ]; then
+  fail "The site already offers $VERSION, from a different image than $NAME." \
+       "Raise the version in package.json and run 'npm run release' to make a new image."
+fi
+
+copy_the_image
+if [ "$LIVE_VERSION" != "$VERSION" ] || [ "$COMMITTED_VERSION" != "$VERSION" ]; then
+  echo "  the site offers $LIVE_VERSION; this publishes $VERSION"
+  commit_the_page_version
+fi
+take_older_images_out
+publish_the_websites
+check_the_site
+
+echo "✓ $SITE/LoText offers $VERSION (Cloudflare may show the old page for a few hours)"

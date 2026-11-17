@@ -22,7 +22,7 @@ electron . --list-presets
 electron . --pdf notes.md --out notes.pdf [--preset NAME] [--paper a4]
 
 npm run web:build  # esbuild --web → dist-web/: the editor for lolekproductions.org/LoText
-scripts/update-website-editor.sh # the same, copied into ~/peru's public folder to commit there
+scripts/update-website-editor.sh # the same, put live: committed in Peru on the Mac mini, websites rebuilt
 npm run ios:build  # esbuild --mobile → dist-mobile/, then cap sync into ios/
 npm run ios:open   # the same, then open Xcode — archiving and uploading happen there
 scripts/ios-upload.sh            # archive and upload to TestFlight from here (keychain unlocked)
@@ -95,7 +95,9 @@ A rebuild does not reload the running app — restart `electron .`. ⌘R is Refr
 - **Never edit `dist/`, `dist-mobile/`, `dist-web/` or `ios/App/App/public/`.** They are generated.
 - **The LoText web page runs the editor's own code** (`src/web/playground.js`): task boxes,
   enhanced tasks, arrows, the hanging indent, Tab, ⌥↑ / ⌥↓ and ⌘X. A change to any of those is
-  not on the site until `scripts/update-website-editor.sh` is run and Peru is committed and deployed.
+  not on the site until `scripts/update-website-editor.sh` is run. The public sites are served
+  from the Mac mini's `~/peru-2` by `pnpm websites:install`, not by `pnpm deploy` (the droplet);
+  `scripts/peru.sh` and `docs/publishing-the-mac-download.md` say how.
 - **iOS is the same app with `src/mobile/` in place of `src/main/`** (`specs/mobile.md`). The
   model does not know which platform it is on: `src/mobile/bridge.js` answers every method
   `preload.js` has. Logic both need goes in `src/shared/` (the stores' naming, walk, recent,

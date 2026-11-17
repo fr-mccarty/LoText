@@ -43,8 +43,6 @@ nobody has clicked it yet.
 - [ ] iPhone and Android: tap a `[[link]]` — it opens; long-press on one still selects, a drag
       over one still scrolls.
 - [ ] iOS / iPad: Move N Items To… with several selected (trackpad ⌘-click); Settings toggle.
-- [ ] Website editor: run `scripts/update-website-editor.sh` so the site has the new boxes and
-      single-bracket tasks, then commit and deploy Peru.
 
 ## Sidebar
 - [ ] New File ⌘N, New Folder ⇧⌘N, Duplicate ⇧⌘D, Rename (extension not pre-selected), Delete.
