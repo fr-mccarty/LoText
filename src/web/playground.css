@@ -19,6 +19,9 @@
 }
 
 .lotext-playground .lo-task-box { cursor: pointer; color: #3478f6; }
+.lotext-playground .lo-web-link { color: #3478f6; }
+.lotext-playground .lo-follow-key .lo-web-link { cursor: pointer; text-decoration: underline; }
+.lotext-playground .lo-link-backwards { color: #e0302a; }
 .lotext-playground .lo-disclosure,
 .lotext-playground .lo-hidden-lines {
   white-space: nowrap;

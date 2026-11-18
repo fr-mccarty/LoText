@@ -171,7 +171,7 @@ export function wikiLinks ({ onRequestLink, onFollowLink, onOpenAddress }) {
       const under = (candidate) => column >= candidate.from && column < candidate.to
       const link = linksOn(line.text).find(under)
       const web = link ? null : webLinksOn(line.text).find(under)
-      if (link?.target) {
+      if (link?.target && onFollowLink) {
         event.preventDefault()
         onFollowLink?.(link.target)
         return true
@@ -199,7 +199,8 @@ export function wikiLinks ({ onRequestLink, onFollowLink, onOpenAddress }) {
     return true
   })
 
-  return [marks, events, typing]
+  // The web page's editor has no folder: it takes the external links and the red brackets only.
+  return onRequestLink ? [marks, events, typing] : [marks, events]
 }
 
 /**

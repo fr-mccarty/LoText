@@ -95,7 +95,7 @@ A rebuild does not reload the running app — restart `electron .`. ⌘R is Refr
     container, not Lolext's key-value store (`specs/icloud-sync.md`).
 - **Never edit `dist/`, `dist-mobile/`, `dist-web/` or `ios/App/App/public/`.** They are generated.
 - **The LoText web page runs the editor's own code** (`src/web/playground.js`): task boxes,
-  enhanced tasks, arrows, the hanging indent, Tab, ⌥↑ / ⌥↓ and ⌘X. A change to any of those is
+  enhanced tasks, arrows, the hanging indent, Tab, ⌥↑ / ⌥↓, ⌘X and external links. A change to any of those is
   not on the site until `scripts/update-website-editor.sh` is run. The public sites are served
   from the Mac mini's `~/peru-2` by `pnpm websites:install`, not by `pnpm deploy` (the droplet);
   `scripts/peru.sh` and `docs/publishing-the-mac-download.md` say how.
