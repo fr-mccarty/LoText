@@ -171,6 +171,15 @@ export function registerHandlers () {
     return true
   }))
 
+  // A wiki link to a web address (specs/wiki-links.md), in the system's browser. Web and mail
+  // addresses only: nothing that could start a program or open a file on the disk.
+  ipcMain.handle('shell:openExternal', answer(async (_entry, address) => {
+    const url = new URL(String(address))
+    if (!['http:', 'https:', 'mailto:'].includes(url.protocol)) throw new StoreError('failed', 'Only web and mail addresses open from a link.')
+    await shell.openExternal(url.href)
+    return true
+  }))
+
   // MARK: - The viewers
 
   /**

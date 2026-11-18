@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { linksOn, resolveLink, linkText, linkBase, opensLink } from '../src/renderer/editor/wiki-links.js'
+import { linksOn, resolveLink, linkText, linkBase, opensLink, webAddress, webLinksOn, backwardsOn } from '../src/renderer/editor/wiki-links.js'
 
 describe('finding links', () => {
   it('finds every [[target]] on a line', () => {
@@ -92,5 +92,50 @@ describe('typing [[ and choosing a file', async () => {
     insertLink(view, 2, 'plan.md')
     undo(view)
     expect(view.state.doc.toString()).toBe('[[')
+  })
+})
+
+describe('external links', () => {
+  it('knows a web or mail address', () => {
+    expect(webAddress('https://example.com/a?b=1')).toBe('https://example.com/a?b=1')
+    expect(webAddress(' http://example.com ')).toBe('http://example.com')
+    expect(webAddress('mailto:someone@example.com')).toBe('mailto:someone@example.com')
+    expect(webAddress('www.example.com/page')).toBe('https://www.example.com/page')
+    expect(webAddress('notes/plan.md')).toBeNull()
+    expect(webAddress('www.md')).toBeNull()
+    expect(webAddress('https://')).toBeNull()
+  })
+
+  it('finds [text](address) on a line', () => {
+    expect(webLinksOn('see [the site](https://example.com) now')).toEqual([
+      { from: 4, to: 35, address: 'https://example.com' },
+    ])
+    expect(webLinksOn('[home](www.example.com)')).toEqual([
+      { from: 0, to: 23, address: 'https://www.example.com' },
+    ])
+  })
+
+  it('takes no file paths, empty halves or wiki links', () => {
+    expect(webLinksOn('[plan](notes/plan.md)')).toEqual([])
+    expect(webLinksOn('[](https://a.com) [a]()')).toEqual([])
+    expect(webLinksOn('[[a.md]](https://a.com)')).toEqual([])
+  })
+})
+
+describe('brackets written backwards', () => {
+  it('reddens ]]target[[', () => {
+    expect(backwardsOn('see ]]plan.md[[ now')).toEqual([{ from: 4, to: 6 }, { from: 13, to: 15 }])
+  })
+
+  it('reddens (address)[text]', () => {
+    expect(backwardsOn('(https://a.com)[site]')).toEqual([{ from: 0, to: 1 }, { from: 14, to: 16 }, { from: 20, to: 21 }])
+  })
+
+  it('leaves real links and look-alikes alone', () => {
+    expect(backwardsOn('[[a.md]] and [[b.md]]')).toEqual([])
+    expect(backwardsOn('[[a.md]]b[[')).toEqual([])
+    expect(backwardsOn('[site](https://a.com)')).toEqual([])
+    expect(backwardsOn('[ ] ==> ( ) title')).toEqual([])
+    expect(backwardsOn('( )[ ]')).toEqual([])
   })
 })

@@ -1203,6 +1203,15 @@ export class AppModel {
     this.editor.insertLink(request.at, linkText(request.from, path))
   }
 
+  /** ⌘-click on `[text](address)`: the address, in the system's browser or mail app. */
+  async openAddress (address) {
+    try {
+      await this.bridge.openExternal(address)
+    } catch (error) {
+      await this.alerts.error(`${quote(address)} could not be opened.`, error.message)
+    }
+  }
+
   /** ⌘-click on `[[target]]`: opens the file it names, read from the open file's folder. */
   async followLink (target) {
     const from = this.openFile?.path

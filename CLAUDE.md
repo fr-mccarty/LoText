@@ -88,7 +88,8 @@ A rebuild does not reload the running app — restart `electron .`. ⌘R is Refr
   - Enhanced tasks are written `[ ] ==> ( ) title`, single brackets, not jam-spec's `[[ ]]` /
     `(( ))`: `[[` is a wiki link (`specs/wiki-links.md`) — typing it opens the file picker
     narrowed to the open file's folder, and ⌘-click on `[[path]]` opens that file — a plain
-    tap does on a touch screen.
+    tap does on a touch screen. `[text](https://…)` is the external link: the same click opens it
+    in the system's browser. Either written backwards (`]]…[[`, `(…)[…]`) shows its brackets red.
   - Reopening a file puts back its selection and top line. Optional iCloud sync carries settings,
     presets and those positions between Mac and iPhone/iPad through files in the iOS app's iCloud
     container, not Lolext's key-value store (`specs/icloud-sync.md`).

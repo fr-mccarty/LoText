@@ -305,6 +305,16 @@ export function createBridge () {
     reveal: async () => false,
     copyAbsolutePath: async () => false,
     openLinkAsFolder: async () => null,
+    // A wiki link to a web address. Capacitor hands both on to the system: iOS opens a
+    // `window.open` in Safari, Android launches any navigation off the app's own host as a view
+    // intent, so the page itself never leaves.
+    openExternal: async (address) => {
+      const url = new URL(String(address))
+      if (!['http:', 'https:', 'mailto:'].includes(url.protocol)) throw new Error('Only web and mail addresses open from a link.')
+      if (PLATFORM === 'android') window.location.assign(url.href)
+      else window.open(url.href, '_blank')
+      return true
+    },
 
     // The viewers
     loadForViewer,

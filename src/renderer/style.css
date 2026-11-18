@@ -434,10 +434,12 @@ body.row-dragging .row.selected:hover { background: var(--selection-inactive); }
 /* A task box, `[ ]` or `[x]`, stays its three characters; it only shows that a click flips it. */
 .lo-task-box { cursor: pointer; color: var(--accent); }
 
-/* Wiki links (specs/wiki-links.md): `[[path]]` in the accent colour. With ⌘ held over the editor
+/* Wiki links (specs/wiki-links.md): `[[path]]`, and external `[text](https://…)`, in the accent colour. With ⌘ held over the editor
    they underline and take the pointer, since ⌘-click is what follows one. */
-.lo-wiki-link { color: var(--accent); }
-.lo-follow-key .lo-wiki-link { cursor: pointer; text-decoration: underline; }
+.lo-wiki-link, .lo-web-link { color: var(--accent); }
+.lo-follow-key .lo-wiki-link, .lo-follow-key .lo-web-link { cursor: pointer; text-decoration: underline; }
+/* `]]target[[` and `(address)[text]`: brackets written the wrong way round, red until put right. */
+.lo-link-backwards { color: #e0302a; }
 
 /* Enhanced tasks (specs/enhanced-tasks.md) and disclosure arrows anywhere on a line
    (specs/disclosures.md). The arrows, `==>` / `==v` and `-->` / `--v`, are text, drawn as small buttons,

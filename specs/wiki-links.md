@@ -12,6 +12,24 @@ Lolext: the user asked for it.
   only — a `..` is dropped, as every path in the app drops it.
 - The target is the file's whole name, extension and all.
 
+## External links
+
+- `[[…]]` is the internal link, to a file. The external one is Markdown's `[text](address)`:
+  the address a web or mail one — `https://…`, `http://…`, `mailto:…`, or `www.…` (read as
+  `https://www.…`). Anything else in the round brackets, a file path included, makes no link.
+- It is coloured like a wiki link and followed the same way (⌘-click, or a tap on a touch
+  screen), but opens in the system's browser (or mail app). Only those schemes open: nothing
+  from a link can start a program or open a file on the disk. On iOS it goes to Safari, on
+  Android to the default browser.
+- The editor only. The markdown dialect for printing still prints links literally.
+
+## Written backwards
+
+- `]]target[[` and `(address)[text]` have their brackets drawn red — the brackets only, not the
+  words — so the slip shows while typing. Brackets that belong to a real wiki link never count:
+  the `]] and [[` between two links stays as it is. `(…)[…]` needs words in both halves, so
+  `( )[ ]` stays plain.
+
 ## Making one
 
 - Typing `[` straight after a `[` — the second of `[[` — opens the file picker (the Find File
@@ -38,7 +56,10 @@ Lolext: the user asked for it.
 
 ## Where it lives
 
-- `src/renderer/editor/wiki-links.js` — finding, reading and writing links, the `[[` typing, the
-  ⌘-click and the ⌘-held pointer. Tested in `test/wiki-links.test.js`.
+- `src/renderer/editor/wiki-links.js` — finding, reading and writing links, external links
+  (`webLinksOn`, `webAddress`), the red backwards brackets (`backwardsOn`), the `[[` typing, the ⌘-click and
+  the ⌘-held pointer. Tested in `test/wiki-links.test.js`.
 - `src/renderer/sheets/find-file.js` — the picker, with `under` and `onChoose`.
-- `src/renderer/model.js` — `requestLink`, `chooseLink`, `followLink`.
+- `src/renderer/model.js` — `requestLink`, `chooseLink`, `followLink`, `openAddress`.
+- `openExternal` on the bridge: `shell:openExternal` in `src/main/ipc.js`, and
+  `src/mobile/bridge.js` for iOS and Android.

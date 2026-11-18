@@ -31,6 +31,7 @@ model.editor = new Editor(detail.editorHost, {
   onSelectionChange: () => model.noteKeyboardLocation(),
   onRequestLink: (at) => model.requestLink(at),
   onFollowLink: (target) => model.followLink(target),
+  onOpenAddress: (address) => model.openAddress(address),
 })
 attachEditorMenu(model.editor, model, bridge)
 

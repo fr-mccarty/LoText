@@ -42,13 +42,14 @@ export class Editor {
    * file gets its own buffer, cursor, scroll position and undo history, and the outgoing one's
    * are gone. That is the price of having no tabs, and it is paid deliberately.
    */
-  constructor (parent, { onChange, onSelectionChange, onRequestLink, onFollowLink }) {
+  constructor (parent, { onChange, onSelectionChange, onRequestLink, onFollowLink, onOpenAddress }) {
     this.onChange = onChange
     this.onSelectionChange = onSelectionChange
     // Made once, so every file's state shares the one set of link handlers.
     this.wikiLinks = wikiLinks({
       onRequestLink: (_view, at) => onRequestLink?.(at),
       onFollowLink: (target) => onFollowLink?.(target),
+      onOpenAddress: (address) => onOpenAddress?.(address),
     })
     this.isProgrammatic = false
     this.settings = null

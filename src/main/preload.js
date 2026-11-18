@@ -53,6 +53,7 @@ contextBridge.exposeInMainWorld('lotext', {
   reveal: (file, isFolder) => call('store:reveal', file, isFolder),
   copyAbsolutePath: (file) => call('store:copyAbsolutePath', file),
   openLinkAsFolder: (file) => call('store:linkTarget', file),
+  openExternal: (address) => call('shell:openExternal', address),
 
   // The viewers
   loadForViewer: (file, viewer) => call('viewer:load', file, viewer),
