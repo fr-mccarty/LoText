@@ -77,8 +77,8 @@ site; they stay in the export folder.
 |---|---|
 | The published image (one, the latest) | `~/peru-2-agent/websites/downloads/lolekproductions/LoText-<version>.dmg` |
 | Its public address | `https://lolekproductions.org/LoText-<version>.dmg` |
-| The page that links to it | `~/peru-2/frontend/web/src/websites/lolekproductions/lolekproductions-website.tsx` |
-| The try-it editors' code | `~/peru-2/frontend/web/public/websites/lolekproductions/lotext-playground.{js,css}` |
+| The page that links to it | `~/peru-2/behavior/code/frontend/web/src/websites/lolekproductions/lolekproductions-website.tsx` |
+| The try-it editors' code | `~/peru-2/behavior/code/frontend/web/public/websites/lolekproductions/lotext-playground.{js,css}` |
 | The page as people see it | [lolekproductions.org/LoText](https://lolekproductions.org/LoText) |
 
 Nothing in the download folder or the page is live until `pnpm websites:install` runs. Each

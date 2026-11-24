@@ -29,7 +29,7 @@ echo "▸ Copying it into Peru ($PERU_WHERE)"
 [ "$(peru 'git branch --show-current')" = main ] || fail "Peru's checkout is not on main."
 [ -z "$(peru "git status --porcelain -- $PERU_SITE_FOLDER")" ] ||
   fail "Peru has uncommitted changes in $PERU_SITE_FOLDER. Commit or undo them first."
-peru_copy "${FILES[@]}" "$PERU_DIR/$PERU_SITE_FOLDER"
+peru_copy "${FILES[@]}" "$PERU_DIR/$PERU_CODE/$PERU_SITE_FOLDER"
 
 if [ -z "$(peru "git status --porcelain -- $PERU_SITE_FOLDER")" ]; then
   echo "  Peru already has this build"

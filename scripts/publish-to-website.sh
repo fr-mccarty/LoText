@@ -89,7 +89,8 @@ peru true || fail "Cannot reach Peru at $PERU_WHERE."
        "Commit or undo them first, so this commit holds the version change only."
 
 version_in () { sed -nE "s/^const lotextDiskImageFileName = 'LoText-([0-9.]+)\.dmg'$/\1/p"; }
-LIVE_VERSION=$(peru "git show $(peru_live_commit):$PAGE_PATH" | version_in)
+# A live build from before Peru's code moved into behavior/code has the page at the old path.
+LIVE_VERSION=$(peru "git show $(peru_live_commit):./$PAGE_PATH 2>/dev/null || git show $(peru_live_commit):$PAGE_PATH" | version_in)
 COMMITTED_VERSION=$(peru "cat $PAGE_PATH" | version_in)
 [ -n "$LIVE_VERSION" ] && [ -n "$COMMITTED_VERSION" ] ||
   fail "Could not find lotextDiskImageFileName in $PERU_WHERE/$PAGE_PATH."

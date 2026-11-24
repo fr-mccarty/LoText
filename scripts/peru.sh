@@ -9,22 +9,26 @@
 #
 #   LOTEXT_PERU_HOST   ssh login for the Mac mini (default jmccarty@mac-mini, its Tailscale address)
 #   LOTEXT_PERU_DIR    the checkout, relative to that home (default peru-2)
+#
+# Peru's code — the websites, package.json — is in the checkout's behavior/code, and every
+# command below runs there: paths are from that folder, and git pathspecs read them from it.
 
 PERU_HOST=${LOTEXT_PERU_HOST:-"jmccarty@mac-mini"}
 PERU_DIR=${LOTEXT_PERU_DIR:-"peru-2"}
+PERU_CODE="behavior/code"
 PERU_SITE_FOLDER="frontend/web/public/websites/lolekproductions"
 PERU_DOWNLOADS="peru-2-agent/websites/downloads/lolekproductions"
 PERU_LIVE_LINK="peru-2-agent/websites/current"
 
 if [ -d "$HOME/$PERU_DIR/.git" ]; then PERU_LOCAL=yes; else PERU_LOCAL=no; fi
-PERU_WHERE=$([ "$PERU_LOCAL" = yes ] && echo "~/$PERU_DIR" || echo "$PERU_HOST:~/$PERU_DIR")
+PERU_WHERE=$([ "$PERU_LOCAL" = yes ] && echo "~/$PERU_DIR/$PERU_CODE" || echo "$PERU_HOST:~/$PERU_DIR/$PERU_CODE")
 
-# peru 'commands' — runs them in a login zsh (so pnpm is on the PATH) in Peru's checkout.
+# peru 'commands' — runs them in a login zsh (so pnpm is on the PATH) in Peru's code folder.
 peru () {
   if [ "$PERU_LOCAL" = yes ]; then
-    printf '%s\n' "$1" | (cd "$HOME/$PERU_DIR" && zsh -l -s)
+    printf '%s\n' "$1" | (cd "$HOME/$PERU_DIR/$PERU_CODE" && zsh -l -s)
   else
-    printf '%s\n' "$1" | ssh -o BatchMode=yes -o ConnectTimeout=15 "$PERU_HOST" "cd ~/$PERU_DIR && zsh -l -s"
+    printf '%s\n' "$1" | ssh -o BatchMode=yes -o ConnectTimeout=15 "$PERU_HOST" "cd ~/$PERU_DIR/$PERU_CODE && zsh -l -s"
   fi
 }
 
@@ -64,9 +68,11 @@ peru_publish_websites () {
   printf '%s\n' "$output" | grep '^\[websites\]' || true
 }
 
-# The website commits on Peru's main that the live sites do not have yet, one per line.
+# The website commits on Peru's main that the live sites do not have yet, one per line — under
+# behavior/code, and under the checkout's own frontend/ for those from before the code moved.
 peru_unpublished_website_commits () {
   local live
   live=$(peru_live_commit)
-  peru "git log --format='  %h %s' $live..HEAD -- frontend/web/src/websites frontend/web/public/websites"
+  peru "git log --format='  %h %s' $live..HEAD -- frontend/web/src/websites frontend/web/public/websites \\
+    :/frontend/web/src/websites :/frontend/web/public/websites"
 }
