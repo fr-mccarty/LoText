@@ -10,7 +10,26 @@ Electron shell, CodeMirror 6 editor, esbuild for the whole build step.
 > Much of it has been checked by script but not yet by hand; while that is under way the list
 > is in `tasks/`.
 
-## Getting started
+## Installing
+
+**Mac** (macOS 11 Big Sur or later):
+
+1. Download the latest disk image from [lolekproductions.org/LoText](https://lolekproductions.org/LoText).
+2. Open the `.dmg` and drag **LoText** into **Applications**.
+3. Open LoText from Applications. It is signed and notarized by Apple, so it opens without a
+   warning.
+4. **File → Open Folder…** (⌘O) and pick a folder of text files. That window belongs to that
+   folder from then on.
+
+To update, download the newer image and drag it into Applications again, replacing the old one.
+
+**iPhone and iPad, Android:** not in the App Store or Google Play yet — both are in testing.
+
+**Windows:** no download yet. Build the installer yourself on a Mac with `npm run windows` (see
+[Building for Windows](#building-for-windows)). It is unsigned, so SmartScreen warns the first
+time it runs.
+
+## Getting started (from source)
 
 You need **Node 20 or newer** (developed on 24) and macOS. Nothing else — Electron and esbuild
 both arrive with `npm install`.
