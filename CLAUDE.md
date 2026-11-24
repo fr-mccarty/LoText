@@ -32,6 +32,10 @@ npm run android:build            # esbuild --mobile → dist-mobile/, cap sync a
 npm run android:run              # the same, installed and launched on the running emulator
 npm run android:open             # the same, then open Android Studio
 scripts/android.sh shot out.png  # the emulator's screen
+scripts/android.sh release       # signed release .aab for Google Play → the export folder
+
+fastlane ios check | beta | listing | release    # App Store: state, TestFlight, listing, submit
+fastlane check | internal | promote version_code:N  # Google Play: key, internal draft, → production
 ```
 
 A rebuild does not reload the running app — restart `electron .`. ⌘R is Refresh, not reload.
@@ -182,6 +186,12 @@ A rebuild does not reload the running app — restart `electron .`. ⌘R is Refr
   and the archive-and-upload steps). `packaging/play-store/listing.md` is the Google Play one,
   and says where the Play upload key lives: `~/.config/lotext/upload.jks` on the M5 MacBook Pro,
   with its password in the gitignored `android/keystore.properties`. Never commit either.
+  fastlane's store keys are there too, outside the repo: the Play service account
+  (`play-store-key.json`) and the App Store Connect API key (`AuthKey_GB595Z9X9A.p8`,
+  `app-store-connect.json`). The repo is public: the App Review phone number is gitignored.
+- **A release goes to both stores with the same code.** Raise iOS MARKETING_VERSION /
+  CURRENT_PROJECT_VERSION and Android versionCode / versionName together; the two version
+  numbers differ (iOS 1.5 is Android 1.0.11).
 - App state: `~/Library/Application Support/LoText/lotext.json`. Delete the directory to test a
   first launch. On iOS the same file is in the app container's `Library/Application Support/
   LoText/`; `xcrun simctl uninstall` gives a first launch.

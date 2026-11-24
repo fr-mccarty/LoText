@@ -36,6 +36,27 @@ listing, one price, bought once for Mac, iPhone and iPad. If the iPhone app shou
 separate listing, change the bundle ID (e.g. `com.lolekproductions.lotext.ios`) in the target
 and in `capacitor.config.json` **before the first upload** — it cannot be changed after.
 
+## App Store Connect — first submission (2026-11-24)
+
+LoText's record is Apple ID 6814934935 (SKU lotext-001), one record for Mac and iOS. The iOS
+version was renamed 1.0 → 1.5 to match the build.
+
+- [x] Listing, screenshots, review contact: `fastlane ios listing`.
+- [x] Content rights: does not use third-party content (set through the API).
+- [x] App Privacy: Data Not Collected, published; privacy policy https://lolekproductions.org/LoText/privacy.
+- [x] Age rating: every answer None / No → 4+.
+- [x] Pricing: Free. Availability: every territory but **China mainland**, which needs an ICP
+      filing (a Chinese entity or publisher) and the China compliance declarations; with it off,
+      App Store Connect ▸ App Compliance needs nothing.
+- [x] EU Digital Services Act trader status: declared (Business).
+- [x] 1.5 (11) submitted for review with `fastlane ios release`; manual release after approval.
+- [ ] Approved, then **Release This Version** in App Store Connect.
+
+`ios/debug.xcconfig` (gitignored, `CAPACITOR_DEBUG = true`) is written only when Capacitor adds
+the platform; without it Debug and simulator builds fail with "Unable to open base configuration
+reference file". Recreate it from `node_modules/@capacitor/cli/assets/ios-spm-template.tar.gz`
+(`tar -xzf … debug.xcconfig`) or write that one line.
+
 ## Each release
 
 1. Bump **Version** (and **Build**, which must rise on every upload) on the App target's

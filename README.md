@@ -22,7 +22,8 @@ Electron shell, CodeMirror 6 editor, esbuild for the whole build step.
 
 To update, download the newer image and drag it into Applications again, replacing the old one.
 
-**iPhone and iPad, Android:** not in the App Store or Google Play yet — both are in testing.
+**iPhone and iPad, Android:** submitted to the App Store (1.5) and Google Play (1.0.11) on
+2026-11-24, awaiting review. Neither is offered in mainland China.
 
 **Windows:** no download yet. Build the installer yourself on a Mac with `npm run windows` (see
 [Building for Windows](#building-for-windows)). It is unsigned, so SmartScreen warns the first
@@ -105,7 +106,7 @@ npm run ios:open    # …and open Xcode: run on a device, or Product ▸ Archive
 scripts/ios-sim.sh run        # or run pad — build, install and launch in the simulator
 ```
 
-Shipping to the App Store is `packaging/app-store/ios.md`.
+Shipping to the App Store is `packaging/app-store/ios.md` (fastlane, from the terminal).
 
 ## Printing from the shell
 
@@ -131,8 +132,8 @@ npm run android:open             # the project in Android Studio
 ```
 
 The same web half as the iPhone app, on its own native plugin in `android/`. Not on Android yet:
-Connect to Server, iCloud sync and Send to DayCap. A Play Store build needs an upload key first
-(`scripts/android.sh release` makes the bundle).
+Connect to Server, iCloud sync and Send to DayCap. A Play Store build needs the upload key
+(`scripts/android.sh release` makes the bundle); fastlane uploads it — `packaging/play-store/listing.md`.
 
 ## Building for Windows
 

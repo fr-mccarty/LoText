@@ -156,11 +156,11 @@ Without that file `scripts/android.sh release` still builds, unsigned, and says 
 
 - [x] Upload key (above) — 2026-10-20, on the M5 MacBook Pro.
 - [x] `scripts/android.sh release` for the .aab — signed, 2026-10-20.
-- [ ] Raise `versionCode` in `android/app/build.gradle` on every upload; `versionName` is "1.0" now.
-- [ ] New personal developer accounts must run a closed test with at least 12 testers for 14 days
-      before production access is granted.
-      LoText is on the Lolek-Productions **organization** account (ID 9165725171449302136), so this
-      should not apply.
+- [x] Raise `versionCode` in `android/app/build.gradle` on every upload — 2 (versionName 1.0.11)
+      for the first production release.
+- [x] New personal developer accounts must run a closed test with at least 12 testers for 14 days
+      before production access is granted. LoText is on the Lolek-Productions **organization**
+      account (ID 9165725171449302136): production was open without one (2026-11-24).
 
 ## Play Console — first setup (2026-10-20)
 
@@ -179,7 +179,9 @@ Without that file `scripts/android.sh release` still builds, unsigned, and says 
       optional "restrict minors" box left unticked), data safety (no data collected or shared),
       advertising ID (No — the release manifest has no AD_ID permission), government, financial,
       health. Play asked no News question.
-- [ ] Publishing overview: the store listing and declarations are "Not yet sent for review".
-      Sending them is what replaces the testers' temporary name
+- [x] Publishing overview: the store listing and declarations sent for review (2026-11-24).
+      Their approval is what replaces the testers' temporary name
       "com.lolekproductions.lotext (unreviewed)" with LoText.
-- [x] Production: 1.0.11 (2) promoted from internal, 2026-11-24, for review.
+- [x] Production countries: all but China, 2026-11-24 (Production ▸ Countries / regions).
+- [x] Production: 1.0.11 (2) promoted from internal at 100%, 2026-11-24, for review.
+- [ ] Approved and live on Google Play.
