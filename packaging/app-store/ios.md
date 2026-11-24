@@ -52,10 +52,9 @@ version was renamed 1.0 → 1.5 to match the build.
 - [x] 1.5 (11) submitted for review with `fastlane ios release`; manual release after approval.
 - [ ] Approved, then **Release This Version** in App Store Connect.
 
-`ios/debug.xcconfig` (gitignored, `CAPACITOR_DEBUG = true`) is written only when Capacitor adds
-the platform; without it Debug and simulator builds fail with "Unable to open base configuration
-reference file". Recreate it from `node_modules/@capacitor/cli/assets/ios-spm-template.tar.gz`
-(`tar -xzf … debug.xcconfig`) or write that one line.
+`ios/debug.xcconfig` (gitignored, `CAPACITOR_DEBUG = true`) is written by Capacitor only when it
+adds the platform, so a fresh clone lacks it and Debug and simulator builds fail with "Unable to
+open base configuration reference file". `npm run ios:build` writes it when it is missing.
 
 ## Each release
 

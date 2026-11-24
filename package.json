@@ -20,7 +20,7 @@
     "release": "bash scripts/release.sh",
     "windows": "bash scripts/make-windows.sh",
     "web:build": "node build.mjs --web",
-    "ios:build": "node build.mjs --mobile && npx cap sync ios && sed -i '' 's#node_modules\\.nosync/#node_modules/#' ios/App/CapApp-SPM/Package.swift",
+    "ios:build": "node build.mjs --mobile && npx cap sync ios && ([ -f ios/debug.xcconfig ] || echo 'CAPACITOR_DEBUG = true' > ios/debug.xcconfig) && sed -i '' 's#node_modules\\.nosync/#node_modules/#' ios/App/CapApp-SPM/Package.swift",
     "ios:sim": "bash scripts/ios-sim.sh run",
     "ios:open": "npm run ios:build && npx cap open ios",
     "android:build": "bash scripts/android.sh build",
