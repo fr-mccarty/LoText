@@ -119,6 +119,9 @@ npx electron . --list-presets
 
 `npm run pdf` is the same thing with the build in front of it.
 
+Quit LoText first: it runs one copy at a time, so a command typed while the app is open quits
+without doing anything. The same goes for `npm start` with the installed app running.
+
 ## Building for Android
 
 ```sh
