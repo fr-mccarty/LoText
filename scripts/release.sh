@@ -18,6 +18,7 @@
 set -euo pipefail
 
 cd "$(dirname "$0")/.."
+source scripts/load-env.sh
 
 IDENTITY=${LOTEXT_SIGN_IDENTITY:-"Developer ID Application: Lolek Productions, INC. (N6Z9A72885)"}
 PROFILE=${LOTEXT_NOTARY_PROFILE:-lotext-notary}

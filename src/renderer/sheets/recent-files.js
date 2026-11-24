@@ -3,7 +3,7 @@
 // changed in another app or on the server all count, and the list survives a relaunch.
 //
 // Where ⇧⌘P answers "where is the file called this?", this answers "take me back to what I was
-// just working on". Both walk the whole folder when the sheet opens (src/main/store/recent.js).
+// just working on". Both walk the whole folder when the sheet opens (src/shared/store/recent.js).
 //
 // **The top row is the last file edited**, because the file on screen is not somewhere to go
 // back to. That is what makes ⇧⌘O ↩ the whole gesture for "back". There is nothing to type: a

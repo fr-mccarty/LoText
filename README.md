@@ -6,9 +6,8 @@ plain text, and prints them.
 
 Electron shell, CodeMirror 6 editor, esbuild for the whole build step.
 
-> **Status: in development.** The app builds and runs, but most of it has never been exercised.
-> Much of it has been checked by script but not yet by hand; while that is under way the list
-> is in `tasks/`.
+> **Status:** the Mac app is released (see Installing). The iPhone/iPad and Android apps are in
+> testing; Windows builds from source.
 
 ## Installing
 
@@ -31,11 +30,15 @@ time it runs.
 
 ## Getting started (from source)
 
-You need **Node 20 or newer** (developed on 24) and macOS. Nothing else — Electron and esbuild
-both arrive with `npm install`.
+Every build — Mac, Windows, iPhone, Android — is made on a Mac. You need **macOS** and
+**Node 20 or newer** (developed on 24). Nothing else: Electron and esbuild both arrive with
+`npm install`.
 
 ```sh
-npm install     # once
+git clone https://github.com/fr-mccarty/LoText.git
+cd LoText
+npm install     # once; keeps the packages in node_modules.nosync, out of iCloud Drive
+npm test        # optional: the test suite
 npm start       # build, then launch
 ```
 
@@ -61,8 +64,8 @@ all into `dist/`, and copies `src/html/` and the stylesheet alongside.
 npm run watch   # esbuild rebuilds dist/ on every save
 ```
 
-Run `npm run watch` in one terminal and `electron .` in another. **A rebuild does not reload the
-running app** — restart `electron .` to pick up changes. There is deliberately no reload
+Run `npm run watch` in one terminal and `npx electron .` in another. **A rebuild does not reload the
+running app** — restart `npx electron .` to pick up changes. There is deliberately no reload
 shortcut: ⌘R is **Refresh**, which re-lists the folder in the sidebar and re-reads the open file.
 
 `dist/` is generated. Never edit it, and never commit a fix there.
@@ -109,9 +112,9 @@ Shipping to the App Store is `packaging/app-store/ios.md`.
 The same layout and drawing code as ⌘P, with no window at all:
 
 ```sh
-electron . --pdf notes.md --out notes.pdf --preset "Letterhead" --paper a4
-electron . --pdf - --name notes.md < notes.md > notes.pdf    # - is stdin/stdout
-electron . --list-presets
+npx electron . --pdf notes.md --out notes.pdf --preset "Letterhead" --paper a4
+npx electron . --pdf - --name notes.md < notes.md > notes.pdf    # - is stdin/stdout
+npx electron . --list-presets
 ```
 
 `npm run pdf` is the same thing with the build in front of it.
@@ -163,7 +166,9 @@ npm run release                  # in Terminal on the Mac, not over SSH
 ```
 
 It checks the one-time setup first — the Developer ID certificate and a saved notary login —
-and says what is missing.
+and says what is missing. It signs as Lolek Productions unless `.env` names another identity
+(`LOTEXT_SIGN_IDENTITY`, `LOTEXT_NOTARY_PROFILE`; see `.env.example`), so to sign your own
+build you need your own Apple Developer account.
 
 ## App state
 
@@ -183,9 +188,8 @@ rm -rf ~/Library/Application\ Support/LoText
 
 ## A note on the reference app
 
-LoText is being built to match the existing application at `~/Documents/Lolext` as closely as
-possible. When a behavior is unclear — what ⌘B does to an already-bold span, how a print preset
-lays out a table — read it there rather than inventing a reasonable default.
+LoText is built to match an earlier Swift app, Lolext, which is not public. Where LoText
+departs from it on purpose, `CLAUDE.md` lists the departures.
 
 ## License
 

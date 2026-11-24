@@ -50,7 +50,7 @@ A rebuild does not reload the running app — restart `electron .`. ⌘R is Refr
     deletes it); Enter on a row opens it and moves to the editor.
   - Text selection is a bright blue (`--text-selection`), not the system's muted `Highlight`.
   - ⇧⌘O is File ▸ Recently Edited…: the folder's files newest first by their modified date on
-    disk (`src/main/store/recent.js`), not Lolext's Go to Last File, the list of files this
+    disk (`src/shared/store/recent.js`), not Lolext's Go to Last File, the list of files this
     window has opened. It is never greyed: with nothing to list it opens the picker, which says
     so. Lolext greys it and the key does nothing.
   - A save that fails on the way out of a file (switching, changing folder, closing the window)
@@ -64,8 +64,7 @@ A rebuild does not reload the running app — restart `electron .`. ⌘R is Refr
     immediately?" and removes it for good only on yes. Lolext only shows the Trash's error.
   - ⌘R (Refresh) re-reads the open file from disk, not just its stamp, so a server-side change
     that keeps the size and second still shows. Unsaved edits are never replaced by it.
-  - Sidebar rows are moved with mouse events, not HTML5 drag and drop — see
-    `discoveries/editor-and-window-pitfalls.md`.
+  - Sidebar rows are moved with mouse events, not HTML5 drag and drop.
   - A long line that starts with spaces or tabs wraps onto rows indented as far as its own text
     (`src/renderer/editor/hanging-indent.js`); Lolext wraps to the left edge. Drawing only — no
     spaces are added.
@@ -97,8 +96,9 @@ A rebuild does not reload the running app — restart `electron .`. ⌘R is Refr
 - **The LoText web page runs the editor's own code** (`src/web/playground.js`): task boxes,
   enhanced tasks, arrows, the hanging indent, Tab, ⌥↑ / ⌥↓, ⌘X and external links. A change to any of those is
   not on the site until `scripts/update-website-editor.sh` is run. The public sites are served
-  from the Mac mini's `~/peru-2` by `pnpm websites:install`, not by `pnpm deploy` (the droplet);
-  `scripts/peru.sh` and `docs/publishing-the-mac-download.md` say how.
+  from the Mac mini's `~/peru-2/behavior/code` by `pnpm websites:install`, not by `pnpm deploy`
+  (the droplet). `scripts/peru.sh` says how; it reaches the Mac mini over ssh at
+  `LOTEXT_PERU_HOST` in `.env` (gitignored — copy `.env.example`).
 - **iOS is the same app with `src/mobile/` in place of `src/main/`** (`specs/mobile.md`). The
   model does not know which platform it is on: `src/mobile/bridge.js` answers every method
   `preload.js` has. Logic both need goes in `src/shared/` (the stores' naming, walk, recent,
@@ -114,11 +114,11 @@ A rebuild does not reload the running app — restart `electron .`. ⌘R is Refr
   A picked folder is a document tree (no paths, only document ids), the app's own folder plain
   files in the app's storage; deleting is for good, and the question says so. Back is the page's
   (`goBack` in `src/mobile/ui.js`). Gradle 8 needs Java 21, not Android Studio's 25:
-  `scripts/android.sh` sets it. See `discoveries/running-lotext-on-android.md`.
+  `scripts/android.sh` sets it.
 - **A folder on a server is one store with two transports** (`src/shared/store/remote-store.js`).
   The Mac runs `/usr/bin/ssh` and logs in with the Mac's own `~/.ssh` keys, LoText's own key
   last (`src/main/store/ssh-transport.js`); iOS runs SwiftNIO SSH in the app with a key of the
-  device's own (`LoTextNative+SSH.swift`). See `discoveries/remote-folders.md`. **iOS
+  device's own (`LoTextNative+SSH.swift`). **iOS
   encrypts only through Apple's CryptoKit**, which is what keeps `ITSAppUsesNonExemptEncryption`
   NO: add no Swift package that carries its own crypto (BoringSSL, OpenSSL, `_CryptoExtras`,
   Citadel) — `packaging/app-store/ios.md`.
@@ -127,7 +127,7 @@ A rebuild does not reload the running app — restart `electron .`. ⌘R is Refr
 - **Paths are store-relative strings** (`src/shared/file-path.js`), `""` is the root — never
   absolute disk paths.
 - **Do not add `"type": "module"`** to the root `package.json`: `dist/*.js` is CommonJS and
-  Electron would load it as ESM. See `discoveries/test-setup.md`.
+  Electron would load it as ESM.
 - **`node_modules` is a symlink to `node_modules.nosync`**, a name iCloud Drive skips. npm
   replaces the link with a real folder on every install; the `dependencies` script in
   `package.json` (`scripts/keep-node-modules-out-of-icloud.mjs`) moves it back. Install with
@@ -148,7 +148,8 @@ A rebuild does not reload the running app — restart `electron .`. ⌘R is Refr
   ~/Library/Keychains/login.keychain-db` in the prompt; after that `npm run release` (Mac, signed
   and notarized) and `scripts/ios-upload.sh` (archive and upload to TestFlight) both work from
   here. Verify a Mac release with `spctl --assess` / `stapler validate`. Simulator builds need no
-  keychain, but must be built outside `~/Documents` (see `discoveries/running-lotext-on-ios.md`).
+  keychain, but must be built outside `~/Documents` (`scripts/ios-sim.sh` does): codesign fails
+  on the extended attributes iCloud Drive puts on files there.
 - **Windows is the Mac app with a different frame** (`src/main/chrome.js`): an ordinary title
   bar and menu bar, opaque backgrounds, Settings and Exit at the foot of File, About in Help.
   `CmdOrCtrl` accelerators; the renderer spells shortcuts and names (Recycle Bin, File Explorer)
@@ -177,26 +178,6 @@ A rebuild does not reload the running app — restart `electron .`. ⌘R is Refr
   `send-to-daycap.md`: Cut and Send to DayCap — a selection saved as a new file in DayCap's folder.
   Help ▸ Enhanced Tasks and Help ▸ Disclosure Arrows (`src/renderer/sheets/help.js`) are the
   user-facing versions of those specs; keep their wording in step.
-- `tasks/` — temporary: what is unverified and what is left, deleted once done. Nothing
-  durable goes there — a lesson goes in `discoveries/`, a rule or decision in this file.
-- `discoveries/` — write-ups of problems already solved. Read the relevant one before
-  debugging; add one when something non-obvious costs you time.
-  - `running-and-screenshotting-lotext.md` — how to drive the app and capture windows without
-    Playwright, and the traps in doing so.
-  - `editor-and-window-pitfalls.md` — bugs already fixed and why they happened: CodeMirror's
-    base theme, ⌥-arrows vs the menu, grid layout, and how the editor was checked against Lolext.
-  - `packaging-a-dmg.md` — building, signing and notarizing; first-time release setup; which
-    Apple certificate is which.
-  - `remote-folders.md` — why Connect to Server never worked (an unquoted path, `-i` hiding
-    the Mac's keys, a save check that always failed), and testing against a throwaway sshd.
-  - `recently-edited-speed.md` — what made ⇧⌘O slow (listing a network share's folders one at
-    a time), how it was measured, and why there is no cache.
-  - `running-lotext-on-ios.md` — the simulator harness (`scripts/ios-sim.sh`), answering native
-    alerts from a terminal, and the codesign-under-Documents trap.
-  - `running-lotext-on-android.md` — Java 21 for Gradle, the emulator from a terminal, finding
-    what to tap, and the long-press that opened two menus.
-- `docs/` — how-to documents for people. `publishing-the-mac-download.md`: exporting the
-  signed disk image, where the images are kept, and replacing the download on lolekproductions.org.
 - `packaging/app-store/` — the App Store listings: `metadata.md` (Mac), `ios.md` (iPhone/iPad,
   and the archive-and-upload steps). `packaging/play-store/listing.md` is the Google Play one,
   and says where the Play upload key lives: `~/.config/lotext/upload.jks` on the M5 MacBook Pro,
