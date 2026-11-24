@@ -5,7 +5,7 @@ Draft of what goes in App Store Connect. The character limits are Apple's.
 ## App information
 
 - **Name** (30): LoText
-- **Subtitle** (30): Plain text, one folder at a time
+- **Subtitle** (30): Plain text, a folder at a time
 - **Bundle ID:** com.lolekproductions.lotext
 - **Primary category:** Productivity
 - **Secondary category:** Developer Tools

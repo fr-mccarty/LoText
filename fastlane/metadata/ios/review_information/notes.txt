@@ -1,0 +1,1 @@
+LoText needs no account. On first launch it opens its own folder (On My iPhone ▸ LoText); tap the folder button at the top left to choose another folder with the system picker. Tap a file to edit it; long-press a file for its menu. Print and Share PDF are in the ⋯ menu above the text.

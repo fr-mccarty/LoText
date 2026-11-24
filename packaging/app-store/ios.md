@@ -12,7 +12,7 @@ What the iOS app needs to get from this folder to the App Store, in order. The M
     Bundle ID            com.lolekproductions.lotext — the same as the Mac app
     Team                 N6Z9A72885 (automatic signing)
     Deployment target    iOS 17.0, iPhone and iPad
-    Version / build      1.4 (10)  — MARKETING_VERSION / CURRENT_PROJECT_VERSION in the target
+    Version / build      1.5 (11)  — MARKETING_VERSION / CURRENT_PROJECT_VERSION in the target
     Category             public.app-category.productivity
     Encryption           ITSAppUsesNonExemptEncryption = NO, so no export question per upload.
                          Connect to Server's SSH encrypts, but only through Apple's CryptoKit
@@ -48,6 +48,30 @@ and in `capacitor.config.json` **before the first upload** — it cannot be chan
 4. *You:* Organizer ▸ **Distribute App ▸ App Store Connect ▸ Upload**. Let Xcode manage signing.
 5. *You:* in App Store Connect, add the build to **TestFlight** and install it on a real iPhone
    and iPad before submitting.
+
+## With fastlane (from `LoText/`)
+
+The App Store Connect API key (Key ID GB595Z9X9A, App Manager) is outside the repo:
+`~/.config/lotext/AuthKey_GB595Z9X9A.p8` and `~/.config/lotext/app-store-connect.json` (its IDs),
+on the M5 MacBook Pro. A lost key is revoked and replaced in App Store Connect ▸ Users and
+Access ▸ Integrations.
+
+```sh
+fastlane ios check     # the key works; versions, builds, and what the listing still lacks
+fastlane ios beta      # scripts/ios-upload.sh: archive, upload to TestFlight (keychain unlocked)
+fastlane ios listing   # fastlane/metadata/ios + fastlane/screenshots/ios → the version being prepared
+fastlane ios release   # the listing, the Xcode project's build, submitted for review; held after approval
+```
+
+The App Store version is renamed to the project's MARKETING_VERSION by `listing` and `release`.
+The review contact's phone is `fastlane/metadata/ios/review_information/phone_number.txt`,
+gitignored (the repo is public). App Privacy, the age rating and pricing are set once in App
+Store Connect: the API cannot.
+
+Screenshots: iPhone 18 Pro Max simulator (1320 × 2868) and iPad Pro 13-inch (M5) (2064 × 2752),
+with `packaging/play-store/screenshot-notes/` copied into the app's Documents, the status bar at
+9:41 (`xcrun simctl status_bar … override`), and files opened with
+`scripts/ios-sim.sh eval "await window.__model.openPath('Weekly plan.md')"`.
 
 ## The listing (App Store Connect ▸ iOS)
 

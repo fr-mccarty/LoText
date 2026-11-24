@@ -50,3 +50,93 @@ platform :android do
     )
   end
 end
+
+# The App Store, from the command line. The App Store Connect API key is outside the repo:
+# ~/.config/lotext/app-store-connect.json names the key file and its IDs (or ASC_KEY points at
+# another such file). packaging/app-store/ios.md says what each lane is for.
+platform :ios do
+  BUNDLE_ID = "com.lolekproductions.lotext"
+
+  before_all do
+    config = JSON.parse(File.read(File.expand_path(ENV["ASC_KEY"] || "~/.config/lotext/app-store-connect.json")))
+    app_store_connect_api_key(
+      key_id: config["key_id"],
+      issuer_id: config["issuer_id"],
+      key_filepath: File.expand_path(config["key_filepath"])
+    )
+  end
+
+  desc "Check the API key reaches App Store Connect, and show where LoText stands there"
+  lane :check do
+    app = Spaceship::ConnectAPI::App.find(BUNDLE_ID) || UI.user_error!("No app #{BUNDLE_ID} in App Store Connect")
+    UI.success("#{app.name} (#{app.bundle_id}), Apple ID #{app.id}")
+    app.get_app_store_versions.each do |v|
+      UI.message("  #{v.platform}  #{v.version_string}  #{v.app_store_state}")
+    end
+    Spaceship::ConnectAPI::Build.all(app_id: app.id, sort: "-uploadedDate", limit: 10).each do |b|
+      UI.message("  build #{b.app_version} (#{b.version}) #{b.platform}  #{b.processing_state}  #{b.uploaded_date}")
+    end
+    version = app.get_edit_app_store_version(platform: Spaceship::ConnectAPI::Platform::IOS)
+    return unless version
+    UI.header("Version #{version.version_string}, not yet submitted")
+    UI.message("  build: #{version.build ? "#{version.build.app_version} (#{version.build.version})" : "none chosen"}")
+    UI.message("  copyright: #{version.copyright.inspect}")
+    version.get_app_store_version_localizations.each do |l|
+      UI.message("  #{l.locale}: description #{l.description.to_s.length} chars, keywords #{l.keywords.to_s.length}, " \
+                 "promo #{l.promotional_text.to_s.length}, support #{l.support_url.inspect}, marketing #{l.marketing_url.inspect}")
+      l.get_app_screenshot_sets.each do |set|
+        UI.message("    screenshots #{set.screenshot_display_type}: #{set.app_screenshots.count}")
+      end
+    end
+    info = app.fetch_edit_app_info
+    if info
+      UI.message("  primary category: #{info.primary_category&.id.inspect}")
+      info.get_app_info_localizations.each do |l|
+        UI.message("  #{l.locale}: name #{l.name.inspect}, subtitle #{l.subtitle.inspect}, privacy #{l.privacy_policy_url.inspect}")
+      end
+    end
+    review = version.fetch_app_store_review_detail rescue nil
+    UI.message("  review contact: #{review ? [review.contact_first_name, review.contact_email].inspect : 'none'}, notes #{review&.notes.to_s.length} chars")
+  end
+
+  # The version and build in ios/App/App.xcodeproj, which scripts/ios-upload.sh uploads.
+  def xcode_version
+    pbx = File.read(File.expand_path("../ios/App/App.xcodeproj/project.pbxproj"))
+    [pbx[/MARKETING_VERSION = ([^;]+);/, 1], pbx[/CURRENT_PROJECT_VERSION = ([^;]+);/, 1]]
+  end
+
+  def send_listing(options = {})
+    version, build = xcode_version
+    deliver({
+      platform: "ios",
+      app_identifier: BUNDLE_ID,
+      app_version: version,
+      metadata_path: File.expand_path("metadata/ios"),
+      screenshots_path: File.expand_path("screenshots/ios"),
+      overwrite_screenshots: true,
+      skip_binary_upload: true,
+      force: true,
+      run_precheck_before_submit: false
+    }.merge(options.call(build)))
+  end
+
+  desc "Archive and upload to TestFlight (scripts/ios-upload.sh; the login keychain must be unlocked)"
+  lane :beta do
+    sh("cd .. && scripts/ios-upload.sh")
+  end
+
+  desc "Upload the App Store listing: text in fastlane/metadata/ios, screenshots in fastlane/screenshots/ios; no build, no submission"
+  lane :listing do
+    send_listing(->(_build) { {} })
+  end
+
+  desc "Send the listing, choose the Xcode project's build, and submit it for App Review"
+  lane :release do
+    send_listing(->(build) { {
+      build_number: build,
+      submit_for_review: true,
+      automatic_release: false,
+      submission_information: { export_compliance_uses_encryption: false, add_id_info_uses_idfa: false }
+    } })
+  end
+end

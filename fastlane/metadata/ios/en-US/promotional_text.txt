@@ -1,0 +1,1 @@
+A quiet plain-text editor for iPhone and iPad. Open a folder, pick a file, write. Markdown headings, tables and emphasis print beautifully with your own presets.

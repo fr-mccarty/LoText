@@ -45,3 +45,6 @@ android/keystore.properties
 # fastlane's own output
 fastlane/report.xml
 fastlane/README.md
+
+# App Review contact phone: sent by fastlane ios listing, kept out of the public repo
+fastlane/metadata/ios/review_information/phone_number.txt
