@@ -2,7 +2,7 @@
 
 What the iOS app needs to get from this folder to the App Store, in order. The Mac listing is
 `metadata.md`; the design is `specs/mobile.md`; driving the simulator is
-`discoveries/running-lotext-on-ios.md`.
+`scripts/ios-sim.sh`.
 
 **Signing can only happen at the Mac**, in Xcode, with the keychain unlocked — the same as
 `npm run release` (CLAUDE.md). Everything below marked *you* is that.

@@ -11,7 +11,7 @@
 # This is scripts/make-dmg.sh with the signing identity and notary profile filled in, and with
 # every precondition checked *first*, in plain words. Each check below is here because its
 # failure once cost real time: the raw tools report them as `errSecInternalComponent`, a 401, or
-# nothing at all. The one-time setup they check for is in discoveries/packaging-a-dmg.md.
+# nothing at all.
 #
 # Run it in Terminal on the Mac itself, not over SSH.
 
@@ -21,7 +21,7 @@ cd "$(dirname "$0")/.."
 
 IDENTITY=${LOTEXT_SIGN_IDENTITY:-"Developer ID Application: Lolek Productions, INC. (N6Z9A72885)"}
 PROFILE=${LOTEXT_NOTARY_PROFILE:-lotext-notary}
-SETUP="See \"First-time setup\" in discoveries/packaging-a-dmg.md."
+SETUP="First-time setup: the Developer ID Application certificate in the login keychain, and a notary login saved with xcrun notarytool store-credentials."
 
 fail () {
   printf '\n✗ %s\n' "$1" >&2

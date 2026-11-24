@@ -30,7 +30,7 @@ export const MAX_DEPTH = 24
  * How many folders of a level are listed at once, unless the store says otherwise
  * (`store.listingConcurrency`). A listing is mostly waiting — on a network share each one is a
  * round trip of a few milliseconds — so one at a time spent ⇧⌘O's two seconds on a Desktop with
- * a 500-folder SMB share linked in (`discoveries/recently-edited-speed.md`). Eight at once took
+ * a 500-folder SMB share linked in. Eight at once took
  * it under one; more gained nothing.
  */
 export const LISTING_CONCURRENCY = 8

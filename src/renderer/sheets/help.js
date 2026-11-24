@@ -73,7 +73,7 @@ const list = (...items) => element('ul', {}, items.map((item) =>
 
 /**
  * A try-it editor with the real extensions. ⌥↑ / ⌥↓ are bound here
- * as in the app's editor, since the menu never receives them (`discoveries/editor-and-window-pitfalls.md`).
+ * as in the app's editor, since the menu never receives them.
  */
 function tryIt (doc, onDispose) {
   const host = element('div', { class: 'help-try' })

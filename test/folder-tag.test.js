@@ -8,7 +8,7 @@ const text = (folder) => folderTag(folder)?.text ?? null
 
 describe('the folder tag', () => {
   it('is SSH for a folder on a server', () => {
-    expect(text({ kind: 'remote', name: 'stleo-office' })).toBe('SSH')
+    expect(text({ kind: 'remote', name: 'office' })).toBe('SSH')
   })
 
   it('is MNT for a folder on a mounted volume', () => {

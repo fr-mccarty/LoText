@@ -1,7 +1,7 @@
 // The app's one screen: Capacitor's web view, with LoTextNative registered on its bridge.
 //
 // In a Debug build it also runs the harness that lets a terminal drive the app in the
-// simulator (discoveries/running-lotext-on-ios.md): a script dropped at tmp/lotext-eval.js in the
+// simulator: a script dropped at tmp/lotext-eval.js in the
 // app's container is run in the page, and what it returns is written to tmp/lotext-eval.out.
 // A Release build has none of it.
 

@@ -180,8 +180,8 @@ describe('reading positions', () => {
 })
 
 describe('saved servers', () => {
-  const location = { user: 'Leo', host: '203.0.113.5', port: null, path: 'stleo-office' }
-  const server = { id: 'ssh://Leo@203.0.113.5/stleo-office', address: 'Leo@203.0.113.5:stleo-office', location }
+  const location = { user: 'me', host: '203.0.113.5', port: null, path: 'office' }
+  const server = { id: 'ssh://me@203.0.113.5/office', address: 'me@203.0.113.5:office', location }
 
   it('keeps the list on the device whether or not sync is on, newest first, once each', () => {
     const mac = device('mac', new Map())
@@ -190,7 +190,7 @@ describe('saved servers', () => {
     mac.cloud.rememberServer({ ...server, id: 'ssh://me@other/x', address: 'me@other:x' })
     clock = 3000
     mac.cloud.rememberServer(server)
-    expect(mac.cloud.servers().map((entry) => entry.address)).toEqual(['Leo@203.0.113.5:stleo-office', 'me@other:x'])
+    expect(mac.cloud.servers().map((entry) => entry.address)).toEqual(['me@203.0.113.5:office', 'me@other:x'])
   })
 
   it('lists a server saved on the Mac on the phone, with positions in its files', async () => {

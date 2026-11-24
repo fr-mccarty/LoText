@@ -86,7 +86,7 @@ describe('the shared remote store', () => {
 
 describe('a remembered server address', () => {
   it.each([
-    'Leo@203.0.113.5:stleo-office',
+    'me@203.0.113.5:office',
     'me@host:/srv/notes',
     'ssh://me@host:2222/srv/notes',
     'ssh://me@host:2222/~/notes',

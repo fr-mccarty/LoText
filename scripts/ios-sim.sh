@@ -1,6 +1,5 @@
 #!/bin/bash
 # Build LoText for the iOS simulator and drive it from a terminal.
-# See discoveries/running-lotext-on-ios.md.
 #
 #   scripts/ios-sim.sh build              web bundle + cap sync + xcodebuild (Debug, simulator)
 #   scripts/ios-sim.sh run [device]       build, install, launch        (device: phone | pad | UDID)

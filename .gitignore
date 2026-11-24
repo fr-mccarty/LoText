@@ -24,6 +24,7 @@ ios/App/Pods/
 # Signing material and secrets
 .env
 .env.*
+!.env.example
 *.p8
 *.p12
 *.cer

@@ -7,13 +7,18 @@
 #
 # Run on the Mac mini, everything happens in place; anywhere else, over ssh to it.
 #
-#   LOTEXT_PERU_HOST   ssh login for the Mac mini (default jmccarty@mac-mini, its Tailscale address)
+#   LOTEXT_PERU_HOST   ssh login for the Mac mini, user@address — needed when Peru is not on this Mac
 #   LOTEXT_PERU_DIR    the checkout, relative to that home (default peru-2)
+#
+# Both are read from the environment or from `.env` at the top of the project (gitignored;
+# `.env.example` shows its shape), so no machine's address is in the repository.
 #
 # Peru's code — the websites, package.json — is in the checkout's behavior/code, and every
 # command below runs there: paths are from that folder, and git pathspecs read them from it.
 
-PERU_HOST=${LOTEXT_PERU_HOST:-"jmccarty@mac-mini"}
+source "$(dirname "${BASH_SOURCE[0]}")/load-env.sh"
+
+PERU_HOST=${LOTEXT_PERU_HOST:-}
 PERU_DIR=${LOTEXT_PERU_DIR:-"peru-2"}
 PERU_CODE="behavior/code"
 PERU_SITE_FOLDER="frontend/web/public/websites/lolekproductions"
@@ -21,6 +26,11 @@ PERU_DOWNLOADS="peru-2-agent/websites/downloads/lolekproductions"
 PERU_LIVE_LINK="peru-2-agent/websites/current"
 
 if [ -d "$HOME/$PERU_DIR/.git" ]; then PERU_LOCAL=yes; else PERU_LOCAL=no; fi
+if [ "$PERU_LOCAL" = no ] && [ -z "$PERU_HOST" ]; then
+  printf '\n✗ Peru is not on this Mac, and LOTEXT_PERU_HOST does not say how to reach it.\n' >&2
+  printf '  Copy .env.example to .env and set LOTEXT_PERU_HOST to the Mac mini'"'"'s user@address.\n\n' >&2
+  exit 1
+fi
 PERU_WHERE=$([ "$PERU_LOCAL" = yes ] && echo "~/$PERU_DIR/$PERU_CODE" || echo "$PERU_HOST:~/$PERU_DIR/$PERU_CODE")
 
 # peru 'commands' — runs them in a login zsh (so pnpm is on the PATH) in Peru's code folder.

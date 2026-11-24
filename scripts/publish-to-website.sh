@@ -1,7 +1,6 @@
 #!/bin/bash
 #
 # Publish a notarized LoText disk image on lolekproductions.org/LoText, replacing the one there.
-# This is docs/publishing-the-mac-download.md as a script.
 #
 #   scripts/publish-to-website.sh LoText-1.0.3.dmg          one in the export folder (scripts/export-folder.sh)
 #   scripts/publish-to-website.sh path/to/LoText-1.0.3.dmg  one anywhere else

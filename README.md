@@ -128,7 +128,8 @@ npm run dmg -- /path/out.dmg     # somewhere else
 ```
 
 `npm run release` also asks whether to publish the notarized image on lolekproductions.org
-(`-- --publish` / `-- --no-publish` to say in advance). See `docs/publishing-the-mac-download.md`.
+(`-- --publish` / `-- --no-publish` to say in advance). Publishing reaches the website's host
+over ssh, at the address in `.env` — copy `.env.example` to `.env` and fill it in.
 
 `scripts/make-dmg.sh` assembles the app bundle from the Electron one in `node_modules`, gives it
 the icon in `assets/` and the document types in `packaging/`, signs it ad-hoc, and wraps it. No
@@ -142,8 +143,8 @@ people is signed with the Developer ID certificate and notarized by Apple:
 npm run release                  # in Terminal on the Mac, not over SSH
 ```
 
-It checks the one-time setup first and says what is missing. The setup, and the traps that cost
-hours the first time, are in [`discoveries/packaging-a-dmg.md`](discoveries/packaging-a-dmg.md).
+It checks the one-time setup first — the Developer ID certificate and a saved notary login —
+and says what is missing.
 
 ## App state
 
@@ -166,3 +167,7 @@ rm -rf ~/Library/Application\ Support/LoText
 LoText is being built to match the existing application at `~/Documents/Lolext` as closely as
 possible. When a behavior is unclear — what ⌘B does to an already-bold span, how a print preset
 lays out a table — read it there rather than inventing a reasonable default.
+
+## License
+
+MIT — see [`LICENSE`](LICENSE).
