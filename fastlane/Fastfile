@@ -35,18 +35,19 @@ platform :android do
     )
   end
 
-  desc "Promote a build already on internal testing to production, as a draft (version_code:N)"
+  desc "Promote a build on internal testing to production at 100%, for Google's review (version_code:N)"
   lane :promote do |options|
     upload_to_play_store(
       track: "internal",
       track_promote_to: "production",
-      track_promote_release_status: "draft",
+      track_promote_release_status: "completed",
       version_code: options[:version_code] || UI.user_error!("fastlane promote version_code:N"),
       skip_upload_aab: true,
       skip_upload_apk: true,
       skip_upload_metadata: true,
       skip_upload_images: true,
-      skip_upload_screenshots: true
+      skip_upload_screenshots: true,
+      skip_upload_changelogs: true
     )
   end
 end

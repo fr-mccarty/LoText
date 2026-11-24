@@ -51,16 +51,17 @@ fastlane check       # the key reaches Play Console
 fastlane listing     # text and icon → the store listing (no build)
 fastlane internal    # android/app/build/outputs/bundle/release/app-release.aab → internal, as a draft
 fastlane production  # the same bundle → production, as a draft
-fastlane promote version_code:2   # a build already on internal → production, as a draft
+fastlane promote version_code:N   # a build already on internal → production at 100%, to review
 ```
 
-Drafts go nowhere until someone opens the release in Play Console and sends it for review (or
-rolls out to testers). Production lanes need the service account's **Release to production**
-permission; it was invited with testing, store presence and app information only.
+`internal` and `production` leave drafts, which go nowhere until someone opens the release in
+Play Console. `promote` makes a full production release, which Google reviews before it is live.
+The production track's countries (all but China, which Play does not serve) are set in Play
+Console ▸ Production ▸ Countries / regions; the API cannot, and a release with none is refused.
 
 Each release: raise `versionCode` (and `versionName`) in `android/app/build.gradle`, add
 `changelogs/<versionCode>.txt`, `scripts/android.sh release`, then a lane above. 1.0.11 is
-versionCode 2, uploaded to internal 2026-11-24.
+versionCode 2, uploaded to internal and promoted to production 2026-11-24 (`fastlane promote`).
 
 ## App details
 
@@ -181,4 +182,4 @@ Without that file `scripts/android.sh release` still builds, unsigned, and says 
 - [ ] Publishing overview: the store listing and declarations are "Not yet sent for review".
       Sending them is what replaces the testers' temporary name
       "com.lolekproductions.lotext (unreviewed)" with LoText.
-- [ ] Closed testing, then production.
+- [x] Production: 1.0.11 (2) promoted from internal, 2026-11-24, for review.
