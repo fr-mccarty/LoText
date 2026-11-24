@@ -25,6 +25,9 @@ import { quote } from './dom.js'
 import { words } from './platform.js'
 import { linkText, resolveLink, linkBase } from './editor/wiki-links.js'
 
+/** How long a notice stays up. */
+const NOTICE_SECONDS = 2.5
+
 export class AppModel {
   constructor (bridge) {
     this.bridge = bridge
@@ -90,6 +93,17 @@ export class AppModel {
     for (const listener of this.listeners) listener(what)
     this.reportMenuState()
     this.updateTitle()
+  }
+
+  /**
+   * A line of news that needs no answer — shown over the foot of the detail pane for a moment,
+   * then gone. For what would otherwise look like nothing happening; never for an error.
+   */
+  showNotice (text) {
+    clearTimeout(this.noticeTimer)
+    this.notice = text
+    this.notify('notice')
+    this.noticeTimer = setTimeout(() => { this.notice = null; this.notify('notice') }, NOTICE_SECONDS * 1000)
   }
 
   get hasFolder () { return this.folder !== null }
@@ -1221,6 +1235,10 @@ export class AppModel {
       const folder = linkBase(from)
       await this.alerts.error(`There is no file ${quote(target)}.`,
         `A link is read from the folder the file is in${FilePath.isRoot(folder) ? ', the top of this one' : `, ${quote(folder)}`}.`)
+      return
+    }
+    if (path === from) {
+      this.showNotice(`This link is to ${quote(FilePath.name(path))}, the file already open.`)
       return
     }
     if (await this.openPath(path) === false && openability(FilePath.name(path), false) === 'opaque') {

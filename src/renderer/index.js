@@ -39,6 +39,7 @@ let openSheet = null
 
 model.subscribe((what) => {
   if (what === 'sheet') { renderSheet(); return }
+  if (what === 'notice') { detail.renderNotice(); return }
   if (what === 'settings') {
     model.editor.apply(model.settings.view)
     detail.render()

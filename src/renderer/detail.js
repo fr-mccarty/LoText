@@ -10,6 +10,9 @@
 // The two **banners** are the one exception, and they are not chrome: each is a piece of news
 // about the file under it — the folder has gone, the file has gone — and each goes away when it
 // stops being true.
+//
+// A **notice** is lighter still: a line over the foot of the pane, for a moment, when something
+// asked for already is so — a link to the file already open — and nothing else would show it.
 
 import { element, clear, icon, quote } from './dom.js'
 import { buildViewer } from './viewers/viewer.js'
@@ -24,7 +27,15 @@ export class DetailPane {
     // which is what lets the window survive every re-render with its scroll intact.
     this.editorHost = element('div', { class: 'editor-host' })
     this.overlayHost = element('div', { class: 'overlay-host' })
-    this.root.append(this.dragStrip, this.bannerHost, this.editorHost, this.overlayHost)
+    this.noticeHost = element('div', { class: 'notice', role: 'status', 'aria-live': 'polite' })
+    this.root.append(this.dragStrip, this.bannerHost, this.editorHost, this.overlayHost, this.noticeHost)
+  }
+
+  /** The model's passing notice, if any: shown over the foot of the pane, then faded out. */
+  renderNotice () {
+    const text = this.model.notice
+    if (text) this.noticeHost.textContent = text
+    this.noticeHost.classList.toggle('shown', Boolean(text))
   }
 
   render () {

@@ -48,6 +48,8 @@ Lolext: the user asked for it.
   plain which text will follow.
 - A link to a file that is not there says so in an alert, naming the folder links are read from.
   Nothing is created.
+- A link to the file it is in — `[[capture.md]]` in `capture.md` — opens nothing new, and a
+  notice over the foot of the editor says so for a moment, so the click is not taken for ignored.
 - **On a touch screen** — iPhone, iPad, an Android phone — a plain tap on a link opens it, since a
   finger has no ⌘. A long-press still selects and a drag still scrolls; to put the caret inside a
   link, tap beside it and move with the keyboard bar's arrows. A trackpad or mouse on an iPad
