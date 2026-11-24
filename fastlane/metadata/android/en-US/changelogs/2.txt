@@ -1,0 +1,4 @@
+- Task boxes [ ] can be clicked anywhere in a line, and tasks use single brackets: [ ] and ( ).
+- Wiki links: type [[ to pick a file; follow the link to open it.
+- Links like [text](https://…) open in the browser.
+- Show or hide hidden files, and select several files in the sidebar.

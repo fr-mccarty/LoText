@@ -28,13 +28,39 @@ Once, by hand — the API cannot do these:
 4. Play Console ▸ **Users and permissions** ▸ invite the service account's email, with access to
    LoText and the release and store-listing permissions.
 
+Done so far (2026-11-24, as fr@joshmccarty.org with `gcloud`):
+
+- Cloud project `lotext-play-upload` ("LoText Play upload"), in the **Lolek Productions**
+  organization (`lolekproductions.org`, ID 951336453212), not a personal one. Google Play Android
+  Developer API enabled.
+- Service account `lotext-play-upload@lotext-play-upload.iam.gserviceaccount.com`.
+- The organization blocks service account keys by default (`iam.disableServiceAccountKeyCreation`).
+  This project alone is exempt: set by the Workspace super admin **fr.josh@lolekproductions.org**
+  (who holds Organization Policy Administrator) with `gcloud org-policies set-policy` on
+  `projects/lotext-play-upload/policies/iam.disableServiceAccountKeyCreation`, `enforce: false`.
+  fr@joshmccarty.org is a member of that Workspace, not an admin.
+- The JSON key: `~/.config/lotext/play-store-key.json` (mode 600) on the M5 MacBook Pro, made with
+  `gcloud iam service-accounts keys create … --iam-account
+  lotext-play-upload@lotext-play-upload.iam.gserviceaccount.com`. A lost key is replaced the same
+  way; delete the old one with `gcloud iam service-accounts keys list/delete`.
+
 Then, from `LoText/`:
 
 ```sh
 fastlane check       # the key reaches Play Console
 fastlane listing     # text and icon → the store listing (no build)
 fastlane internal    # android/app/build/outputs/bundle/release/app-release.aab → internal, as a draft
+fastlane production  # the same bundle → production, as a draft
+fastlane promote version_code:2   # a build already on internal → production, as a draft
 ```
+
+Drafts go nowhere until someone opens the release in Play Console and sends it for review (or
+rolls out to testers). Production lanes need the service account's **Release to production**
+permission; it was invited with testing, store presence and app information only.
+
+Each release: raise `versionCode` (and `versionName`) in `android/app/build.gradle`, add
+`changelogs/<versionCode>.txt`, `scripts/android.sh release`, then a lane above. 1.0.11 is
+versionCode 2, uploaded to internal 2026-11-24.
 
 ## App details
 
