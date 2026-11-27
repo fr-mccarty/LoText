@@ -135,6 +135,21 @@ platform :ios do
     send_listing(->(_build) { {} })
   end
 
+  desc "After a rejection: send the listing (notes, video), mark the rejected item resolved, and send the same submission back"
+  lane :resubmit do
+    send_listing(->(build) { { build_number: build } })
+    app = Spaceship::ConnectAPI::App.find(BUNDLE_ID)
+    sub = app.get_review_submissions(includes: "items").find { |s| s.platform == "IOS" && s.state == "UNRESOLVED_ISSUES" } ||
+          UI.user_error!("No rejected iOS submission to resubmit; use `fastlane ios release`")
+    client = Spaceship::ConnectAPI.client.tunes_request_client
+    sub.items.each do |item|
+      client.patch("v1/reviewSubmissionItems/#{item.id}",
+                   { data: { type: "reviewSubmissionItems", id: item.id, attributes: { resolved: true } } })
+    end
+    sub.submit_for_review
+    UI.success("Resubmitted for App Review")
+  end
+
   desc "Send the listing, choose the Xcode project's build, and submit it for App Review"
   lane :release do
     send_listing(->(build) { {

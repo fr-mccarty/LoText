@@ -34,7 +34,7 @@ npm run android:open             # the same, then open Android Studio
 scripts/android.sh shot out.png  # the emulator's screen
 scripts/android.sh release       # signed release .aab for Google Play → the export folder
 
-fastlane ios check | beta | listing | release    # App Store: state, TestFlight, listing, submit
+fastlane ios check | beta | listing | release | resubmit  # App Store: state, TestFlight, listing, submit, resubmit after a rejection
 fastlane check | internal | promote version_code:N  # Google Play: key, internal draft, → production
 ```
 
