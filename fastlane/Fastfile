@@ -57,6 +57,7 @@ end
 # another such file). packaging/app-store/ios.md says what each lane is for.
 platform :ios do
   BUNDLE_ID = "com.lolekproductions.lotext"
+  REVIEW_VIDEO = File.expand_path("~/.config/lotext/app-review.mp4")
 
   before_all do
     config = JSON.parse(File.read(File.expand_path(ENV["ASC_KEY"] || "~/.config/lotext/app-store-connect.json")))
@@ -117,7 +118,10 @@ platform :ios do
       overwrite_screenshots: true,
       skip_binary_upload: true,
       force: true,
-      run_precheck_before_submit: false
+      run_precheck_before_submit: false,
+      # App Review's screen recording (guideline 2.1). deliver deletes the attachment on any run
+      # without one, so every run sends it. Kept outside the repo, which is public.
+      app_review_attachment_file: (REVIEW_VIDEO if File.exist?(REVIEW_VIDEO))
     }.merge(options.call(build)))
   end
 

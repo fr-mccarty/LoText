@@ -1,1 +1,32 @@
-LoText needs no account. On first launch it opens its own folder (On My iPhone ▸ LoText); tap the folder button at the top left to choose another folder with the system picker. Tap a file to edit it; long-press a file for its menu. Print and Share PDF are in the ⋯ menu above the text.
+1. SCREEN RECORDING
+Attached to this App Review Information section (app-review.mp4): recorded on a physical iPhone running iOS 27.2.1, the latest release, with the TestFlight build, starting from the Home Screen as the app is launched. It shows the developer's own folder, so the app reopens the last file; a new install opens its own empty folder instead.
+LoText has no account registration, no login, no user-generated content shared between users, and no paid content or in-app purchases, so none of those flows exist to show.
+
+2. PURPOSE AND AUDIENCE
+LoText is a plain-text editor for people who keep their notes, drafts, lists and documents as ordinary text files in folders: writers, students, and anyone who wants their writing in an open format that any other app can read, rather than locked in a database.
+The problem it solves: most note apps keep text in their own format and storage. LoText edits ordinary files where they already are (iCloud Drive, On My iPhone, any file provider, the user's own server), so nothing is locked in, and the same files open on a Mac.
+The value: a fast, distraction-free editor with tasks, outlining and good printing, with no account, no subscription and no tracking. It is for the general public, not for a particular business or organization.
+It works on one folder at a time and one file at a time. It adds clickable task boxes ([ ] / [x]), folding arrows (--> / --v), links between files ([[name]]), and properly typeset printing of simple Markdown (headings, paragraphs, tables, emphasis) with AirPrint or as a PDF. The same app exists for Mac, so a folder in iCloud Drive can be edited on both.
+
+3. HOW TO USE IT
+No login, no sample files, no setup needed.
+- On first launch LoText opens its own folder (Files: On My iPhone > LoText). It may be empty.
+- Tap the New File button in the bar above the file list, type a name, and start writing. Saving is automatic when you leave the file or the app; Command-S also saves with a keyboard.
+- Tap a file in the list to open it; long-press a file or folder for Rename, Duplicate, Move To..., Delete.
+- The bar above the keyboard has Tab, task box, bold, italic, undo and redo. Type "[ ] Buy milk" and tap the box to tick it.
+- Above the text, the magnifier is Find; the ... menu has Print, Share PDF and Find and Replace.
+- The folder button above the file list chooses another folder with the system folder picker (On My iPhone, iCloud Drive, or another file provider), and lists recent folders.
+- The ... menu above the file list has Settings (font, size, theme, print layouts) and Help.
+Optional features that reviewers do not need to set up:
+- Connect to Server... (in the folder button's menu) edits a folder on the user's own computer over SSH, at an address the user types. It needs the user's own server; the app supplies no server.
+- Settings > iCloud > Sync settings and reading positions (off by default) copies settings between the user's own devices through the app's iCloud container.
+- Cut and Send to DayCap (the ... menu above the text, with text selected) saves the selection as a new file in a folder the user picks, for our separate app DayCap. It sends nothing over the network.
+
+4. EXTERNAL SERVICES
+LoText runs no servers of its own and uses no third-party services: no accounts, no analytics, no advertising, no AI, no payment processing, no data providers. It uses only Apple's own system features: the Files folder picker and file providers, iCloud (the app's iCloud container, only if the user turns sync on), AirPrint and the share sheet. Connect to Server talks only to an SSH server the user names, using the open-source SwiftNIO SSH library with Apple CryptoKit for encryption.
+
+5. REGIONAL DIFFERENCES
+None. The app works the same in every region. It is in English.
+
+6. REGULATED INDUSTRY / THIRD-PARTY MATERIAL
+Not applicable. LoText is not in a regulated industry and contains no third-party protected material; it only edits the user's own files.
